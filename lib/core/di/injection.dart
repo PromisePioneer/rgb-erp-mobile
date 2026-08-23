@@ -1,3 +1,6 @@
+import 'dart:convert';
+import 'dart:io';
+
 import 'package:dio/dio.dart';
 import '../network/api_endpoints.dart';
 import '../network/api_exception.dart';
@@ -491,6 +494,112 @@ class LeaveApi {
           'reason': reason,
         },
       );
+      return response.data as Map<String, dynamic>;
+    } on DioException catch (e) {
+      throw ApiException.fromDioException(e);
+    }
+  }
+}
+
+class ViolationReportApi {
+  final Dio _dio;
+
+  ViolationReportApi(this._dio);
+
+  /// GET /patrol-violation/projects - Get projects for violation report
+  Future<Map<String, dynamic>> getProjects() async {
+    try {
+      final response = await _dio.get(ApiEndpoints.violationReportProjects);
+      return response.data as Map<String, dynamic>;
+    } on DioException catch (e) {
+      throw ApiException.fromDioException(e);
+    }
+  }
+
+  /// GET /patrol-violation/employees - Get employees by project
+  Future<Map<String, dynamic>> getEmployeesByProject(int projectId) async {
+    try {
+      final response = await _dio.get(
+        ApiEndpoints.violationReportEmployees,
+        queryParameters: {'project_id': projectId},
+      );
+      return response.data as Map<String, dynamic>;
+    } on DioException catch (e) {
+      throw ApiException.fromDioException(e);
+    }
+  }
+
+  /// POST /patrol-violation - Submit violation report (multipart)
+  Future<Map<String, dynamic>> submitViolation({
+    required int projectId,
+    required int employeeId,
+    required int violationTypeId,
+    required String capturedAt,
+    required double latitude,
+    required double longitude,
+    String? notes,
+    String? action,
+    List<String>? photoPaths,
+  }) async {
+    try {
+      final formData = FormData();
+
+      formData.fields.add(MapEntry('projects_id', projectId.toString()));
+      formData.fields.add(MapEntry('employee_id', employeeId.toString()));
+      formData.fields.add(MapEntry('violation_type_id', violationTypeId.toString()));
+      formData.fields.add(MapEntry('captured_at', capturedAt));
+      formData.fields.add(MapEntry('latitude', latitude.toString()));
+      formData.fields.add(MapEntry('longitude', longitude.toString()));
+
+      if (notes != null && notes.isNotEmpty) {
+        formData.fields.add(MapEntry('notes', notes));
+      }
+
+      if (action != null && action.isNotEmpty) {
+        formData.fields.add(MapEntry('action', action));
+      }
+
+      if (photoPaths != null && photoPaths.isNotEmpty) {
+        for (int i = 0; i < photoPaths.length; i++) {
+          final file = File(photoPaths[i]);
+          if (await file.exists()) {
+            final bytes = await file.readAsBytes();
+            final base64 = base64Encode(bytes);
+            formData.fields.add(MapEntry(
+              'photos[$i]',
+              base64,
+            ));
+          }
+        }
+      }
+
+      final response = await _dio.post(
+        ApiEndpoints.violationReportSubmit,
+        data: formData,
+        options: Options(
+          contentType: 'multipart/form-data',
+        ),
+      );
+      return response.data as Map<String, dynamic>;
+    } on DioException catch (e) {
+      throw ApiException.fromDioException(e);
+    }
+  }
+
+  /// GET /violation-types - Get hierarchical violation types
+  Future<Map<String, dynamic>> getViolationTypes() async {
+    try {
+      final response = await _dio.get(ApiEndpoints.violationTypes);
+      return response.data as Map<String, dynamic>;
+    } on DioException catch (e) {
+      throw ApiException.fromDioException(e);
+    }
+  }
+
+  /// GET /patrol-violation/history - Get logged in user's violation reports
+  Future<Map<String, dynamic>> getUserViolations() async {
+    try {
+      final response = await _dio.get(ApiEndpoints.violationReportHistory);
       return response.data as Map<String, dynamic>;
     } on DioException catch (e) {
       throw ApiException.fromDioException(e);

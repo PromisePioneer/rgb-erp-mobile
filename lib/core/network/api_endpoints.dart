@@ -78,4 +78,14 @@ class ApiEndpoints {
   // Leave Endpoints
   // ====================
   static const String leave = '/leave';
+
+  // ====================
+  // Violation Report Endpoints
+  // ====================
+  static const String violationReportProjects = '/patrol-violation/projects';
+  static const String violationReportEmployees = '/patrol-violation/employees';
+  static const String violationReportSubmit = '/patrol-violation';
+  static const String violationReportHistory = '/patrol-violation/history';
+  static const String violationTypes = '/violation-types';
+  static const String violationTypesList = '/violation-types/list';
 }

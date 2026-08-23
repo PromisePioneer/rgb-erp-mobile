@@ -14,6 +14,7 @@ import 'features/schedule/presentation/providers/schedule_provider.dart';
 import 'features/payroll/presentation/providers/payroll_provider.dart';
 import 'features/leave/presentation/providers/leave_provider.dart';
 import 'features/panic/presentation/providers/panic_provider.dart';
+import 'features/violation_report/presentation/providers/violation_report_provider.dart';
 import 'navigation/app_router.dart';
 
 /// Global notification service instance
@@ -129,6 +130,14 @@ void main() async {
         ChangeNotifierProvider<PanicNotifier>(
           create: (_) => PanicNotifier(
             createPanicRepository(dio),
+          ),
+        ),
+
+        // Violation Report Provider (lazy loaded)
+        ChangeNotifierProvider<ViolationReportNotifier>(
+          create: (_) => ViolationReportNotifier(
+            createViolationReportRepository(dio),
+            locationService,
           ),
         ),
       ],
