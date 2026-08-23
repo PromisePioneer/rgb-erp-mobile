@@ -1,0 +1,132 @@
+import 'package:dio/dio.dart';
+import '../../../../core/core.dart';
+import '../../domain/domain.dart';
+
+/// Repository for attendance operations
+class AttendanceRepository {
+  final AttendanceApi _api;
+
+  AttendanceRepository({required AttendanceApi api}) : _api = api;
+
+  /// Get today's attendance data (records, next action, location, shift)
+  Future<AttendanceData> getTodayAttendance() async {
+    try {
+      print('REPO: Calling GET /attendance/today');
+      final response = await _api.getTodayAttendance();
+      print('REPO: Response received: $response');
+      return AttendanceData.fromJson(response);
+    } on DioException catch (e) {
+      print('REPO: DioException - ${e.message}, type: ${e.type}');
+      throw ApiException.fromDioException(e);
+    }
+  }
+
+  /// Record attendance (check-in or check-out)
+  Future<AttendanceRecord> recordAttendance({
+    required AttendanceType type,
+    required String photoBase64,
+    double? lat,
+    double? lng,
+    String? notes,
+    bool? livenessPassed,
+    double? faceMatchScore,
+    double? freqRatio,
+    double? textureScore,
+    String? earlyLeaveNotes,
+  }) async {
+    print('ATT_REPO: Recording attendance - type: ${type.value}');
+    print('ATT_REPO: Photo size: ${photoBase64.length} chars (base64)');
+    print('ATT_REPO: Location: lat=$lat, lng=$lng');
+    try {
+      final response = await _api.recordAttendance(
+        type: type.value,
+        photo: photoBase64,
+        lat: lat,
+        lng: lng,
+        notes: notes,
+        livenessPassed: livenessPassed,
+        faceMatchScore: faceMatchScore,
+        freqRatio: freqRatio,
+        textureScore: textureScore,
+        earlyLeaveNotes: earlyLeaveNotes,
+      );
+      print('ATT_REPO: Response: $response');
+
+      final attendance = response['attendance'] as Map<String, dynamic>?;
+      if (attendance != null) {
+        return AttendanceRecord.fromJson(attendance);
+      }
+
+      throw ApiException(message: 'Invalid attendance response');
+    } on DioException catch (e) {
+      print('ATT_REPO: DioException: ${e.message}, status: ${e.response?.statusCode}');
+      throw ApiException.fromDioException(e);
+    } catch (e) {
+      print('ATT_REPO: Error: $e');
+      rethrow;
+    }
+  }
+
+  /// Face verify for attendance
+  Future<FaceVerifyResult> faceVerify({
+    required String photoBase64,
+    required String capturedAt,
+    double? lat,
+    double? lng,
+    String? type,
+    String? notes,
+  }) async {
+    print('ATT_REPO: Face verify starting...');
+    print('ATT_REPO: Photo size: ${photoBase64.length} chars (base64)');
+    try {
+      final response = await _api.faceVerify(
+        photo: photoBase64,
+        capturedAt: capturedAt,
+        lat: lat,
+        lng: lng,
+        type: type,
+        notes: notes,
+      );
+      print('ATT_REPO: Face verify response: $response');
+      return FaceVerifyResult.fromJson(response);
+    } on DioException catch (e) {
+      print('ATT_REPO: Face verify DioException: ${e.message}');
+      throw ApiException.fromDioException(e);
+    }
+  }
+
+  /// Check attendance job status (for polling)
+  Future<AttendanceJobStatusResult> checkJobStatus(String jobUuid) async {
+    try {
+      final response = await _api.getAttendanceStatus(jobUuid);
+      return AttendanceJobStatusResult.fromJson(response);
+    } on DioException catch (e) {
+      throw ApiException.fromDioException(e);
+    }
+  }
+
+  /// Poll job status until completed or failed
+  Future<AttendanceJobStatusResult> pollJobStatus(
+    String jobUuid, {
+    int maxAttempts = 15,
+    Duration interval = const Duration(seconds: 2),
+  }) async {
+    for (int i = 0; i < maxAttempts; i++) {
+      final status = await checkJobStatus(jobUuid);
+
+      if (status.isCompleted || status.isFailed) {
+        return status;
+      }
+
+      if (i < maxAttempts - 1) {
+        await Future.delayed(interval);
+      }
+    }
+
+    // Timeout - return as failed
+    return AttendanceJobStatusResult(
+      status: AttendanceJobStatus.failed,
+      message: 'Verifikasi wajah timeout, silakan coba lagi',
+    );
+  }
+}

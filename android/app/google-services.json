@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "223238458504",
+    "project_id": "rgb-app-898ec",
+    "storage_bucket": "rgb-app-898ec.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:223238458504:android:d92def0ddcafa87f82e33d",
+        "android_client_info": {
+          "package_name": "com.rgb.erp_mobile_new"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDf-K3CmfM-3TdhSSCqVXnAh9E9ttRPt3I"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

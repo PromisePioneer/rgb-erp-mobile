@@ -1,0 +1,87 @@
+name: rgb_86
+description: "RGB 86 - Aplikasi Patroli & Absensi"
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.13.0
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+
+  # UI
+  cupertino_icons: ^1.0.8
+  cached_network_image: ^3.3.1
+  shimmer: ^3.0.0
+
+  # State Management
+  provider: ^6.1.2
+
+  # Navigation
+  go_router: ^14.2.0
+
+  # Network
+  dio: ^5.4.3+1
+
+  # Storage
+  flutter_secure_storage: ^10.0.0
+
+  # Biometrics
+  local_auth: ^2.2.0
+
+  # Location
+  geolocator: ^11.0.0
+  # Note: geocoding removed - causes compileSdk issues with android-33
+  # Add geocoding later when plugin is updated
+
+  # Camera & Media
+  image_picker: ^1.1.2
+  camera: ^0.10.5+2
+
+  # Barcode Scanner
+  mobile_scanner: ^5.1.1
+
+  # Firebase (Push Notifications)
+  firebase_core: ^3.1.0
+  firebase_messaging: ^15.0.1
+
+  # Local Notifications
+  flutter_local_notifications: ^18.0.1
+  timezone: ^0.10.0
+
+  # Foreground Service (Keep app running)
+  flutter_foreground_task: ^8.0.0
+
+  # Utilities
+  intl: ^0.20.3
+  equatable: ^2.0.5
+  json_annotation: ^4.9.0
+  freezed_annotation: ^2.4.1
+  audioplayers: ^6.8.1
+  get_it: ^9.2.1
+
+  # TOTP (One-Time Password) for patrol anti-fraud
+  otp: ^3.1.4
+  base32: ^2.1.3
+
+  # Tutorial / Onboarding
+  tutorial_coach_mark: ^1.3.3
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+  build_runner: ^2.4.9
+  json_serializable: ^6.8.0
+  freezed: ^2.5.2
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - assets/images/
+    - assets/logos/
+    - assets/sounds/
