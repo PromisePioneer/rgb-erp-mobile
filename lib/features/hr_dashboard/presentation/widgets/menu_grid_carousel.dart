@@ -125,6 +125,8 @@ class _MenuGridCarouselState extends State<MenuGridCarousel> {
                           context.push(route);
                         } else if (item['label'] == 'Patroli') {
                           context.push('/patrol');
+                        } else if (item['label'] == 'Lapor Pelanggaran') {
+                          context.push('/violation-report/form');
                         }
                       },
                     ),

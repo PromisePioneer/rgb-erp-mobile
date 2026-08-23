@@ -26,6 +26,9 @@ import '../features/schedule/presentation/screens/schedule_screen.dart';
 import '../features/payroll/presentation/screens/payroll_screen.dart';
 import '../features/payroll/presentation/screens/payroll_detail_screen.dart';
 import '../features/leave/presentation/screens/leave_screen.dart';
+import '../features/violation_report/presentation/screens/violation_report_form_screen.dart';
+import '../features/violation_report/presentation/screens/violation_report_history_screen.dart';
+import '../features/violation_report/presentation/screens/violation_report_detail_screen.dart';
 
 // Navigation imports
 import '../shared/widgets/navigation/app_bottom_nav.dart';
@@ -238,6 +241,30 @@ void initRouter(AuthNotifier authNotifier) {
         path: '/leave/form',
         name: 'leave-form',
         builder: (context, state) => const LeaveFormScreen(),
+      ),
+
+      // Violation Report History Screen
+      GoRoute(
+        path: '/violation-report',
+        name: 'violation-report',
+        builder: (context, state) => const ViolationReportHistoryScreen(),
+      ),
+
+      // Violation Report Detail Screen
+      GoRoute(
+        path: '/violation-report/:id',
+        name: 'violation-report-detail',
+        builder: (context, state) {
+          final id = int.parse(state.pathParameters['id']!);
+          return ViolationReportDetailScreen(violationId: id);
+        },
+      ),
+
+      // Violation Report Form Screen (full-screen modal)
+      GoRoute(
+        path: '/violation-report/form',
+        name: 'violation-report-form',
+        builder: (context, state) => const ViolationReportFormScreen(),
       ),
     ],
     errorBuilder: (context, state) => Scaffold(

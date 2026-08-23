@@ -17,9 +17,9 @@ final _menuGrid = [
   {'label': 'Jadwal', 'icon': Icons.calendar_today, 'bg': AppColors.amber100, 'fg': AppColors.amber600, 'route': '/schedule', 'badge': null},
   {'label': 'Cuti', 'icon': Icons.beach_access, 'bg': AppColors.emerald100, 'fg': AppColors.emerald600, 'route': '/leave', 'badge': null},
   {'label': 'Payroll', 'icon': Icons.account_balance_wallet, 'bg': AppColors.amber100, 'fg': AppColors.amber600, 'route': '/payroll', 'badge': null},
-  {'label': 'Training', 'icon': Icons.school, 'bg': AppColors.rose100, 'fg': AppColors.rose600, 'route': null, 'badge': null},
   {'label': 'Approval', 'icon': Icons.checklist, 'bg': AppColors.indigo100, 'fg': AppColors.indigo600, 'route': null, 'badge': null},
   {'label': 'Patroli', 'icon': Icons.security, 'bg': AppColors.teal100, 'fg': AppColors.teal600, 'route': null, 'badge': null},
+  {'label': 'Laporan Patroli', 'icon': Icons.report_problem, 'bg': AppColors.rose100, 'fg': AppColors.rose600, 'route': '/violation-report', 'badge': null},
 ];
 
 final _patrolPoints = [
