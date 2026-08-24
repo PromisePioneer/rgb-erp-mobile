@@ -14,13 +14,24 @@ class ViolationReportRepository {
   Future<List<ViolationType>> getViolationTypes() async {
     try {
       final response = await _api.getViolationTypes();
-      final data = response['data'] as List<dynamic>? ?? [];
+
+      // Handle different response formats safely
+      final responseData = response['data'];
+      if (responseData == null) {
+        return [];
+      }
+
+      List<dynamic> dataList;
+      if (responseData is List) {
+        dataList = responseData;
+      } else {
+        return [];
+      }
 
       // Check if data is nested (has children) or flat (has parent_id)
-      final List<Map<String, dynamic>> typedList = data.map((json) {
-        if (json is Map<String, dynamic>) return json;
-        return <String, dynamic>{};
-      }).toList();
+      final List<Map<String, dynamic>> typedList = dataList
+          .map((json) => _safeToMap(json) ?? {})
+          .toList();
 
       // Check first item to determine format
       if (typedList.isNotEmpty && typedList.first.containsKey('children')) {
@@ -46,9 +57,22 @@ class ViolationReportRepository {
   Future<List<ViolationProject>> getProjects() async {
     try {
       final response = await _api.getProjects();
-      final data = response['data'] as List<dynamic>? ?? [];
-      return data
-          .map((json) => ViolationProject.fromJson(json as Map<String, dynamic>))
+
+      // Handle different response formats safely
+      final responseData = response['data'];
+      if (responseData == null) {
+        return [];
+      }
+
+      List<dynamic> dataList;
+      if (responseData is List) {
+        dataList = responseData;
+      } else {
+        return [];
+      }
+
+      return dataList
+          .map((json) => ViolationProject.fromJson(_safeToMap(json)!))
           .toList();
     } on ApiException {
       rethrow;
@@ -64,9 +88,22 @@ class ViolationReportRepository {
   Future<List<ViolationEmployee>> getEmployeesByProject(int projectId) async {
     try {
       final response = await _api.getEmployeesByProject(projectId);
-      final data = response['data'] as List<dynamic>? ?? [];
-      return data
-          .map((json) => ViolationEmployee.fromJson(json as Map<String, dynamic>))
+
+      // Handle different response formats safely
+      final responseData = response['data'];
+      if (responseData == null) {
+        return [];
+      }
+
+      List<dynamic> dataList;
+      if (responseData is List) {
+        dataList = responseData;
+      } else {
+        return [];
+      }
+
+      return dataList
+          .map((json) => ViolationEmployee.fromJson(_safeToMap(json)!))
           .toList();
     } on ApiException {
       rethrow;
@@ -103,9 +140,15 @@ class ViolationReportRepository {
         photoPaths: photoPaths,
       );
 
-      return ViolationReportResult.fromJson(
-        response['data'] as Map<String, dynamic>,
-      );
+      final dataMap = _safeToMap(response['data']);
+      if (dataMap == null) {
+        throw ApiException(
+          message: 'Format response tidak valid',
+          statusCode: 500,
+        );
+      }
+
+      return ViolationReportResult.fromJson(dataMap);
     } on ApiException {
       rethrow;
     } catch (e) {
@@ -120,9 +163,27 @@ class ViolationReportRepository {
   Future<List<ViolationReportResult>> getUserViolations() async {
     try {
       final response = await _api.getUserViolations();
-      final data = response['data'] as List<dynamic>? ?? [];
-      return data
-          .map((json) => ViolationReportResult.fromJson(json as Map<String, dynamic>))
+
+      // Handle different response formats safely
+      final responseData = response['data'];
+      if (responseData == null) {
+        return [];
+      }
+
+      List<dynamic> dataList;
+      if (responseData is List) {
+        dataList = responseData;
+      } else if (responseData is Map && responseData['items'] is List) {
+        dataList = responseData['items'] as List;
+      } else if (responseData is Map && responseData['data'] is List) {
+        dataList = responseData['data'] as List;
+      } else {
+        // Try to convert single object to list
+        return [ViolationReportResult.fromJson(_safeToMap(responseData)!)];
+      }
+
+      return dataList
+          .map((json) => ViolationReportResult.fromJson(_safeToMap(json)!))
           .toList();
     } on ApiException {
       rethrow;
@@ -132,5 +193,12 @@ class ViolationReportRepository {
         statusCode: 500,
       );
     }
+  }
+
+  Map<String, dynamic>? _safeToMap(dynamic value) {
+    if (value == null) return null;
+    if (value is Map<String, dynamic>) return value;
+    if (value is Map) return Map<String, dynamic>.from(value);
+    return null;
   }
 }

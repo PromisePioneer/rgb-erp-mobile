@@ -8,6 +8,7 @@ import '../../../../shared/utils/tutorial_keys.dart';
 import '../../../attendance/presentation/providers/attendance_provider.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../panic/presentation/providers/panic_provider.dart';
+import '../../domain/menu_access.dart';
 import '../widgets/menu_grid_carousel.dart';
 
 // Data
@@ -253,6 +254,9 @@ class _HRDashboardScreenState extends State<HRDashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final authNotifier = context.read<AuthNotifier>();
+    final user = authNotifier.state.user;
+
     return TopGradientBackground(
       gradientHeight: 180,
       child: Scaffold(
@@ -271,7 +275,7 @@ class _HRDashboardScreenState extends State<HRDashboardScreen> {
                     const SizedBox(height: 20),
                     _buildMenuGrid(),
                     const SizedBox(height: 20),
-                    // Promo banner section
+                    // Promo banner section - ALWAYS VISIBLE for all positions
                     Container(
                       decoration: BoxDecoration(
                         color: Colors.white,
@@ -302,7 +306,8 @@ class _HRDashboardScreenState extends State<HRDashboardScreen> {
                   ],
                 ),
               ),
-              _buildPanicButton(),
+              // Panic button - only visible if user has panic_button privilege
+              if (user?.hasPrivilege('panic_button') == true) _buildPanicButton(),
               if (_showPatroli) _buildPatroliSheet(),
             ],
           ),
@@ -399,6 +404,14 @@ class _HRDashboardScreenState extends State<HRDashboardScreen> {
   }
 
   Widget _buildMenuGrid() {
+    final authNotifier = context.read<AuthNotifier>();
+    final user = authNotifier.state.user;
+
+    // Filter menu items based on user privileges
+    final filteredMenuGrid = user != null
+        ? filterMenuByPrivileges(_menuGrid, user)
+        : _menuGrid;
+
     return Container(
       key: TutorialKeys.menuGridKey,
       decoration: BoxDecoration(
@@ -433,7 +446,7 @@ class _HRDashboardScreenState extends State<HRDashboardScreen> {
           ),
           const SizedBox(height: 12),
           MenuGridCarousel(
-            menuItems: _menuGrid,
+            menuItems: filteredMenuGrid,
             itemsPerPage: 8,
           ),
         ],

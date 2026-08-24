@@ -16,6 +16,8 @@ class User extends Equatable {
   final String? siteName;
   final String? areaId;
   final String? areaName;
+  final List<String> privileges;
+  final bool hasFaceEnrollment;
 
   const User({
     required this.id,
@@ -32,6 +34,8 @@ class User extends Equatable {
     this.siteName,
     this.areaId,
     this.areaName,
+    this.privileges = const [],
+    this.hasFaceEnrollment = false,
   });
 
   /// Check if user is RGB (Satpam/Security)
@@ -42,6 +46,9 @@ class User extends Equatable {
 
   /// Check if user is Super Admin
   bool get isSuperAdmin => position?.toLowerCase() == 'super admin';
+
+  /// Check if user has a specific privilege
+  bool hasPrivilege(String key) => privileges.contains(key);
 
   factory User.fromJson(Map<String, dynamic> json) {
     return User(
@@ -59,6 +66,11 @@ class User extends Equatable {
       siteName: json['site_name'] as String?,
       areaId: json['area_id'] as String?,
       areaName: json['area_name'] as String?,
+      privileges: (json['privileges'] as List<dynamic>?)
+              ?.map((e) => e.toString())
+              .toList() ??
+          [],
+      hasFaceEnrollment: json['has_face_enrollment'] == true,
     );
   }
 
@@ -78,6 +90,8 @@ class User extends Equatable {
       'site_name': siteName,
       'area_id': areaId,
       'area_name': areaName,
+      'privileges': privileges,
+      'has_face_enrollment': hasFaceEnrollment,
     };
   }
 
@@ -97,5 +111,7 @@ class User extends Equatable {
         siteName,
         areaId,
         areaName,
+        privileges,
+        hasFaceEnrollment,
       ];
 }

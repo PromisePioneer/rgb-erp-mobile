@@ -15,13 +15,28 @@ class ViolationType extends Equatable {
     this.children = const [],
   });
 
+  static int _parseInt(dynamic value) {
+    if (value == null) return 0;
+    if (value is int) return value;
+    if (value is double) return value.toInt();
+    if (value is String && value.isNotEmpty) return int.tryParse(value) ?? 0;
+    return 0;
+  }
+
+  static String _parseString(dynamic value) {
+    if (value == null) return 'medium';
+    return value.toString();
+  }
+
   factory ViolationType.fromJson(Map<String, dynamic> json) {
     // Check if nested children format (from backend with children array)
     if (json['children'] != null) {
       return ViolationType(
-        id: json['id'] as int,
-        name: json['name'] as String,
-        severityLevel: json['severity_level'] as String? ?? 'medium',
+        id: _parseInt(json['id']),
+        name: _parseString(json['name']),
+        severityLevel: _parseString(json['severity_level']).isNotEmpty
+            ? _parseString(json['severity_level'])
+            : 'medium',
         children: (json['children'] as List<dynamic>?)
                 ?.map((c) => ViolationType.fromJson(c as Map<String, dynamic>))
                 .toList() ??
@@ -31,11 +46,13 @@ class ViolationType extends Equatable {
 
     // Flat format with parent_id (CSV style)
     return ViolationType(
-      id: json['id'] as int,
-      name: json['name'] as String,
-      severityLevel: json['severity_level'] as String? ??
-          json['severity'] as String? ??
-          'medium',
+      id: _parseInt(json['id']),
+      name: _parseString(json['name']),
+      severityLevel: _parseString(json['severity_level']).isNotEmpty
+          ? _parseString(json['severity_level'])
+          : _parseString(json['severity']).isNotEmpty
+              ? _parseString(json['severity'])
+              : 'medium',
       children: const [],
     );
   }
@@ -94,15 +111,18 @@ class ViolationType extends Equatable {
 
     // First pass: create all types and map parent relationships
     for (final json in rawList) {
-      final id = json['id'] as int;
-      final parentId = json['parent_id'] as int?;
+      final id = _parseInt(json['id']);
+      final parentIdRaw = json['parent_id'];
+      final int? parentId = parentIdRaw == null ? null : _parseInt(parentIdRaw);
 
       final type = ViolationType(
         id: id,
-        name: json['name'] as String,
-        severityLevel: json['severity_level'] as String? ??
-            json['severity'] as String? ??
-            'medium',
+        name: _parseString(json['name']),
+        severityLevel: _parseString(json['severity_level']).isNotEmpty
+            ? _parseString(json['severity_level'])
+            : _parseString(json['severity']).isNotEmpty
+                ? _parseString(json['severity'])
+                : 'medium',
         children: const [],
       );
 
