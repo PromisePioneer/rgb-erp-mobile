@@ -240,7 +240,7 @@ class ReportNotifier extends ChangeNotifier {
     } catch (e) {
       _state = _state.copyWith(
         isSubmitting: false,
-        submitError: 'Gagal menyimpan laporan lapangan',
+        submitError: 'Gagal menyimpan laporan mutasi',
       );
       notifyListeners();
       return false;

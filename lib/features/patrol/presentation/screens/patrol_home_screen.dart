@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+
 import '../../../../core/core.dart';
 import '../../../../shared/widgets/buttons/primary_button.dart';
 import '../../../../shared/widgets/layout/top_gradient_background.dart';
@@ -24,7 +25,9 @@ class _PatrolHomeScreenState extends State<PatrolHomeScreen> {
 
     // Set navigation callback for alarm
     notifier.navigateToAlarmScreen = (message) {
-      context.push('/patrol/alarm?message=${Uri.encodeComponent(message ?? '')}');
+      context.push(
+        '/patrol/alarm?message=${Uri.encodeComponent(message ?? '')}',
+      );
     };
 
     notifier.loadTodayStatus();
@@ -58,7 +61,8 @@ class _PatrolHomeScreenState extends State<PatrolHomeScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              result.validation?.locationMessage ?? 'Scan berhasil - lokasi di luar radius',
+              result.validation?.locationMessage ??
+                  'Scan berhasil - lokasi di luar radius',
             ),
             backgroundColor: AppColors.warning,
             duration: const Duration(seconds: 4),
@@ -105,9 +109,7 @@ class _PatrolHomeScreenState extends State<PatrolHomeScreen> {
           ],
         ),
         content: Text(
-          message.isNotEmpty
-              ? message
-              : 'GPS palsu (fake GPS) terdeteksi. Matikan aplikasi fake GPS untuk melanjutkan patroli.',
+          message.isNotEmpty ? message : 'GPS palsu (fake GPS) terdeteksi. Matikan aplikasi fake GPS untuk melanjutkan patroli.',
         ),
         actions: [
           TextButton(
@@ -131,9 +133,7 @@ class _PatrolHomeScreenState extends State<PatrolHomeScreen> {
           ],
         ),
         content: Text(
-          message.isNotEmpty
-              ? message
-              : 'Kode OTP tidak valid atau sudah kadaluarsa. Pastikan waktu perangkat Anda sudah sinkron.',
+          message.isNotEmpty ? message : 'Kode OTP tidak valid atau sudah kadaluarsa. Pastikan waktu perangkat Anda sudah sinkron.',
         ),
         actions: [
           TextButton(
@@ -157,9 +157,7 @@ class _PatrolHomeScreenState extends State<PatrolHomeScreen> {
           ],
         ),
         content: Text(
-          message.isNotEmpty
-              ? message
-              : 'Waktu perangkat Anda tidak sinkron dengan server. Mohon perbarui waktu otomatis di pengaturan perangkat.',
+          message.isNotEmpty ? message : 'Waktu perangkat Anda tidak sinkron dengan server. Mohon perbarui waktu otomatis di pengaturan perangkat.',
         ),
         actions: [
           TextButton(
@@ -203,11 +201,13 @@ class _PatrolHomeScreenState extends State<PatrolHomeScreen> {
         ),
         body: Consumer<PatrolNotifier>(
           builder: (context, notifier, child) {
-            if (notifier.state.error != null && notifier.state.todayStatus == null) {
+            if (notifier.state.error != null &&
+                notifier.state.todayStatus == null) {
               return _buildError(notifier);
             }
 
-            if (notifier.state.isLoading && notifier.state.todayStatus == null) {
+            if (notifier.state.isLoading &&
+                notifier.state.todayStatus == null) {
               return const Center(child: CircularProgressIndicator());
             }
 
@@ -217,7 +217,14 @@ class _PatrolHomeScreenState extends State<PatrolHomeScreen> {
               return _buildNoSchedule();
             }
 
-            return _buildContent(notifier, status);
+            return Column(
+              children: [
+                Expanded(
+                  child: _buildContent(notifier, status),
+                ),
+                _buildScanButtonFixed(notifier),
+              ],
+            );
           },
         ),
       ),
@@ -289,10 +296,7 @@ class _PatrolHomeScreenState extends State<PatrolHomeScreen> {
             SizedBox(height: AppSpacing.md),
             Text(
               'Tidak ada jadwal patroli hari ini',
-              style: TextStyle(
-                fontSize: 16,
-                color: AppColors.textSecondary,
-              ),
+              style: TextStyle(fontSize: 16, color: AppColors.textSecondary),
             ),
           ],
         ),
@@ -305,12 +309,18 @@ class _PatrolHomeScreenState extends State<PatrolHomeScreen> {
       onRefresh: () => notifier.loadTodayStatus(),
       child: SingleChildScrollView(
         physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.all(AppSpacing.screenPadding),
+        padding: const EdgeInsets.fromLTRB(
+          AppSpacing.screenPadding,
+          AppSpacing.screenPadding,
+          AppSpacing.screenPadding,
+          120, // Extra padding at bottom for fixed button
+        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             // Countdown card (for when not overdue)
-            if (!notifier.state.isRoundOverdue && notifier.state.roundCountdownText != null)
+            if (!notifier.state.isRoundOverdue &&
+                notifier.state.roundCountdownText != null)
               _buildCountdownCard(notifier),
 
             // Schedule card
@@ -325,16 +335,32 @@ class _PatrolHomeScreenState extends State<PatrolHomeScreen> {
             _buildCheckpointPath(notifier, status),
             const SizedBox(height: AppSpacing.lg),
 
-            // Scan button
-            _buildScanButton(notifier),
-            const SizedBox(height: AppSpacing.lg),
-
             // Session history
-            if (status.sessions.isNotEmpty) ...[
-              _buildSessionHistory(status),
-            ],
+            if (status.sessions.isNotEmpty) ...[_buildSessionHistory(status)],
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildScanButtonFixed(PatrolNotifier notifier) {
+    final isLoading =
+        notifier.state.isScanning || notifier.state.isCountingDown;
+
+    return Container(
+      padding: EdgeInsets.fromLTRB(
+        AppSpacing.screenPadding,
+        AppSpacing.md,
+        AppSpacing.screenPadding,
+        MediaQuery.of(context).padding.bottom + AppSpacing.xxl,
+      ),
+      child: PrimaryButton(
+        label: isLoading
+            ? 'Memproses...'
+            : 'Scan Checkpoint #${notifier.state.nextExpectedSequence}',
+        icon: Icons.qr_code_scanner,
+        isLoading: isLoading,
+        onPressed: isLoading ? null : _handleScan,
       ),
     );
   }
@@ -350,10 +376,7 @@ class _PatrolHomeScreenState extends State<PatrolHomeScreen> {
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [
-            AppColors.primary,
-            AppColors.primary.withAlpha(204),
-          ],
+          colors: [AppColors.primary, AppColors.primary.withAlpha(204)],
         ),
         borderRadius: AppRadius.radiusLg,
         boxShadow: [
@@ -384,10 +407,7 @@ class _PatrolHomeScreenState extends State<PatrolHomeScreen> {
                   children: [
                     const Text(
                       'Checkpoint Berikutnya',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.white70,
-                      ),
+                      style: TextStyle(fontSize: 14, color: Colors.white70),
                     ),
                     const SizedBox(height: 4),
                     Text(
@@ -569,7 +589,12 @@ class _PatrolHomeScreenState extends State<PatrolHomeScreen> {
     );
   }
 
-  Widget _buildStatCard(String label, String value, IconData icon, Color color) {
+  Widget _buildStatCard(
+    String label,
+    String value,
+    IconData icon,
+    Color color,
+  ) {
     return Container(
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
@@ -591,7 +616,10 @@ class _PatrolHomeScreenState extends State<PatrolHomeScreen> {
           ),
           Text(
             label,
-            style: const TextStyle(fontSize: 10, color: AppColors.textSecondary),
+            style: const TextStyle(
+              fontSize: 10,
+              color: AppColors.textSecondary,
+            ),
             textAlign: TextAlign.center,
           ),
         ],
@@ -599,7 +627,10 @@ class _PatrolHomeScreenState extends State<PatrolHomeScreen> {
     );
   }
 
-  Widget _buildCheckpointPath(PatrolNotifier notifier, PatrolTodayStatus status) {
+  Widget _buildCheckpointPath(
+    PatrolNotifier notifier,
+    PatrolTodayStatus status,
+  ) {
     final total = status.stats?.totalCheckpoints ?? 0;
     final nextSeq = status.nextExpectedSequence;
 
@@ -620,11 +651,7 @@ class _PatrolHomeScreenState extends State<PatrolHomeScreen> {
         name = 'Titik $seq';
       }
 
-      return CheckpointNode(
-        sequence: seq,
-        status: nodeStatus,
-        name: name,
-      );
+      return CheckpointNode(sequence: seq, status: nodeStatus, name: name);
     });
 
     return Container(
@@ -650,7 +677,10 @@ class _PatrolHomeScreenState extends State<PatrolHomeScreen> {
               ),
               if (notifier.state.isCountingDown)
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: AppColors.amber100,
                     borderRadius: BorderRadius.circular(12),
@@ -658,7 +688,11 @@ class _PatrolHomeScreenState extends State<PatrolHomeScreen> {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Icon(Icons.timer, size: 14, color: AppColors.amber600),
+                      const Icon(
+                        Icons.timer,
+                        size: 14,
+                        color: AppColors.amber600,
+                      ),
                       const SizedBox(width: 4),
                       Text(
                         '${notifier.state.countdownSeconds}s',
@@ -691,19 +725,6 @@ class _PatrolHomeScreenState extends State<PatrolHomeScreen> {
           ),
         ],
       ),
-    );
-  }
-
-  Widget _buildScanButton(PatrolNotifier notifier) {
-    final isLoading = notifier.state.isScanning || notifier.state.isCountingDown;
-
-    return PrimaryButton(
-      label: isLoading
-          ? 'Memproses...'
-          : 'Scan Checkpoint #${notifier.state.nextExpectedSequence}',
-      icon: Icons.qr_code_scanner,
-      isLoading: isLoading,
-      onPressed: isLoading ? null : _handleScan,
     );
   }
 
@@ -745,9 +766,11 @@ class _PatrolHomeScreenState extends State<PatrolHomeScreen> {
 
     String timeText = '-';
     if (session.startedAt != null) {
-      timeText = '${session.startedAt!.hour.toString().padLeft(2, '0')}:${session.startedAt!.minute.toString().padLeft(2, '0')}';
+      timeText =
+          '${session.startedAt!.hour.toString().padLeft(2, '0')}:${session.startedAt!.minute.toString().padLeft(2, '0')}';
       if (session.completedAt != null) {
-        timeText += ' - ${session.completedAt!.hour.toString().padLeft(2, '0')}:${session.completedAt!.minute.toString().padLeft(2, '0')}';
+        timeText +=
+            ' - ${session.completedAt!.hour.toString().padLeft(2, '0')}:${session.completedAt!.minute.toString().padLeft(2, '0')}';
       }
     }
 

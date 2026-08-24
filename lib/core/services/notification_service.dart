@@ -13,6 +13,25 @@ import 'storage_service.dart';
 // Import PatrolNotifier for static callback
 import '../../features/patrol/presentation/providers/patrol_provider.dart';
 
+/// Model for a notification item
+class NotificationItem {
+  final String id;
+  final String title;
+  final String body;
+  final String? type;
+  final DateTime timestamp;
+  final bool isRead;
+
+  NotificationItem({
+    required this.id,
+    required this.title,
+    required this.body,
+    this.type,
+    required this.timestamp,
+    this.isRead = false,
+  });
+}
+
 /// Service for handling push notifications (FCM) and local notifications
 class NotificationService {
   static final NotificationService _instance = NotificationService._internal();
@@ -31,11 +50,18 @@ class NotificationService {
   bool _isAlarmDismissed = false;
   bool _isRegisteringToken = false;
 
+  /// List of received notifications
+  final List<NotificationItem> _notifications = [];
+  List<NotificationItem> get notifications => List.unmodifiable(_notifications);
+
   /// Callback when patrol alarm is received (foreground only)
   void Function(String? message)? onPatrolAlarmReceived;
 
   /// Callback when shift reminder is received (foreground only)
   void Function(String? message)? onShiftReminderReceived;
+
+  /// Callback when new notification is received
+  void Function(NotificationItem)? onNotificationReceived;
 
   /// Initialize notification service
   /// Call this after Firebase.initializeApp() in main()
@@ -225,6 +251,13 @@ class NotificationService {
       channelId: isPatrolAlarm
           ? 'patrol_alarm'
           : (isShiftReminder ? 'shift_reminder' : 'default'),
+    );
+
+    // Add to notification list
+    _addNotification(
+      title: title,
+      body: body,
+      type: data['type'],
     );
   }
 
@@ -589,6 +622,66 @@ class NotificationService {
 
   /// Check if alarm is currently playing
   bool get isAlarmPlaying => _isAlarmPlaying;
+
+  /// Get count of unread notifications
+  int get unreadCount => _notifications.where((n) => !n.isRead).length;
+
+  /// Add a notification to the list
+  void _addNotification({
+    required String title,
+    required String body,
+    String? type,
+  }) {
+    final item = NotificationItem(
+      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      title: title,
+      body: body,
+      type: type,
+      timestamp: DateTime.now(),
+    );
+    _notifications.insert(0, item);
+    onNotificationReceived?.call(item);
+  }
+
+  /// Mark a notification as read
+  void markAsRead(String id) {
+    final index = _notifications.indexWhere((n) => n.id == id);
+    if (index != -1) {
+      _notifications[index] = NotificationItem(
+        id: _notifications[index].id,
+        title: _notifications[index].title,
+        body: _notifications[index].body,
+        type: _notifications[index].type,
+        timestamp: _notifications[index].timestamp,
+        isRead: true,
+      );
+    }
+  }
+
+  /// Mark all notifications as read
+  void markAllAsRead() {
+    for (int i = 0; i < _notifications.length; i++) {
+      _notifications[i] = NotificationItem(
+        id: _notifications[i].id,
+        title: _notifications[i].title,
+        body: _notifications[i].body,
+        type: _notifications[i].type,
+        timestamp: _notifications[i].timestamp,
+        isRead: true,
+      );
+    }
+  }
+
+  /// Clear all notifications
+  void clearAll() {
+    _notifications.clear();
+  }
+
+  /// Clear old notifications (older than 7 days)
+  void clearOld() {
+    final cutoff = DateTime.now().subtract(const Duration(days: 7));
+    _notifications.removeWhere((n) => n.timestamp.isBefore(cutoff));
+  }
 }
 
 /// Top-level background handler for FCM (REQUIRED to be top-level function)

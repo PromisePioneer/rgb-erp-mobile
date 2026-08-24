@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
+
 import '../core/core.dart';
 import '../shared/utils/tutorial_keys.dart';
 
@@ -37,6 +38,7 @@ import '../shared/widgets/navigation/app_bottom_nav.dart';
 
 // Tutorial imports
 import '../core/services/onboarding_service.dart';
+
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 
 /// Global router provider that will be initialized in main.dart
@@ -208,7 +210,8 @@ void initRouter(AuthNotifier authNotifier) {
         path: '/patrol/alarm',
         name: 'patrol-alarm',
         builder: (context, state) {
-          final message = state.uri.queryParameters['message'] ??
+          final message =
+              state.uri.queryParameters['message'] ??
               'Waktunya patroli checkpoint berikutnya!';
           return PatrolAlarmScreen(message: message);
         },
@@ -288,11 +291,7 @@ void initRouter(AuthNotifier authNotifier) {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(
-              Icons.error_outline,
-              size: 64,
-              color: AppColors.danger,
-            ),
+            const Icon(Icons.error_outline, size: 64, color: AppColors.danger),
             const SizedBox(height: AppSpacing.lg),
             Text(
               'Page not found: ${state.matchedLocation}',
@@ -314,17 +313,16 @@ void initRouter(AuthNotifier authNotifier) {
 class MainShell extends StatefulWidget {
   final StatefulNavigationShell navigationShell;
 
-  const MainShell({
-    super.key,
-    required this.navigationShell,
-  });
+  const MainShell({super.key, required this.navigationShell});
 
   @override
   State<MainShell> createState() => _MainShellState();
 }
 
 class _MainShellState extends State<MainShell> {
-  final OnboardingService _onboardingService = OnboardingService(StorageService());
+  final OnboardingService _onboardingService = OnboardingService(
+    StorageService(),
+  );
   bool _hasShownOnboarding = false;
 
   @override
@@ -368,144 +366,160 @@ class _MainShellState extends State<MainShell> {
 
     // Menu Grid
     if (TutorialKeys.menuGridKey.currentContext != null) {
-      targets.add(TargetFocus(
-        identify: 'menuGrid',
-        keyTarget: TutorialKeys.menuGridKey,
-        shape: ShapeLightFocus.RRect,
-        radius: 16,
-        contents: [
-          TargetContent(
-            align: ContentAlign.bottom,
-            child: _buildTutorialCard(
-              'Menu Layanan',
-              'Akses semua fitur aplikasi dari sini. Tap untuk masuk ke fitur yang diinginkan.',
+      targets.add(
+        TargetFocus(
+          identify: 'menuGrid',
+          keyTarget: TutorialKeys.menuGridKey,
+          shape: ShapeLightFocus.RRect,
+          radius: 16,
+          contents: [
+            TargetContent(
+              align: ContentAlign.bottom,
+              child: _buildTutorialCard(
+                'Menu Layanan',
+                'Akses semua fitur aplikasi dari sini. Tap untuk masuk ke fitur yang diinginkan.',
+              ),
             ),
-          ),
-        ],
-      ));
+          ],
+        ),
+      );
     }
 
     // Notification
     if (TutorialKeys.notificationKey.currentContext != null) {
-      targets.add(TargetFocus(
-        identify: 'notification',
-        keyTarget: TutorialKeys.notificationKey,
-        shape: ShapeLightFocus.Circle,
-        contents: [
-          TargetContent(
-            align: ContentAlign.bottom,
-            child: _buildTutorialCard(
-              'Notifikasi',
-              'Lihat notifikasi dan pengumuman penting di sini.',
+      targets.add(
+        TargetFocus(
+          identify: 'notification',
+          keyTarget: TutorialKeys.notificationKey,
+          shape: ShapeLightFocus.Circle,
+          contents: [
+            TargetContent(
+              align: ContentAlign.bottom,
+              child: _buildTutorialCard(
+                'Notifikasi',
+                'Lihat notifikasi dan pengumuman penting di sini.',
+              ),
             ),
-          ),
-        ],
-      ));
+          ],
+        ),
+      );
     }
 
     // Scan Button
     if (TutorialKeys.scanButtonKey.currentContext != null) {
-      targets.add(TargetFocus(
-        identify: 'scanButton',
-        keyTarget: TutorialKeys.scanButtonKey,
-        shape: ShapeLightFocus.Circle,
-        contents: [
-          TargetContent(
-            align: ContentAlign.top,
-            child: _buildTutorialCard(
-              'Tombol Scan',
-              'Tekan untuk scan wajah saat absen atau scan QR saat patroli.',
+      targets.add(
+        TargetFocus(
+          identify: 'scanButton',
+          keyTarget: TutorialKeys.scanButtonKey,
+          shape: ShapeLightFocus.Circle,
+          contents: [
+            TargetContent(
+              align: ContentAlign.top,
+              child: _buildTutorialCard(
+                'Tombol Scan',
+                'Tekan untuk scan wajah saat absen atau scan QR saat patroli.',
+              ),
             ),
-          ),
-        ],
-      ));
+          ],
+        ),
+      );
     }
 
     // Panic Button
     if (TutorialKeys.panicButtonKey.currentContext != null) {
-      targets.add(TargetFocus(
-        identify: 'panicButton',
-        keyTarget: TutorialKeys.panicButtonKey,
-        shape: ShapeLightFocus.Circle,
-        contents: [
-          TargetContent(
-            align: ContentAlign.top,
-            child: _buildTutorialCard(
-              'Tombol Panic / SOS',
-              'Tekan dan tahan 3 detik saat darurat. Lokasi Anda akan dikirim ke tim keamanan.',
+      targets.add(
+        TargetFocus(
+          identify: 'panicButton',
+          keyTarget: TutorialKeys.panicButtonKey,
+          shape: ShapeLightFocus.Circle,
+          contents: [
+            TargetContent(
+              align: ContentAlign.top,
+              child: _buildTutorialCard(
+                'Tombol Panic / SOS',
+                'Tekan dan tahan 3 detik saat darurat. Lokasi Anda akan dikirim ke tim keamanan.',
+              ),
             ),
-          ),
-        ],
-      ));
+          ],
+        ),
+      );
     }
 
     // Bottom Nav Tabs
     if (TutorialKeys.homeKey.currentContext != null) {
-      targets.add(TargetFocus(
-        identify: 'homeTab',
-        keyTarget: TutorialKeys.homeKey,
-        shape: ShapeLightFocus.Circle,
-        contents: [
-          TargetContent(
-            align: ContentAlign.top,
-            child: _buildTutorialCard(
-              'Tab Home',
-              'Kembali ke dashboard utama.',
+      targets.add(
+        TargetFocus(
+          identify: 'homeTab',
+          keyTarget: TutorialKeys.homeKey,
+          shape: ShapeLightFocus.Circle,
+          contents: [
+            TargetContent(
+              align: ContentAlign.top,
+              child: _buildTutorialCard(
+                'Tab Home',
+                'Kembali ke dashboard utama.',
+              ),
             ),
-          ),
-        ],
-      ));
+          ],
+        ),
+      );
     }
 
     if (TutorialKeys.presensiKey.currentContext != null) {
-      targets.add(TargetFocus(
-        identify: 'presensiTab',
-        keyTarget: TutorialKeys.presensiKey,
-        shape: ShapeLightFocus.Circle,
-        contents: [
-          TargetContent(
-            align: ContentAlign.top,
-            child: _buildTutorialCard(
-              'Tab Presensi',
-              'Catat kehadiran masuk dan pulang melalui tab ini.',
+      targets.add(
+        TargetFocus(
+          identify: 'presensiTab',
+          keyTarget: TutorialKeys.presensiKey,
+          shape: ShapeLightFocus.Circle,
+          contents: [
+            TargetContent(
+              align: ContentAlign.top,
+              child: _buildTutorialCard(
+                'Tab Absensi',
+                'Catat kehadiran masuk dan pulang melalui tab ini.',
+              ),
             ),
-          ),
-        ],
-      ));
+          ],
+        ),
+      );
     }
 
     if (TutorialKeys.forYouKey.currentContext != null) {
-      targets.add(TargetFocus(
-        identify: 'forYouTab',
-        keyTarget: TutorialKeys.forYouKey,
-        shape: ShapeLightFocus.Circle,
-        contents: [
-          TargetContent(
-            align: ContentAlign.top,
-            child: _buildTutorialCard(
-              'Tab For You',
-              'Dapatkan konten dan informasi yang dipersonalisasi.',
+      targets.add(
+        TargetFocus(
+          identify: 'forYouTab',
+          keyTarget: TutorialKeys.forYouKey,
+          shape: ShapeLightFocus.Circle,
+          contents: [
+            TargetContent(
+              align: ContentAlign.top,
+              child: _buildTutorialCard(
+                'Tab For You',
+                'Dapatkan konten dan informasi yang dipersonalisasi.',
+              ),
             ),
-          ),
-        ],
-      ));
+          ],
+        ),
+      );
     }
 
     if (TutorialKeys.akunKey.currentContext != null) {
-      targets.add(TargetFocus(
-        identify: 'akunTab',
-        keyTarget: TutorialKeys.akunKey,
-        shape: ShapeLightFocus.Circle,
-        contents: [
-          TargetContent(
-            align: ContentAlign.top,
-            child: _buildTutorialCard(
-              'Tab Akun',
-              'Kelola profil, pengaturan, dan informasi akun Anda.',
+      targets.add(
+        TargetFocus(
+          identify: 'akunTab',
+          keyTarget: TutorialKeys.akunKey,
+          shape: ShapeLightFocus.Circle,
+          contents: [
+            TargetContent(
+              align: ContentAlign.top,
+              child: _buildTutorialCard(
+                'Tab Akun',
+                'Kelola profil, pengaturan, dan informasi akun Anda.',
+              ),
             ),
-          ),
-        ],
-      ));
+          ],
+        ),
+      );
     }
 
     return targets;
@@ -541,10 +555,7 @@ class _MainShellState extends State<MainShell> {
           const SizedBox(height: 8),
           Text(
             description,
-            style: const TextStyle(
-              color: AppColors.slate600,
-              fontSize: 14,
-            ),
+            style: const TextStyle(color: AppColors.slate600, fontSize: 14),
           ),
         ],
       ),
@@ -649,7 +660,9 @@ class _SplashScreenState extends State<SplashScreen> {
     if (!mounted) return;
 
     final authNotifier = context.read<AuthNotifier>();
-    final destination = authNotifier.state.isAuthenticated ? '/dashboard' : '/login';
+    final destination = authNotifier.state.isAuthenticated
+        ? '/dashboard'
+        : '/login';
 
     Timer(const Duration(milliseconds: 100), () {
       if (mounted) {
@@ -669,9 +682,7 @@ class _SplashScreenState extends State<SplashScreen> {
             Container(
               height: 100,
               width: 100,
-              decoration: BoxDecoration(
-                borderRadius: AppRadius.radiusXl,
-              ),
+              decoration: BoxDecoration(borderRadius: AppRadius.radiusXl),
               child: const ClipRRect(
                 borderRadius: BorderRadius.all(Radius.circular(16)),
                 child: Image(
@@ -701,10 +712,7 @@ class _SplashScreenState extends State<SplashScreen> {
             const SizedBox(height: AppSpacing.xs),
             const Text(
               'Loading...',
-              style: TextStyle(
-                fontSize: 14,
-                color: AppColors.textSecondary,
-              ),
+              style: TextStyle(fontSize: 14, color: AppColors.textSecondary),
             ),
           ],
         ),
@@ -720,12 +728,8 @@ class ForgotPasswordScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Lupa Password'),
-      ),
-      body: const Center(
-        child: Text('Forgot Password Screen - Coming Soon'),
-      ),
+      appBar: AppBar(title: const Text('Lupa Password')),
+      body: const Center(child: Text('Forgot Password Screen - Coming Soon')),
     );
   }
 }

@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+
 import '../../../../core/core.dart';
+import '../../../../shared/widgets/navigation/app_bottom_nav.dart';
 import '../../domain/domain.dart';
 import '../providers/report_provider.dart';
 
@@ -27,7 +29,7 @@ class _ReportListScreenState extends State<ReportListScreen> {
     return Scaffold(
       backgroundColor: AppColors.slate100,
       appBar: AppBar(
-        title: const Text('Laporan Lapangan'),
+        title: const Text('Laporan Mutasi'),
         backgroundColor: Colors.white,
         foregroundColor: AppColors.slate800,
         elevation: 0,
@@ -73,21 +75,17 @@ class _ReportListScreenState extends State<ReportListScreen> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.assignment_outlined, size: 64, color: AppColors.gray400),
+                  Icon(
+                    Icons.assignment_outlined,
+                    size: 64,
+                    color: AppColors.gray400,
+                  ),
                   const SizedBox(height: AppSpacing.md),
                   Text(
-                    'Belum ada laporan lapangan',
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: AppColors.gray500,
-                    ),
+                    'Belum ada laporan mutasi',
+                    style: TextStyle(fontSize: 16, color: AppColors.gray500),
                   ),
                   const SizedBox(height: AppSpacing.md),
-                  ElevatedButton.icon(
-                    onPressed: () => context.push('/report/form'),
-                    icon: const Icon(Icons.add),
-                    label: const Text('Buat Laporan Baru'),
-                  ),
                 ],
               ),
             );
@@ -112,7 +110,28 @@ class _ReportListScreenState extends State<ReportListScreen> {
         backgroundColor: AppColors.primary,
         child: const Icon(Icons.add, color: Colors.white),
       ),
+      bottomNavigationBar: AppBottomNavBar(
+        currentIndex: 0,
+        onTap: (index) => _onNavTap(context, index),
+      ),
     );
+  }
+
+  void _onNavTap(BuildContext context, int index) {
+    switch (index) {
+      case 0:
+        context.go('/dashboard');
+        break;
+      case 1:
+        context.go('/attendance');
+        break;
+      case 2:
+        context.go('/for-you');
+        break;
+      case 3:
+        context.go('/settings');
+        break;
+    }
   }
 
   Widget _buildAreaSection(ReportArea area) {
@@ -151,10 +170,7 @@ class _ReportListScreenState extends State<ReportListScreen> {
                 ),
                 child: Text(
                   '${area.count} laporan',
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 12,
-                  ),
+                  style: const TextStyle(color: Colors.white, fontSize: 12),
                 ),
               ),
             ],
@@ -188,10 +204,7 @@ class _ReportListScreenState extends State<ReportListScreen> {
               const SizedBox(width: 4),
               Text(
                 '${report.date} ${report.time}',
-                style: TextStyle(
-                  fontSize: 12,
-                  color: AppColors.gray500,
-                ),
+                style: TextStyle(fontSize: 12, color: AppColors.gray500),
               ),
               const Spacer(),
               if (report.image != null)
@@ -201,25 +214,23 @@ class _ReportListScreenState extends State<ReportListScreen> {
           const SizedBox(height: AppSpacing.sm),
           Text(
             report.description,
-            style: const TextStyle(
-              fontSize: 14,
-              color: AppColors.slate800,
-            ),
+            style: const TextStyle(fontSize: 14, color: AppColors.slate800),
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
           ),
           const SizedBox(height: AppSpacing.sm),
           Row(
             children: [
-              Icon(Icons.location_on_outlined, size: 14, color: AppColors.gray400),
+              Icon(
+                Icons.location_on_outlined,
+                size: 14,
+                color: AppColors.gray400,
+              ),
               const SizedBox(width: 4),
               Expanded(
                 child: Text(
                   report.location,
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: AppColors.gray500,
-                  ),
+                  style: TextStyle(fontSize: 12, color: AppColors.gray500),
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
@@ -233,10 +244,7 @@ class _ReportListScreenState extends State<ReportListScreen> {
                 const SizedBox(width: 4),
                 Text(
                   report.employeeName!,
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: AppColors.gray500,
-                  ),
+                  style: TextStyle(fontSize: 12, color: AppColors.gray500),
                 ),
               ],
             ),

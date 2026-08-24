@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+
 import '../../../../core/core.dart';
 import '../../../../shared/widgets/buttons/primary_button.dart';
 import '../providers/report_provider.dart';
@@ -43,10 +44,7 @@ class _ReportFormScreenState extends State<ReportFormScreen> {
     if (!mounted) return;
 
     if (notifier.state.locationError != null) {
-      _showErrorDialog(
-        'Lokasi Tidak Valid',
-        notifier.state.locationError!,
-      );
+      _showErrorDialog('Lokasi Tidak Valid', notifier.state.locationError!);
       return;
     }
 
@@ -67,7 +65,8 @@ class _ReportFormScreenState extends State<ReportFormScreen> {
     } else {
       _showErrorDialog(
         'Gagal',
-        notifier.state.submitError ?? 'Terjadi kesalahan saat menyimpan laporan.',
+        notifier.state.submitError ??
+            'Terjadi kesalahan saat menyimpan laporan.',
       );
     }
   }
@@ -106,7 +105,7 @@ class _ReportFormScreenState extends State<ReportFormScreen> {
             const Text('Berhasil'),
           ],
         ),
-        content: const Text('Laporan lapangan berhasil disimpan.'),
+        content: const Text('Laporan mutasi berhasil disimpan.'),
         actions: [
           ElevatedButton(
             onPressed: () {
@@ -129,7 +128,7 @@ class _ReportFormScreenState extends State<ReportFormScreen> {
     return Scaffold(
       backgroundColor: AppColors.slate100,
       appBar: AppBar(
-        title: const Text('Buat Laporan Lapangan'),
+        title: const Text('Buat Laporan Mutasi'),
         backgroundColor: Colors.white,
         foregroundColor: AppColors.slate800,
         elevation: 0,
@@ -197,10 +196,7 @@ class _ReportFormScreenState extends State<ReportFormScreen> {
           Expanded(
             child: Text(
               'Waktu dan lokasi akan dicatat otomatis saat laporan disimpan.',
-              style: TextStyle(
-                fontSize: 13,
-                color: AppColors.info,
-              ),
+              style: TextStyle(fontSize: 13, color: AppColors.info),
             ),
           ),
         ],
@@ -233,7 +229,7 @@ class _ReportFormScreenState extends State<ReportFormScreen> {
       maxLines: 5,
       maxLength: 2000,
       decoration: InputDecoration(
-        hintText: 'Tuliskan deskripsi laporan lapangan...',
+        hintText: 'Tuliskan deskripsi laporan Mutasi...',
         hintStyle: TextStyle(color: AppColors.gray400),
         filled: true,
         fillColor: Colors.white,

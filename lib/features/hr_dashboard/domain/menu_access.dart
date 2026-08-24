@@ -2,7 +2,7 @@ import '../../auth/domain/entities/user.dart';
 
 /// Mapping of menu labels to their required privilege keys
 const Map<String, String> menuPrivilegeMapping = {
-  'Presensi': 'presensi',
+  'Absen': 'presensi',
   'Pendaftaran Wajah': 'face_enrollment',
   'Jadwal': 'schedule',
   'Cuti': 'leave',
@@ -10,7 +10,7 @@ const Map<String, String> menuPrivilegeMapping = {
   'Approval': 'approval',
   'Patroli': 'patrol',
   'Laporan Patroli': 'patrol_report',
-  'Laporan Lapangan': 'field_report',
+  'Laporan Mutasi': 'field_report',
 };
 
 /// Menu labels that should be hidden when user already has the data

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+
 import '../../../../core/core.dart';
 
 /// Bottom navigation bar with floating center button (myBCA style)
@@ -41,9 +42,7 @@ class AppBottomNavBar extends StatelessWidget {
               height: 64,
               decoration: const BoxDecoration(
                 color: AppColors.primary,
-                borderRadius: BorderRadius.vertical(
-                  top: Radius.circular(20),
-                ),
+                borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
                 boxShadow: [
                   BoxShadow(
                     color: Color(0x1A000000),
@@ -108,7 +107,10 @@ class AppBottomNavBar extends StatelessWidget {
                     gradient: const LinearGradient(
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
-                      colors: [Color(0xFF06B6D4), Color(0xFF0891B2)], // Cyan gradient
+                      colors: [
+                        Color(0xFF06B6D4),
+                        Color(0xFF0891B2),
+                      ], // Cyan gradient
                     ),
                     shape: BoxShape.circle,
                     boxShadow: [
@@ -181,7 +183,7 @@ class AppBottomNavBar extends StatelessWidget {
                     icon: Icons.fingerprint,
                     iconColor: AppColors.indigo600,
                     iconBg: AppColors.indigo100,
-                    title: 'Scan Presensi',
+                    title: 'Absen',
                     subtitle: 'Absen dengan wajah',
                     onTap: () {
                       Navigator.pop(context);
@@ -194,7 +196,7 @@ class AppBottomNavBar extends StatelessWidget {
                     icon: Icons.qr_code_scanner,
                     iconColor: AppColors.teal600,
                     iconBg: AppColors.teal100,
-                    title: 'Scan Patroli',
+                    title: 'Patroli',
                     subtitle: 'Scan QR di titik patroli',
                     onTap: () {
                       Navigator.pop(context);
@@ -240,7 +242,8 @@ class _NavItem extends StatelessWidget {
           children: [
             Icon(
               isActive ? activeIcon : icon,
-              color: Colors.white.withAlpha(isActive ? 255 : 179), // 70% opacity when inactive
+              color: Colors.white.withAlpha(isActive ? 255 : 179),
+              // 70% opacity when inactive
               size: 24,
             ),
             const SizedBox(height: 4),

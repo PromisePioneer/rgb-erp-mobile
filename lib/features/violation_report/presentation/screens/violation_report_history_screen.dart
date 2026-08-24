@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/core.dart';
 import '../../../../shared/widgets/layout/top_gradient_background.dart';
+import '../../../../shared/widgets/navigation/app_bottom_nav.dart';
 import '../../domain/domain.dart';
 import '../providers/violation_report_provider.dart';
 
@@ -127,8 +128,29 @@ class _ViolationReportHistoryScreenState extends State<ViolationReportHistoryScr
           backgroundColor: AppColors.primary,
           child: Icon(Icons.add, color: Colors.white),
         ),
+        bottomNavigationBar: AppBottomNavBar(
+          currentIndex: 0, // Default to home
+          onTap: (index) => _onNavTap(context, index),
+        ),
       ),
     );
+  }
+
+  void _onNavTap(BuildContext context, int index) {
+    switch (index) {
+      case 0:
+        context.go('/dashboard');
+        break;
+      case 1:
+        context.go('/attendance');
+        break;
+      case 2:
+        context.go('/for-you');
+        break;
+      case 3:
+        context.go('/settings');
+        break;
+    }
   }
 }
 

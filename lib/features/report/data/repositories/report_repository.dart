@@ -86,7 +86,7 @@ class ReportRepository {
       rethrow;
     } catch (e) {
       throw ApiException(
-        message: 'Gagal menyimpan laporan lapangan: $e',
+        message: 'Gagal menyimpan laporan mutasi: $e',
         statusCode: 500,
       );
     }
