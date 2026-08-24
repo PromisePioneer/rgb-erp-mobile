@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
-import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
 
 /// Face capture screen with auto-capture when face is ready
@@ -127,17 +126,25 @@ class _FaceCaptureScreenState extends State<FaceCaptureScreen> {
     try {
       final XFile photo = await _controller!.takePicture();
 
-      setState(() {
-        _capturedPhotoPath = photo.path;
-        _isCapturing = false;
-      });
+      if (mounted) {
+        setState(() {
+          _capturedPhotoPath = photo.path;
+          _isCapturing = false;
+        });
+      }
 
+      // Small delay to let UI render the captured photo before navigating away
+      await Future.delayed(const Duration(milliseconds: 100));
+
+      // Navigate away - this will unmount and dispose properly via State.dispose()
       widget.onCapture?.call(photo.path);
     } catch (e) {
-      setState(() {
-        _isCapturing = false;
-        _errorMessage = 'Gagal mengambil foto: $e';
-      });
+      if (mounted) {
+        setState(() {
+          _isCapturing = false;
+          _errorMessage = 'Gagal mengambil foto: $e';
+        });
+      }
     }
   }
 

@@ -29,6 +29,8 @@ import '../features/leave/presentation/screens/leave_screen.dart';
 import '../features/violation_report/presentation/screens/violation_report_form_screen.dart';
 import '../features/violation_report/presentation/screens/violation_report_history_screen.dart';
 import '../features/violation_report/presentation/screens/violation_report_detail_screen.dart';
+import '../features/report/presentation/screens/report_list_screen.dart';
+import '../features/report/presentation/screens/report_form_screen.dart';
 
 // Navigation imports
 import '../shared/widgets/navigation/app_bottom_nav.dart';
@@ -265,6 +267,20 @@ void initRouter(AuthNotifier authNotifier) {
         path: '/violation-report/form',
         name: 'violation-report-form',
         builder: (context, state) => const ViolationReportFormScreen(),
+      ),
+
+      // Field Report List Screen
+      GoRoute(
+        path: '/report',
+        name: 'report',
+        builder: (context, state) => const ReportListScreen(),
+      ),
+
+      // Field Report Form Screen (full-screen modal)
+      GoRoute(
+        path: '/report/form',
+        name: 'report-form',
+        builder: (context, state) => const ReportFormScreen(),
       ),
     ],
     errorBuilder: (context, state) => Scaffold(

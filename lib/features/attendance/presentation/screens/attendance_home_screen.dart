@@ -17,6 +17,8 @@ class AttendanceHomeScreen extends StatefulWidget {
 }
 
 class _AttendanceHomeScreenState extends State<AttendanceHomeScreen> {
+  bool _isProcessingAttendance = false;
+
   @override
   void initState() {
     super.initState();
@@ -26,25 +28,33 @@ class _AttendanceHomeScreenState extends State<AttendanceHomeScreen> {
   }
 
   Future<void> _handleAttendance({String? earlyLeaveNotes}) async {
+    // Prevent double invocation
+    if (_isProcessingAttendance) {
+      print('HOME: Already processing, ignoring duplicate call');
+      return;
+    }
+    _isProcessingAttendance = true;
+
     print('HOME: Starting _handleAttendance');
     final notifier = context.read<AttendanceNotifier>();
 
-    // 1. Get location first
-    print('HOME: Step 1 - Getting location...');
-    final location = await notifier.getCurrentLocation();
-    if (location == null) {
-      print('HOME: Location null, showing error');
-      if (notifier.state.error != null && mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(notifier.state.error!),
-            backgroundColor: AppColors.danger,
-          ),
-        );
+    try {
+      // 1. Get location first
+      print('HOME: Step 1 - Getting location...');
+      final location = await notifier.getCurrentLocation();
+      if (location == null) {
+        print('HOME: Location null, showing error');
+        if (notifier.state.error != null && mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(notifier.state.error!),
+              backgroundColor: AppColors.danger,
+            ),
+          );
+        }
+        return;
       }
-      return;
-    }
-    print('HOME: Location obtained - lat: ${location.latitude}, lng: ${location.longitude}');
+      print('HOME: Location obtained - lat: ${location.latitude}, lng: ${location.longitude}');
 
     // 2. Navigate to camera capture
     print('HOME: Step 2 - Navigating to camera capture...');
@@ -55,11 +65,15 @@ class _AttendanceHomeScreenState extends State<AttendanceHomeScreen> {
       return;
     }
 
+    // Generate capturedAt timestamp once for idempotency
+    final capturedAt = DateTime.now().toIso8601String();
+
     // 3. Face verify
     print('HOME: Step 3 - Face verify...');
     final type = notifier.state.hasCheckedIn ? 'check_out' : 'check_in';
     final verifyResult = await notifier.faceVerify(
       photoPath: photoPath,
+      capturedAt: capturedAt,
       lat: location.latitude,
       lng: location.longitude,
       type: type,
@@ -95,10 +109,11 @@ class _AttendanceHomeScreenState extends State<AttendanceHomeScreen> {
       }
     }
 
-    // 5. Record attendance
+    // 5. Record attendance (same capturedAt for idempotency)
     print('HOME: Step 5 - Recording attendance...');
     final record = await notifier.recordAttendance(
       photoPath: photoPath,
+      capturedAt: capturedAt,
       lat: location.latitude,
       lng: location.longitude,
       faceMatchScore: verifyResult.score,
@@ -118,6 +133,9 @@ class _AttendanceHomeScreenState extends State<AttendanceHomeScreen> {
       print('HOME: Recording failed with error');
       _handleError(notifier.state.error!);
     }
+    } finally {
+      _isProcessingAttendance = false;
+    }
   }
 
   void _handleError(String error) {
@@ -126,6 +144,12 @@ class _AttendanceHomeScreenState extends State<AttendanceHomeScreen> {
         error.contains('belum terdaftar') ||
         (error.toLowerCase().contains('face') && error.toLowerCase().contains('not'))) {
       _showFaceEnrollmentRequiredDialog();
+    }
+    // Check if error is about geofence/location distance - show as AlertDialog
+    else if (error.contains('jarak') ||
+        error.contains('lokasi') ||
+        error.contains('Dekatkan lokasi')) {
+      _showGeofenceErrorDialog(error);
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -134,6 +158,32 @@ class _AttendanceHomeScreenState extends State<AttendanceHomeScreen> {
         ),
       );
     }
+  }
+
+  void _showGeofenceErrorDialog(String error) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Row(
+          children: [
+            Icon(Icons.location_off, color: AppColors.danger),
+            SizedBox(width: AppSpacing.sm),
+            Text('Lokasi Jauh'),
+          ],
+        ),
+        content: Text(error),
+        actions: [
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Mengerti'),
+          ),
+        ],
+      ),
+    );
   }
 
   Future<void> _showFaceEnrollmentRequiredDialog() async {
@@ -510,8 +560,10 @@ class _AttendanceHomeScreenState extends State<AttendanceHomeScreen> {
             PrimaryButton(
               label: 'Absen Pulang',
               icon: Icons.fingerprint,
-              isLoading: isLoading,
-              onPressed: () => _handleCheckOutWithEarlyLeaveWarning(notifier, minutesToEnd),
+              isLoading: isLoading || _isProcessingAttendance,
+              onPressed: _isProcessingAttendance
+                  ? null
+                  : () => _handleCheckOutWithEarlyLeaveWarning(notifier, minutesToEnd),
             ),
           ],
         ),
@@ -523,8 +575,8 @@ class _AttendanceHomeScreenState extends State<AttendanceHomeScreen> {
           ? 'Selesai'
           : (nextAction == 'check_in' ? 'Absen Masuk' : 'Absen Pulang'),
       icon: isDone ? Icons.check_circle : Icons.fingerprint,
-      isLoading: isLoading,
-      onPressed: isDone || !canAttend
+      isLoading: isLoading || _isProcessingAttendance,
+      onPressed: isDone || !canAttend || _isProcessingAttendance
           ? null
           : () => _handleAttendance(),
     );

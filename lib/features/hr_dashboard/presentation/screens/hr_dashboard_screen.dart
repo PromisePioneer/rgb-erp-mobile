@@ -21,6 +21,7 @@ final _menuGrid = [
   {'label': 'Approval', 'icon': Icons.checklist, 'bg': AppColors.indigo100, 'fg': AppColors.indigo600, 'route': null, 'badge': null},
   {'label': 'Patroli', 'icon': Icons.security, 'bg': AppColors.teal100, 'fg': AppColors.teal600, 'route': null, 'badge': null},
   {'label': 'Laporan Patroli', 'icon': Icons.report_problem, 'bg': AppColors.rose100, 'fg': AppColors.rose600, 'route': '/violation-report', 'badge': null},
+  {'label': 'Laporan Lapangan', 'icon': Icons.edit_note, 'bg': AppColors.violet100, 'fg': AppColors.violet600, 'route': '/report', 'badge': null},
 ];
 
 final _patrolPoints = [

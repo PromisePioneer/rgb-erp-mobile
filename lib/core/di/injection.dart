@@ -127,7 +127,7 @@ class AttendanceApi {
   }
 
   /// POST /attendance - Record attendance (check-in/check-out)
-  /// Body: {type, photo(base64), lat, lng, notes, liveness_passed, face_match_score, early_leave_notes, ...}
+  /// Body: {type, photo(base64), lat, lng, notes, liveness_passed, face_match_score, early_leave_notes, captured_at, ...}
   Future<Map<String, dynamic>> recordAttendance({
     required String type,
     required String photo,
@@ -139,6 +139,7 @@ class AttendanceApi {
     double? freqRatio,
     double? textureScore,
     String? earlyLeaveNotes,
+    String? capturedAt,
   }) async {
     print('ATT_API: Recording attendance - type: $type');
     print('ATT_API: Photo length: ${photo.length} chars');
@@ -156,6 +157,7 @@ class AttendanceApi {
           if (freqRatio != null) 'freq_ratio': freqRatio,
           if (textureScore != null) 'texture_score': textureScore,
           if (earlyLeaveNotes != null) 'early_leave_notes': earlyLeaveNotes,
+          if (capturedAt != null) 'captured_at': capturedAt,
         },
       );
       print('ATT_API: Record attendance response: ${response.data}');
@@ -600,6 +602,55 @@ class ViolationReportApi {
   Future<Map<String, dynamic>> getUserViolations() async {
     try {
       final response = await _dio.get(ApiEndpoints.violationReportHistory);
+      return response.data as Map<String, dynamic>;
+    } on DioException catch (e) {
+      throw ApiException.fromDioException(e);
+    }
+  }
+}
+
+class ReportApi {
+  final Dio _dio;
+
+  ReportApi(this._dio);
+
+  /// GET /report - Get current user's field reports
+  Future<Map<String, dynamic>> getReports() async {
+    try {
+      final response = await _dio.get(ApiEndpoints.reports);
+      return response.data as Map<String, dynamic>;
+    } on DioException catch (e) {
+      throw ApiException.fromDioException(e);
+    }
+  }
+
+  /// GET /report/by-area - Get reports grouped by area
+  Future<Map<String, dynamic>> getReportsByArea() async {
+    try {
+      final response = await _dio.get(ApiEndpoints.reportByArea);
+      return response.data as Map<String, dynamic>;
+    } on DioException catch (e) {
+      throw ApiException.fromDioException(e);
+    }
+  }
+
+  /// POST /report - Submit a field report
+  Future<Map<String, dynamic>> submitReport({
+    required String description,
+    required double latitude,
+    required double longitude,
+    String? location,
+  }) async {
+    try {
+      final response = await _dio.post(
+        ApiEndpoints.reports,
+        data: {
+          'note': description,
+          'lat': latitude,
+          'lng': longitude,
+          if (location != null) 'location': location,
+        },
+      );
       return response.data as Map<String, dynamic>;
     } on DioException catch (e) {
       throw ApiException.fromDioException(e);

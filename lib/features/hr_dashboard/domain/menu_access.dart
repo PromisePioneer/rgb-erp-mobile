@@ -10,7 +10,7 @@ const Map<String, String> menuPrivilegeMapping = {
   'Approval': 'approval',
   'Patroli': 'patrol',
   'Laporan Patroli': 'patrol_report',
-  // 'Laporan Lapangan': 'field_report', // Field report menu not defined yet - ask user before adding
+  'Laporan Lapangan': 'field_report',
 };
 
 /// Menu labels that should be hidden when user already has the data

@@ -25,6 +25,7 @@ class AttendanceRepository {
   Future<AttendanceRecord> recordAttendance({
     required AttendanceType type,
     required String photoBase64,
+    required String capturedAt,
     double? lat,
     double? lng,
     String? notes,
@@ -37,6 +38,7 @@ class AttendanceRepository {
     print('ATT_REPO: Recording attendance - type: ${type.value}');
     print('ATT_REPO: Photo size: ${photoBase64.length} chars (base64)');
     print('ATT_REPO: Location: lat=$lat, lng=$lng');
+    print('ATT_REPO: capturedAt: $capturedAt');
     try {
       final response = await _api.recordAttendance(
         type: type.value,
@@ -49,6 +51,7 @@ class AttendanceRepository {
         freqRatio: freqRatio,
         textureScore: textureScore,
         earlyLeaveNotes: earlyLeaveNotes,
+        capturedAt: capturedAt,
       );
       print('ATT_REPO: Response: $response');
 

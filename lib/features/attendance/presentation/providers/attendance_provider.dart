@@ -156,6 +156,7 @@ class AttendanceNotifier extends ChangeNotifier {
   /// Face verify before attendance
   Future<FaceVerifyResult?> faceVerify({
     required String photoPath,
+    required String capturedAt,
     double? lat,
     double? lng,
     String? type,
@@ -168,14 +169,13 @@ class AttendanceNotifier extends ChangeNotifier {
       print('ATT_PROVIDER: Photo path: $photoPath');
       print('ATT_PROVIDER: Location: lat=$lat, lng=$lng');
       print('ATT_PROVIDER: Type: $type');
+      print('ATT_PROVIDER: capturedAt: $capturedAt');
 
       // Convert photo to base64
       final file = File(photoPath);
       final bytes = await file.readAsBytes();
       final base64Photo = base64Encode(bytes);
       print('ATT_PROVIDER: Photo base64 length: ${base64Photo.length}');
-
-      final capturedAt = DateTime.now().toIso8601String();
 
       print('ATT_PROVIDER: Calling repository.faceVerify()...');
       final result = await _repository.faceVerify(
@@ -241,6 +241,7 @@ class AttendanceNotifier extends ChangeNotifier {
   /// Record attendance (after face verify success)
   Future<AttendanceRecord?> recordAttendance({
     required String photoPath,
+    required String capturedAt,
     double? lat,
     double? lng,
     String? notes,
@@ -257,6 +258,7 @@ class AttendanceNotifier extends ChangeNotifier {
       print('ATT_PROVIDER: Location: lat=$lat, lng=$lng');
       print('ATT_PROVIDER: hasCheckedIn: ${_state.hasCheckedIn}');
       print('ATT_PROVIDER: earlyLeaveNotes: ${earlyLeaveNotes != null ? "provided" : "null"}');
+      print('ATT_PROVIDER: capturedAt: $capturedAt');
 
       // Convert photo to base64
       final file = File(photoPath);
@@ -278,6 +280,7 @@ class AttendanceNotifier extends ChangeNotifier {
         notes: notes,
         faceMatchScore: faceMatchScore,
         earlyLeaveNotes: earlyLeaveNotes,
+        capturedAt: capturedAt,
       );
       print('ATT_PROVIDER: recordAttendance success! ID: ${record.id}');
 
@@ -326,10 +329,14 @@ class AttendanceNotifier extends ChangeNotifier {
       return null;
     }
 
+    // Generate capturedAt timestamp once for idempotency
+    final capturedAt = DateTime.now().toIso8601String();
+
     // 3. Face verify
     final type = _state.hasCheckedIn ? 'check_out' : 'check_in';
     final verifyResult = await faceVerify(
       photoPath: photoPath,
+      capturedAt: capturedAt,
       lat: location.latitude,
       lng: location.longitude,
       type: type,
@@ -360,9 +367,10 @@ class AttendanceNotifier extends ChangeNotifier {
       }
     }
 
-    // 5. Record attendance
+    // 5. Record attendance (same capturedAt for idempotency)
     return await recordAttendance(
       photoPath: photoPath,
+      capturedAt: capturedAt,
       lat: location.latitude,
       lng: location.longitude,
       faceMatchScore: verifyResult.score,

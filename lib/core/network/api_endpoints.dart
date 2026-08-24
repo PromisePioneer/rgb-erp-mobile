@@ -54,8 +54,8 @@ class ApiEndpoints {
   // ====================
   // Report Endpoints
   // ====================
-  static const String reports = '/reports';
-  static const String dailyReports = '/reports/daily';
+  static const String reports = '/report';
+  static const String reportByArea = '/report/by-area';
 
   // ====================
   // Notification Endpoints

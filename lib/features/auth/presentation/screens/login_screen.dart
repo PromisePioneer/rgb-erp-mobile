@@ -24,7 +24,7 @@ class _LoginScreenState extends State<LoginScreen> {
   String? _nikError;
   String? _passwordError;
   bool _showNikInput = false;
-  bool _isLoggingIn = false;
+  bool _isEditingNik = false; // User explicitly chose to edit NIK
 
   @override
   void dispose() {
@@ -34,21 +34,28 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<void> _handlePasswordLogin() async {
-    if (_isLoggingIn) return;
+    final authNotifier = context.read<AuthNotifier>();
+
+    if (authNotifier.state.isLoading) return;
 
     setState(() {
       _nikError = null;
       _passwordError = null;
-      _isLoggingIn = true;
     });
 
-    final nik = _nikController.text.trim();
+    // Get NIK from controller (if editing) or from savedNik
+    String nik;
+    if (_isEditingNik) {
+      nik = _nikController.text.trim();
+    } else {
+      nik = authNotifier.state.savedNik ?? '';
+    }
+
     final password = _passwordController.text;
 
     if (nik.isEmpty) {
       setState(() {
         _nikError = 'NIK wajib diisi';
-        _isLoggingIn = false;
       });
       return;
     }
@@ -56,7 +63,6 @@ class _LoginScreenState extends State<LoginScreen> {
     if (password.isEmpty) {
       setState(() {
         _passwordError = 'Password wajib diisi';
-        _isLoggingIn = false;
       });
       return;
     }
@@ -64,14 +70,12 @@ class _LoginScreenState extends State<LoginScreen> {
     if (password.length < AppConstants.minPasswordLength) {
       setState(() {
         _passwordError = 'Password minimal 6 karakter';
-        _isLoggingIn = false;
       });
       return;
     }
 
     try {
-      final authNotifier = context.read<AuthNotifier>();
-      final result = await authNotifier.login(code: nik, password: password);
+      await authNotifier.login(code: nik, password: password);
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -103,8 +107,11 @@ class _LoginScreenState extends State<LoginScreen> {
         );
       }
     } finally {
+      // Reset editing state after login attempt
       if (mounted) {
-        setState(() => _isLoggingIn = false);
+        setState(() {
+          _isEditingNik = false;
+        });
       }
     }
   }
@@ -204,9 +211,16 @@ class _LoginScreenState extends State<LoginScreen> {
                 child: Column(
                   children: [
                     // Saved NIK display or input
-                    if (!_showNikInput && authState.savedNik != null) ...[
+                    if (!_showNikInput && authState.savedNik != null && !_isEditingNik) ...[
                       GestureDetector(
-                        onTap: () => setState(() => _showNikInput = true),
+                        onTap: () {
+                          // Populate controller with saved NIK before showing input
+                          _nikController.text = authState.savedNik!;
+                          setState(() {
+                            _showNikInput = true;
+                            _isEditingNik = true;
+                          });
+                        },
                         child: Container(
                           padding: const EdgeInsets.all(AppSpacing.lg),
                           decoration: BoxDecoration(
@@ -254,12 +268,11 @@ class _LoginScreenState extends State<LoginScreen> {
                     ] else ...[
                       // NIK input
                       NikTextField(
-                        controller: _showNikInput ? _nikController : null,
-                        initialValue: _showNikInput ? null : authState.savedNik,
+                        controller: _isEditingNik ? _nikController : null,
+                        initialValue: !_isEditingNik ? authState.savedNik : null,
                         onChanged: (value) {
                           setState(() {
                             _nikError = null;
-                            _showNikInput = value.isNotEmpty;
                           });
                         },
                         errorText: _nikError,
@@ -281,20 +294,32 @@ class _LoginScreenState extends State<LoginScreen> {
                     const SizedBox(height: AppSpacing.lg),
 
                     // Login button
-                    ElevatedButton(
-                      onPressed: _isLoggingIn ? null : _handlePasswordLogin,
-                      child: _isLoggingIn
-                          ? const SizedBox(
-                              width: 24,
-                              height: 24,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                valueColor: AlwaysStoppedAnimation<Color>(
-                                  Colors.white,
-                                ),
-                              ),
-                            )
-                          : const Text('Masuk'),
+                    Builder(
+                      builder: (context) {
+                        final authNotifier = context.watch<AuthNotifier>();
+                        final isLoading = authNotifier.state.isLoading;
+                        print('LOGIN_BUILD: isLoading=$isLoading, savedNik=${authNotifier.state.savedNik}, _isEditingNik=$_isEditingNik');
+                        return ElevatedButton(
+                          onPressed: isLoading
+                              ? null
+                              : () {
+                                  print('LOGIN_BUTTON: tapped, _isEditingNik=$_isEditingNik, nikController=${_nikController.text}');
+                                  _handlePasswordLogin();
+                                },
+                          child: isLoading
+                              ? const SizedBox(
+                                  width: 24,
+                                  height: 24,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    valueColor: AlwaysStoppedAnimation<Color>(
+                                      Colors.white,
+                                    ),
+                                  ),
+                                )
+                              : const Text('Masuk'),
+                        );
+                      },
                     ),
                     const SizedBox(height: AppSpacing.lg),
 
