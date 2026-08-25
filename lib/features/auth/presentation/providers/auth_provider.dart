@@ -363,6 +363,34 @@ class AuthNotifier extends ChangeNotifier {
     }
   }
 
+  /// Update hasFaceEnrollment flag (call after successful face enrollment)
+  void setFaceEnrollment(bool enrolled) {
+    if (_state.user != null) {
+      final user = _state.user!;
+      _state = _state.copyWith(
+        user: User(
+          id: user.id,
+          code: user.code,
+          name: user.name,
+          email: user.email,
+          username: user.username,
+          nik: user.nik,
+          department: user.department,
+          position: user.position,
+          photo: user.photo,
+          division: user.division,
+          siteId: user.siteId,
+          siteName: user.siteName,
+          areaId: user.areaId,
+          areaName: user.areaName,
+          privileges: user.privileges,
+          hasFaceEnrollment: enrolled,
+        ),
+      );
+      notifyListeners();
+    }
+  }
+
   /// Clear error
   void clearError() {
     _state = _state.copyWith(clearError: true);

@@ -405,6 +405,7 @@ class _HRDashboardScreenState extends State<HRDashboardScreen> {
   Widget _buildHeader() {
     final authNotifier = context.read<AuthNotifier>();
     final userName = authNotifier.state.user?.name ?? 'User';
+    final userPosition = authNotifier.state.user?.position ?? '';
 
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -425,6 +426,17 @@ class _HRDashboardScreenState extends State<HRDashboardScreen> {
                 color: AppColors.slate800,
               ),
             ),
+            if (userPosition.isNotEmpty) ...[
+              const SizedBox(height: 2),
+              Text(
+                userPosition,
+                style: const TextStyle(
+                  fontSize: 12,
+                  color: AppColors.primary,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
           ],
         ),
         Row(children: [
@@ -537,8 +549,8 @@ class _HRDashboardScreenState extends State<HRDashboardScreen> {
   }
 
   Widget _buildMenuGrid() {
-    final authNotifier = context.read<AuthNotifier>();
-    final user = authNotifier.state.user;
+    // Use watch to rebuild when auth state changes (e.g., hasFaceEnrollment updated)
+    final user = context.watch<AuthNotifier>().state.user;
 
     // Filter menu items based on user privileges
     final filteredMenuGrid = user != null

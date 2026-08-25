@@ -261,7 +261,6 @@ class _FaceCaptureScreenState extends State<FaceCaptureScreen> {
         child: TextButton(
           onPressed: () {
             widget.onCancel?.call();
-            Navigator.pop(context);
           },
           child: Container(
             padding: const EdgeInsets.symmetric(

@@ -266,16 +266,45 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                       ),
                     ] else ...[
-                      // NIK input
-                      NikTextField(
-                        controller: _isEditingNik ? _nikController : null,
-                        initialValue: !_isEditingNik ? authState.savedNik : null,
-                        onChanged: (value) {
-                          setState(() {
-                            _nikError = null;
-                          });
-                        },
-                        errorText: _nikError,
+                      // NIK input - use TextField always for paste support
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          TextFormField(
+                            controller: _nikController,
+                            initialValue: !_isEditingNik ? authState.savedNik : null,
+                            onChanged: (value) {
+                              setState(() {
+                                _nikError = null;
+                                // Enable editing mode on any input (including paste)
+                                if (!_isEditingNik && value.isNotEmpty) {
+                                  _isEditingNik = true;
+                                }
+                              });
+                            },
+                            decoration: InputDecoration(
+                              labelText: 'NIK',
+                              hintText: 'Masukkan NIK Anda',
+                              prefixIcon: const Icon(Icons.badge_outlined, color: AppColors.gray400),
+                              filled: true,
+                              fillColor: _nikError != null ? AppColors.dangerBg : AppColors.gray100,
+                              border: OutlineInputBorder(
+                                borderRadius: AppRadius.input,
+                                borderSide: BorderSide.none,
+                              ),
+                            ),
+                          ),
+                          if (_nikError != null) ...[
+                            const SizedBox(height: 4),
+                            Text(
+                              _nikError!,
+                              style: const TextStyle(
+                                fontSize: 12,
+                                color: AppColors.danger,
+                              ),
+                            ),
+                          ],
+                        ],
                       ),
                     ],
 

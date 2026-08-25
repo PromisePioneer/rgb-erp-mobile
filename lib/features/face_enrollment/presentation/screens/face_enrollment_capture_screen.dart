@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/core.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../../shared/widgets/camera/face_capture_screen.dart';
 import '../providers/face_enrollment_provider.dart';
 
@@ -28,13 +29,17 @@ class FaceEnrollmentCaptureScreen extends StatelessWidget {
 
         if (context.mounted) {
           if (result != null && result.success) {
+            // Update auth state with hasFaceEnrollment = true
+            context.read<AuthNotifier>().setFaceEnrollment(true);
+
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text(result.message),
                 backgroundColor: AppColors.success,
               ),
             );
-            context.go('/face-enrollment');
+            // Redirect to dashboard instead of staying on face enrollment screen
+            context.go('/dashboard');
           } else {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
