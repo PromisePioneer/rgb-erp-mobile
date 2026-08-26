@@ -24,8 +24,8 @@ class AttendanceData extends Equatable {
   final bool hasSchedule;
   final bool canAttend;
   final String? message;
-  final ProjectLocation? project;
-  final ClientLocation? client;
+  final PosLocation? pos; // POS location for geofencing (from schedule.pos)
+  final ClientLocation? client; // Fallback client location
   final ShiftInfo? shift;
 
   const AttendanceData({
@@ -34,7 +34,7 @@ class AttendanceData extends Equatable {
     required this.hasSchedule,
     required this.canAttend,
     this.message,
-    this.project,
+    this.pos,
     this.client,
     this.shift,
   });
@@ -75,8 +75,8 @@ class AttendanceData extends Equatable {
       hasSchedule: json['has_schedule'] as bool? ?? false,
       canAttend: json['can_attend'] as bool? ?? json['has_schedule'] as bool? ?? false,
       message: json['message'] as String?,
-      project: json['project'] != null
-          ? ProjectLocation.fromJson(json['project'] as Map<String, dynamic>)
+      pos: json['pos'] != null
+          ? PosLocation.fromJson(json['pos'] as Map<String, dynamic>)
           : null,
       client: json['client'] != null
           ? ClientLocation.fromJson(json['client'] as Map<String, dynamic>)
@@ -94,21 +94,21 @@ class AttendanceData extends Equatable {
         hasSchedule,
         canAttend,
         message,
-        project,
+        pos,
         client,
         shift,
       ];
 }
 
-/// Project location with coordinates
-class ProjectLocation extends Equatable {
+/// POS location for geofencing (from schedule.pos_id -> poss table)
+class PosLocation extends Equatable {
   final String id;
   final String name;
   final double lat;
   final double lng;
   final String? address;
 
-  const ProjectLocation({
+  const PosLocation({
     required this.id,
     required this.name,
     required this.lat,
@@ -116,12 +116,12 @@ class ProjectLocation extends Equatable {
     this.address,
   });
 
-  factory ProjectLocation.fromJson(Map<String, dynamic> json) {
+  factory PosLocation.fromJson(Map<String, dynamic> json) {
     // Handle id as both int and String
     final idValue = json['id'];
     final id = idValue is int ? idValue.toString() : idValue.toString();
 
-    return ProjectLocation(
+    return PosLocation(
       id: id,
       name: json['name'] as String? ?? '',
       lat: _toDouble(json['lat']),
@@ -134,7 +134,7 @@ class ProjectLocation extends Equatable {
   List<Object?> get props => [id, name, lat, lng, address];
 }
 
-/// Client location with radius
+/// Client location with radius (fallback if POS not available)
 class ClientLocation extends Equatable {
   final String name;
   final double lat;

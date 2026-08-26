@@ -461,7 +461,7 @@ class _AttendanceHomeScreenState extends State<AttendanceHomeScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      data?.project?.name ?? data?.client?.name ?? 'Lokasi Kerja',
+                      data?.pos?.name ?? data?.client?.name ?? 'Lokasi Kerja',
                       style: const TextStyle(
                         fontWeight: FontWeight.w600,
                         color: AppColors.textPrimary,
