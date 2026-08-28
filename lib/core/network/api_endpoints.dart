@@ -1,5 +1,5 @@
 /// API endpoint constants
-/// Base URL: https://somethinghappen.net/api
+/// Base URL: https://api.testing-erp-ges.tech/api
 class ApiEndpoints {
   ApiEndpoints._();
 

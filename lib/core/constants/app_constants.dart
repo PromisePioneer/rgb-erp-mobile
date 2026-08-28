@@ -3,7 +3,7 @@ class AppConstants {
   AppConstants._();
 
   // API Configuration
-  static const String apiBaseUrl = 'https://somethinghappen.net/api';
+  static const String apiBaseUrl = 'https://api.testing-erp-ges.tech/api';
   static const Duration apiTimeout = Duration(seconds: 30);
   static const Duration shortTimeout = Duration(seconds: 5);
 
