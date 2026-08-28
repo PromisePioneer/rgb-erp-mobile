@@ -62,6 +62,7 @@ dependencies:
   freezed_annotation: ^2.4.1
   audioplayers: ^6.8.1
   get_it: ^9.2.1
+  flutter_dotenv: ^5.1.0
 
   # TOTP (One-Time Password) for patrol anti-fraud
   otp: ^3.1.4

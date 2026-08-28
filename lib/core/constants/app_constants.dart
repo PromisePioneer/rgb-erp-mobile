@@ -1,10 +1,13 @@
+import '../environment/environment_config.dart';
+
 /// App-wide constants for RGB ERP Mobile
 class AppConstants {
   AppConstants._();
 
-  // API Configuration
-  static const String apiBaseUrl = 'https://api.testing-erp-ges.tech/api';
-  static const Duration apiTimeout = Duration(seconds: 30);
+  // API Configuration - reads from .env file
+  static String get apiBaseUrl => EnvironmentConfig.apiBaseUrl;
+  static Duration get apiTimeout =>
+      Duration(seconds: EnvironmentConfig.apiTimeout);
   static const Duration shortTimeout = Duration(seconds: 5);
 
   // Storage Keys

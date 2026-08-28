@@ -2,6 +2,9 @@
 export 'constants/app_constants.dart';
 export 'di/injection.dart';
 
+// Environment
+export 'environment/environment_config.dart';
+
 // Theme
 export 'theme/app_colors.dart';
 export 'theme/app_spacing.dart';
