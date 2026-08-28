@@ -44,9 +44,7 @@ app.*.map.json
 /android/app/profile
 /android/app/release
 
-# Environment files
+# Environment files - .env (local dev) should NOT be committed
 .env
-.env.dev
-.env.staging
-.env.production
-!.env.example
+
+# But commit .env.example, .env.dev, .env.staging, .env.production for team reference

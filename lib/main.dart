@@ -25,8 +25,12 @@ final notificationService = globalNotificationService;
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Load environment variables from .env file
-  await dotenv.load(fileName: '.env');
+  // Load environment variables from .env file (optional, will fallback to defaults)
+  try {
+    await dotenv.load(fileName: '.env');
+  } catch (e) {
+    debugPrint('MAIN: .env file not found or error loading, using defaults');
+  }
 
   // Initialize environment configuration
   await EnvironmentConfig.init();

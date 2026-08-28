@@ -32,6 +32,14 @@ class EnvironmentConfig {
   /// Initialize environment from .env file
   /// Call this in main() before runApp()
   static Future<void> init() async {
+    try {
+      // Load .env from assets
+      await dotenv.load(fileName: '.env');
+    } catch (e) {
+      // If loading fails, dotenv will use empty values
+      debugPrint('EnvironmentConfig: Failed to load .env file: $e');
+    }
+
     // Determine which .env file to load based on environment
     final envName = dotenv.env['ENVIRONMENT'] ?? 'dev';
 
@@ -47,8 +55,8 @@ class EnvironmentConfig {
     }
 
     if (kDebugMode) {
-      debugPrint('🌍 App Environment: ${_currentEnvironment!.displayName}');
-      debugPrint('📡 API Base URL: $apiBaseUrl');
+      debugPrint('EnvironmentConfig: App Environment: ${_currentEnvironment!.displayName}');
+      debugPrint('EnvironmentConfig: API Base URL: $apiBaseUrl');
     }
   }
 
@@ -63,7 +71,20 @@ class EnvironmentConfig {
 
   /// Get API base URL from environment
   static String get apiBaseUrl {
-    return dotenv.env['API_BASE_URL'] ?? 'https://api.dev-erp-ges.tech/api';
+    final env = dotenv.env['ENVIRONMENT']?.toLowerCase() ?? 'dev';
+    return dotenv.env['API_BASE_URL'] ?? _getDefaultUrl(env);
+  }
+
+  static String _getDefaultUrl(String env) {
+    switch (env) {
+      case 'production':
+        return 'https://api.testing-erp-ges.tech/api';
+      case 'staging':
+        return 'https://api.somethinghappen.net/api';
+      default:
+        // Dev default - Android emulator
+        return 'http://10.0.2.2:8800/api';
+    }
   }
 
   /// Get API timeout in seconds

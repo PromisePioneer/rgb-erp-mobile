@@ -9,9 +9,9 @@ import '../../data/repositories/auth_repository.dart';
 // Repository Factory
 // ====================
 
-AuthRepository createAuthRepository() {
+AuthRepository createAuthRepository(Dio dio) {
   return AuthRepository(
-    api: AuthApi(Dio()),
+    api: AuthApi(dio),
     storage: StorageService(),
     biometric: BiometricService(),
   );
