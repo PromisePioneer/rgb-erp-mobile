@@ -68,7 +68,7 @@ class ViolationReportDetailScreen extends StatelessWidget {
                     _InfoItem(
                       icon: Icons.business,
                       label: 'Project/Site',
-                      value: violation.projectName ?? '-',
+                      value: violation.areaName ?? '-',
                     ),
                     _InfoItem(
                       icon: Icons.person,
@@ -207,7 +207,7 @@ class ViolationReportDetailScreen extends StatelessWidget {
               Icon(Icons.business, color: Colors.white70, size: 16),
               SizedBox(width: AppSpacing.xs),
               Text(
-                violation.projectName ?? '-',
+                violation.areaName ?? '-',
                 style: TextStyle(
                   fontSize: 14,
                   color: Colors.white70,

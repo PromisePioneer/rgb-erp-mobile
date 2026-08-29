@@ -68,6 +68,21 @@ class ApiEndpoints {
   // Schedule Endpoints
   // ====================
   static const String schedule = '/schedule';
+  static const String shiftRespond = '/shift/{id}/respond';
+  static const String shiftPendingResponses = '/shift/pending-responses';
+
+  // ====================
+  // Backup Offer Endpoints
+  // ====================
+  static const String backupOffers = '/backup-offers';
+  static String backupOfferAccept(String id) => '/backup-offers/$id/accept';
+  static String backupOfferReject(String id) => '/backup-offers/$id/reject';
+
+  // ====================
+  // Coordinator Endpoints
+  // ====================
+  static const String coordinatorAreas = '/coordinator/backup/areas';
+  static const String coordinatorEscalations = '/coordinator/backup/escalations';
 
   // ====================
   // Payroll Endpoints

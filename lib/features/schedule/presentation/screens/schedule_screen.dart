@@ -208,7 +208,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
             const SizedBox(height: 12),
           ],
 
-          // Location / Description
+          // Location / Area & Client
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -230,18 +230,20 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    // Area name
                     Text(
-                      schedule.description,
+                      schedule.areaName,
                       style: const TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.w500,
                         color: AppColors.slate700,
                       ),
                     ),
-                    if (schedule.location != '-') ...[
+                    // Client name (if different from area)
+                    if (schedule.clientName != null && schedule.clientName != schedule.areaName) ...[
                       const SizedBox(height: 2),
                       Text(
-                        schedule.location,
+                        schedule.clientName!,
                         style: const TextStyle(
                           fontSize: 13,
                           color: AppColors.slate500,

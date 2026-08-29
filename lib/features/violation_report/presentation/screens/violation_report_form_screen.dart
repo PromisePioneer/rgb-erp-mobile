@@ -146,10 +146,10 @@ class _ViolationReportFormScreenState extends State<ViolationReportFormScreen> {
               ListView(
                 padding: const EdgeInsets.all(AppSpacing.md),
                 children: [
-                  // Project dropdown
+                  // Area dropdown
                   _buildSection(
-                    'Project/Site',
-                    _buildProjectDropdown(notifier),
+                    'Area/Site',
+                    _buildAreaDropdown(notifier),
                   ),
                   const SizedBox(height: AppSpacing.md),
 
@@ -213,7 +213,7 @@ class _ViolationReportFormScreenState extends State<ViolationReportFormScreen> {
               ),
 
               // Loading overlay
-              if (notifier.state.isLoadingProjects || notifier.state.isLoadingTypes)
+              if (notifier.state.isLoadingAreas || notifier.state.isLoadingTypes)
                 Container(
                   color: Colors.black26,
                   child: Center(
@@ -246,11 +246,11 @@ class _ViolationReportFormScreenState extends State<ViolationReportFormScreen> {
     );
   }
 
-  Widget _buildProjectDropdown(ViolationReportNotifier notifier) {
-    final projects = notifier.state.projects;
-    final selected = notifier.state.selectedProject;
-    final isLoading = notifier.state.isLoadingProjects;
-    final error = notifier.state.projectsError;
+  Widget _buildAreaDropdown(ViolationReportNotifier notifier) {
+    final areas = notifier.state.areas;
+    final selected = notifier.state.selectedArea;
+    final isLoading = notifier.state.isLoadingAreas;
+    final error = notifier.state.areasError;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -263,20 +263,20 @@ class _ViolationReportFormScreenState extends State<ViolationReportFormScreen> {
             border: error != null ? Border.all(color: AppColors.danger) : null,
           ),
           child: DropdownButtonHideUnderline(
-            child: DropdownButton<ViolationProject>(
+            child: DropdownButton<ViolationArea>(
               value: selected,
               hint: Text(
                 isLoading
                     ? 'Memuat...'
-                    : projects.isEmpty
-                        ? 'Tidak ada project'
-                        : 'Pilih project/site',
+                    : areas.isEmpty
+                        ? 'Tidak ada site'
+                        : 'Pilih area',
                 style: TextStyle(
-                  color: projects.isEmpty ? AppColors.gray400 : AppColors.gray400,
+                  color: areas.isEmpty ? AppColors.gray400 : AppColors.gray400,
                 ),
               ),
               isExpanded: true,
-              items: projects.map((p) {
+              items: areas.map((p) {
                 return DropdownMenuItem(
                   value: p,
                   child: Text(
@@ -288,7 +288,7 @@ class _ViolationReportFormScreenState extends State<ViolationReportFormScreen> {
               onChanged: isLoading
                   ? null
                   : (v) {
-                      if (v != null) notifier.selectProject(v);
+                      if (v != null) notifier.selectArea(v);
                     },
             ),
           ),
@@ -303,10 +303,10 @@ class _ViolationReportFormScreenState extends State<ViolationReportFormScreen> {
             ),
           ),
         ],
-        if (projects.isEmpty && !isLoading && error == null) ...[
+        if (areas.isEmpty && !isLoading && error == null) ...[
           const SizedBox(height: 4),
           Text(
-            'Tidak ada project/site yang tersedia',
+            'Tidak ada area yang tersedia',
             style: TextStyle(
               fontSize: 12,
               color: AppColors.gray500,
@@ -322,7 +322,7 @@ class _ViolationReportFormScreenState extends State<ViolationReportFormScreen> {
     final selected = notifier.state.selectedEmployee;
     final isLoading = notifier.state.isLoadingEmployees;
     final error = notifier.state.employeesError;
-    final hasProject = notifier.state.selectedProject != null;
+    final hasArea = notifier.state.selectedArea != null;
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
@@ -335,8 +335,8 @@ class _ViolationReportFormScreenState extends State<ViolationReportFormScreen> {
         child: DropdownButton<ViolationEmployee>(
           value: selected,
           hint: Text(
-            !hasProject
-                ? 'Pilih project dulu'
+            !hasArea
+                ? 'Pilih site dulu'
                 : isLoading
                     ? 'Memuat...'
                     : 'Pilih karyawan',
@@ -352,7 +352,7 @@ class _ViolationReportFormScreenState extends State<ViolationReportFormScreen> {
               ),
             );
           }).toList(),
-          onChanged: !hasProject || isLoading
+          onChanged: !hasArea || isLoading
               ? null
               : (v) {
                   if (v != null) notifier.selectEmployee(v);

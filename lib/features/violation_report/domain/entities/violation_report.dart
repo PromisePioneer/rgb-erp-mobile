@@ -44,8 +44,8 @@ Map<String, dynamic>? _safeToMap(dynamic value) {
 // Entities
 // ====================
 
-/// Project entity for violation report
-class ViolationProject extends Equatable {
+/// Area entity for violation report
+class ViolationArea extends Equatable {
   final int id;
   final String name;
   final String? clientName;
@@ -54,7 +54,7 @@ class ViolationProject extends Equatable {
   final double? lng;
   final int? radiusMeters;
 
-  const ViolationProject({
+  const ViolationArea({
     required this.id,
     required this.name,
     this.clientName,
@@ -64,8 +64,8 @@ class ViolationProject extends Equatable {
     this.radiusMeters,
   });
 
-  factory ViolationProject.fromJson(Map<String, dynamic> json) {
-    return ViolationProject(
+  factory ViolationArea.fromJson(Map<String, dynamic> json) {
+    return ViolationArea(
       id: _parseInt(json['id']),
       name: _parseString(json['name']),
       clientName: json['client_name']?.toString(),
@@ -129,8 +129,9 @@ class ViolationPhoto extends Equatable {
 /// Violation report submission result
 class ViolationReportResult extends Equatable {
   final int id;
-  final int projectId;
-  final String? projectName;
+  final int areaId;
+  final String? areaName;
+  final String? clientName;
   final int employeeId;
   final String? employeeName;
   final int violationTypeId;
@@ -145,8 +146,9 @@ class ViolationReportResult extends Equatable {
 
   const ViolationReportResult({
     required this.id,
-    required this.projectId,
-    this.projectName,
+    required this.areaId,
+    this.areaName,
+    this.clientName,
     required this.employeeId,
     this.employeeName,
     required this.violationTypeId,
@@ -167,8 +169,9 @@ class ViolationReportResult extends Equatable {
 
     return ViolationReportResult(
       id: _parseInt(json['id']),
-      projectId: _parseInt(json['project_id']),
-      projectName: json['project_name']?.toString(),
+      areaId: _parseInt(json['area_id']),
+      areaName: json['area_name']?.toString(),
+      clientName: json['client_name']?.toString(),
       employeeId: _parseInt(json['employee_id']),
       employeeName: json['employee_name']?.toString(),
       violationTypeId: _parseInt(json['violation_type_id']),
@@ -186,8 +189,9 @@ class ViolationReportResult extends Equatable {
   @override
   List<Object?> get props => [
         id,
-        projectId,
-        projectName,
+        areaId,
+        areaName,
+        clientName,
         employeeId,
         employeeName,
         violationTypeId,

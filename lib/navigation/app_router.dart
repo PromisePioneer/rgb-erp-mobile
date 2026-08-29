@@ -16,6 +16,9 @@ import '../features/leave/presentation/screens/leave_form_screen.dart';
 import '../features/settings/presentation/screens/settings_screen.dart';
 import '../features/settings/presentation/screens/change_password_screen.dart';
 import '../features/attendance/presentation/screens/attendance_home_screen.dart';
+import '../features/attendance/presentation/screens/attendance_capture_screen.dart';
+import '../features/attendance/presentation/screens/shift_response_screen.dart';
+import '../features/attendance/presentation/screens/backup_offer_screen.dart';
 import '../features/face_enrollment/presentation/screens/face_enrollment_status_screen.dart';
 import '../features/face_enrollment/presentation/screens/face_enrollment_capture_screen.dart';
 import '../features/attendance/presentation/screens/attendance_capture_screen.dart';
@@ -197,6 +200,22 @@ void initRouter(AuthNotifier authNotifier) {
         builder: (context, state) => const AttendanceCaptureScreen(),
       ),
       GoRoute(
+        path: '/attendance/shift-response',
+        name: 'shift-response',
+        builder: (context, state) {
+          final shiftId = state.uri.queryParameters['shiftId'] ?? '';
+          return ShiftResponseScreen(shiftId: shiftId);
+        },
+      ),
+      GoRoute(
+        path: '/attendance/backup-offer',
+        name: 'backup-offer',
+        builder: (context, state) {
+          final offerId = state.uri.queryParameters['offerId'] ?? '';
+          return BackupOfferScreen(offerId: offerId);
+        },
+      ),
+      GoRoute(
         path: '/face-enrollment/capture',
         name: 'face-enrollment-capture',
         builder: (context, state) => const FaceEnrollmentCaptureScreen(),
@@ -255,6 +274,13 @@ void initRouter(AuthNotifier authNotifier) {
         builder: (context, state) => const ViolationReportHistoryScreen(),
       ),
 
+      // Violation Report Form Screen (full-screen modal) - MUST be before /:id
+      GoRoute(
+        path: '/violation-report/form',
+        name: 'violation-report-form',
+        builder: (context, state) => const ViolationReportFormScreen(),
+      ),
+
       // Violation Report Detail Screen
       GoRoute(
         path: '/violation-report/:id',
@@ -263,13 +289,6 @@ void initRouter(AuthNotifier authNotifier) {
           final id = int.parse(state.pathParameters['id']!);
           return ViolationReportDetailScreen(violationId: id);
         },
-      ),
-
-      // Violation Report Form Screen (full-screen modal)
-      GoRoute(
-        path: '/violation-report/form',
-        name: 'violation-report-form',
-        builder: (context, state) => const ViolationReportFormScreen(),
       ),
 
       // Field Report List Screen

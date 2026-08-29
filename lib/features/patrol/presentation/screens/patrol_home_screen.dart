@@ -534,7 +534,7 @@ class _PatrolHomeScreenState extends State<PatrolHomeScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  schedule.projectName,
+                  schedule.areaName,
                   style: const TextStyle(
                     fontWeight: FontWeight.w600,
                     color: AppColors.textPrimary,

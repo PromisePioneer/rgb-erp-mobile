@@ -211,7 +211,7 @@ class _ViolationCard extends StatelessWidget {
                           ),
                           SizedBox(height: 2),
                           Text(
-                            violation.projectName ?? '-',
+                            violation.areaName ?? '-',
                             style: TextStyle(
                               fontSize: 13,
                               color: AppColors.slate600,

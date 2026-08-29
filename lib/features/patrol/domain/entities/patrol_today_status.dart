@@ -51,16 +51,16 @@ class PatrolTodayStatus extends Equatable {
 }
 
 class ScheduleInfo extends Equatable {
-  final int projectId;
-  final String projectName;
+  final int areaId;
+  final String areaName;
   final int shiftId;
   final String shiftName;
   final String shiftStartTime;
   final String shiftEndTime;
 
   const ScheduleInfo({
-    required this.projectId,
-    required this.projectName,
+    required this.areaId,
+    required this.areaName,
     required this.shiftId,
     required this.shiftName,
     required this.shiftStartTime,
@@ -69,10 +69,10 @@ class ScheduleInfo extends Equatable {
 
   factory ScheduleInfo.fromJson(Map<String, dynamic> json) {
     return ScheduleInfo(
-      projectId: json['project_id'] is int
-          ? json['project_id']
-          : int.tryParse(json['project_id']?.toString() ?? '0') ?? 0,
-      projectName: json['project_name']?.toString() ?? '',
+      areaId: json['area_id'] is int
+          ? json['area_id']
+          : int.tryParse(json['area_id']?.toString() ?? '0') ?? 0,
+      areaName: json['area_name']?.toString() ?? '',
       shiftId: json['shift_id'] is int
           ? json['shift_id']
           : int.tryParse(json['shift_id']?.toString() ?? '0') ?? 0,
@@ -84,8 +84,8 @@ class ScheduleInfo extends Equatable {
 
   @override
   List<Object?> get props => [
-        projectId,
-        projectName,
+        areaId,
+        areaName,
         shiftId,
         shiftName,
         shiftStartTime,

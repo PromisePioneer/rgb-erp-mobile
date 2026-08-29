@@ -6,6 +6,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 
 import 'core/core.dart';
+import 'core/services/notification_dialog_handler.dart';
 import 'features/auth/presentation/providers/auth_provider.dart';
 import 'features/auth/data/repositories/auth_repository.dart';
 import 'features/attendance/presentation/providers/attendance_provider.dart';
@@ -176,10 +177,20 @@ void _setupAlarmNavigation() {
     _navigateToAlarm(message ?? 'Waktunya patroli checkpoint berikutnya!');
   };
 
-  // Setup shift reminder navigation callback
+  // Setup shift reminder notification callback - show dialog
   notificationService.onShiftReminderReceived = (message) {
     debugPrint('MAIN: onShiftReminderReceived called with: $message');
-    _navigateToAttendance(message ?? 'Waktunya absen shift!');
+    notificationDialogHandler.handleShiftReminderNotification(message: message);
+  };
+
+  // Setup backup offer notification callback - show dialog
+  notificationService.onBackupOfferReceived = (message, offerId, scheduleId) {
+    debugPrint('MAIN: onBackupOfferReceived called with: $message, offerId: $offerId');
+    notificationDialogHandler.handleBackupOfferNotification(
+      message: message,
+      offerId: offerId,
+      scheduleId: scheduleId,
+    );
   };
 }
 
@@ -258,8 +269,20 @@ void _navigateToAttendance(String? message) {
   }
 }
 
-class RGBERPApp extends StatelessWidget {
+class RGBERPApp extends StatefulWidget {
   const RGBERPApp({super.key});
+
+  @override
+  State<RGBERPApp> createState() => _RGBERPAppState();
+}
+
+class _RGBERPAppState extends State<RGBERPApp> {
+  @override
+  void initState() {
+    super.initState();
+    // Initialize notification dialog handler
+    notificationDialogHandler.init();
+  }
 
   @override
   Widget build(BuildContext context) {

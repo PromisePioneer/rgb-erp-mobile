@@ -196,6 +196,10 @@ class _HRDashboardScreenState extends State<HRDashboardScreen> {
     });
   }
 
+  Future<void> _onRefresh() async {
+    await context.read<AttendanceNotifier>().loadTodayAttendance();
+  }
+
   void _showPanicTypeSheet() {
     // Show error if location failed
     if (_panicError != null) {
@@ -349,8 +353,11 @@ class _HRDashboardScreenState extends State<HRDashboardScreen> {
         body: SafeArea(
           child: Stack(
             children: [
-              SingleChildScrollView(
-                padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+              RefreshIndicator(
+                onRefresh: _onRefresh,
+                child: SingleChildScrollView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -390,6 +397,7 @@ class _HRDashboardScreenState extends State<HRDashboardScreen> {
                     ),
                   ],
                 ),
+              ),
               ),
               // Panic button - only visible if user has panic_button privilege
               if (user?.hasPrivilege('panic_button') == true)

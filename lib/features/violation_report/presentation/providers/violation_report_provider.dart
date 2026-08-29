@@ -24,10 +24,10 @@ class ViolationReportState extends ChangeNotifier {
   final bool isLoadingViolations;
   final String? violationsError;
 
-  // Projects
-  final List<ViolationProject> projects;
-  final bool isLoadingProjects;
-  final String? projectsError;
+  // Areas
+  final List<ViolationArea> areas;
+  final bool isLoadingAreas;
+  final String? areasError;
 
   // Employees
   final List<ViolationEmployee> employees;
@@ -40,7 +40,7 @@ class ViolationReportState extends ChangeNotifier {
   final String? typesError;
 
   // Selected values
-  final ViolationProject? selectedProject;
+  final ViolationArea? selectedArea;
   final ViolationEmployee? selectedEmployee;
   final ViolationType? selectedCategory;
   final ViolationType? selectedViolationType;
@@ -73,16 +73,16 @@ class ViolationReportState extends ChangeNotifier {
     this.violations = const [],
     this.isLoadingViolations = false,
     this.violationsError,
-    this.projects = const [],
-    this.isLoadingProjects = false,
-    this.projectsError,
+    this.areas = const [],
+    this.isLoadingAreas = false,
+    this.areasError,
     this.employees = const [],
     this.isLoadingEmployees = false,
     this.employeesError,
     this.violationTypes = const [],
     this.isLoadingTypes = false,
     this.typesError,
-    this.selectedProject,
+    this.selectedArea,
     this.selectedEmployee,
     this.selectedCategory,
     this.selectedViolationType,
@@ -101,7 +101,7 @@ class ViolationReportState extends ChangeNotifier {
   /// Check if form is ready to submit
   /// Note: location and time validation are checked in _handleSubmit, not here
   bool get canSubmit {
-    return selectedProject != null &&
+    return selectedArea != null &&
         selectedEmployee != null &&
         selectedViolationType != null &&
         !isSubmitting;
@@ -111,16 +111,16 @@ class ViolationReportState extends ChangeNotifier {
     List<ViolationReportResult>? violations,
     bool? isLoadingViolations,
     String? violationsError,
-    List<ViolationProject>? projects,
-    bool? isLoadingProjects,
-    String? projectsError,
+    List<ViolationArea>? areas,
+    bool? isLoadingAreas,
+    String? areasError,
     List<ViolationEmployee>? employees,
     bool? isLoadingEmployees,
     String? employeesError,
     List<ViolationType>? violationTypes,
     bool? isLoadingTypes,
     String? typesError,
-    ViolationProject? selectedProject,
+    ViolationArea? selectedArea,
     ViolationEmployee? selectedEmployee,
     ViolationType? selectedCategory,
     ViolationType? selectedViolationType,
@@ -143,7 +143,7 @@ class ViolationReportState extends ChangeNotifier {
     bool clearLocation = false,
     bool clearTimeError = false,
     bool clearSubmitError = false,
-    bool clearProjectsError = false,
+    bool clearAreasError = false,
     bool clearEmployeesError = false,
     bool clearTypesError = false,
     bool clearViolationsError = false,
@@ -152,16 +152,16 @@ class ViolationReportState extends ChangeNotifier {
       violations: violations ?? this.violations,
       isLoadingViolations: isLoadingViolations ?? this.isLoadingViolations,
       violationsError: clearViolationsError ? null : (violationsError ?? this.violationsError),
-      projects: projects ?? this.projects,
-      isLoadingProjects: isLoadingProjects ?? this.isLoadingProjects,
-      projectsError: clearProjectsError ? null : (projectsError ?? this.projectsError),
+      areas: areas ?? this.areas,
+      isLoadingAreas: isLoadingAreas ?? this.isLoadingAreas,
+      areasError: clearAreasError ? null : (areasError ?? this.areasError),
       employees: clearEmployees ? const [] : (employees ?? this.employees),
       isLoadingEmployees: isLoadingEmployees ?? this.isLoadingEmployees,
       employeesError: clearEmployeesError ? null : (employeesError ?? this.employeesError),
       violationTypes: violationTypes ?? this.violationTypes,
       isLoadingTypes: isLoadingTypes ?? this.isLoadingTypes,
       typesError: clearTypesError ? null : (typesError ?? this.typesError),
-      selectedProject: clearSelectedProject ? null : (selectedProject ?? this.selectedProject),
+      selectedArea: clearSelectedProject ? null : (selectedArea ?? this.selectedArea),
       selectedEmployee: clearSelectedEmployee ? null : (selectedEmployee ?? this.selectedEmployee),
       selectedCategory: clearSelectedCategory ? null : (selectedCategory ?? this.selectedCategory),
       selectedViolationType: clearSelectedViolationType ? null : (selectedViolationType ?? this.selectedViolationType),
@@ -197,10 +197,10 @@ class ViolationReportNotifier extends ChangeNotifier {
   ViolationReportState _state = ViolationReportState();
   ViolationReportState get state => _state;
 
-  /// Load initial data (projects and violation types)
+  /// Load initial data (areas and violation types)
   Future<void> loadInitialData() async {
     await Future.wait([
-      _loadProjects(),
+      _loadAreas(),
       _loadViolationTypes(),
     ]);
   }
@@ -232,28 +232,28 @@ class ViolationReportNotifier extends ChangeNotifier {
     }
   }
 
-  /// Load projects list
-  Future<void> _loadProjects() async {
-    _state = _state.copyWith(isLoadingProjects: true, clearProjectsError: true);
+  /// Load areas list
+  Future<void> _loadAreas() async {
+    _state = _state.copyWith(isLoadingAreas: true, clearAreasError: true);
     notifyListeners();
 
     try {
-      final projects = await _repository.getProjects();
+      final areas = await _repository.getAreas();
       _state = _state.copyWith(
-        projects: projects,
-        isLoadingProjects: false,
+        areas: areas,
+        isLoadingAreas: false,
       );
       notifyListeners();
     } on ApiException catch (e) {
       _state = _state.copyWith(
-        isLoadingProjects: false,
-        projectsError: e.message,
+        isLoadingAreas: false,
+        areasError: e.message,
       );
       notifyListeners();
     } catch (e) {
       _state = _state.copyWith(
-        isLoadingProjects: false,
-        projectsError: 'Gagal memuat daftar project',
+        isLoadingAreas: false,
+        areasError: 'Gagal memuat daftar area',
       );
       notifyListeners();
     }
@@ -286,8 +286,8 @@ class ViolationReportNotifier extends ChangeNotifier {
     }
   }
 
-  /// Load employees for selected project
-  Future<void> loadEmployeesByProject(int projectId) async {
+  /// Load employees for selected area
+  Future<void> loadEmployeesByArea(int areaId) async {
     _state = _state.copyWith(
       isLoadingEmployees: true,
       clearEmployeesError: true,
@@ -297,7 +297,7 @@ class ViolationReportNotifier extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final employees = await _repository.getEmployeesByProject(projectId);
+      final employees = await _repository.getEmployeesByArea(areaId);
       _state = _state.copyWith(
         employees: employees,
         isLoadingEmployees: false,
@@ -318,16 +318,16 @@ class ViolationReportNotifier extends ChangeNotifier {
     }
   }
 
-  /// Select project
-  void selectProject(ViolationProject project) {
+  /// Select area
+  void selectArea(ViolationArea area) {
     _state = _state.copyWith(
-      selectedProject: project,
+      selectedArea: area,
       clearSelectedEmployee: true,
       clearSelectedViolationType: true,
       clearEmployees: true,
     );
     notifyListeners();
-    loadEmployeesByProject(project.id);
+    loadEmployeesByArea(area.id);
   }
 
   /// Select employee
@@ -456,7 +456,7 @@ class ViolationReportNotifier extends ChangeNotifier {
       final capturedAt = DateTime.now().toIso8601String();
 
       await _repository.submitViolation(
-        projectId: _state.selectedProject!.id,
+        areaId: _state.selectedArea!.id,
         employeeId: _state.selectedEmployee!.id,
         violationTypeId: _state.selectedViolationType!.id,
         capturedAt: capturedAt,
@@ -503,7 +503,7 @@ class ViolationReportNotifier extends ChangeNotifier {
   void clearError() {
     _state = _state.copyWith(
       clearSubmitError: true,
-      clearProjectsError: true,
+      clearAreasError: true,
       clearEmployeesError: true,
       clearTypesError: true,
       clearTimeError: true,

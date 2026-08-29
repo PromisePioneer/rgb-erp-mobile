@@ -1,13 +1,11 @@
 import 'package:equatable/equatable.dart';
 
-/// Parse server datetime string (handles both with and without Z suffix)
+/// Parse server datetime string - assume server returns UTC with Z suffix
 DateTime _parseServerDateTime(String value) {
-  // If already has Z suffix, parse directly
-  if (value.endsWith('Z')) {
-    return DateTime.parse(value);
-  }
-  // Otherwise add Z to indicate UTC
-  return DateTime.parse(value + 'Z');
+  // Parse as UTC (server returns ISO8601 with Z suffix)
+  final dt = DateTime.parse(value);
+  // Convert to local timezone for display
+  return dt.toLocal();
 }
 
 /// Attendance type enum - matches backend 'check_in' | 'check_out'

@@ -7,6 +7,14 @@ import '../../../../shared/widgets/inputs/app_text_field.dart';
 import '../../../../shared/widgets/layout/top_gradient_background.dart';
 import '../../domain/domain.dart';
 import '../providers/attendance_provider.dart';
+import '../../../backup_offer/domain/models/backup_offer.dart';
+import '../../../backup_offer/domain/models/shift_response.dart';
+import '../../../backup_offer/data/repositories/backup_offer_repository.dart';
+import '../../../backup_offer/data/repositories/shift_response_repository.dart';
+import '../../../backup_offer/presentation/providers/backup_offer_provider.dart';
+import '../../../backup_offer/presentation/providers/shift_response_provider.dart';
+import '../../../backup_offer/presentation/widgets/backup_offer_dialog.dart';
+import '../../../backup_offer/presentation/widgets/shift_response_dialog.dart';
 
 /// Attendance home screen
 class AttendanceHomeScreen extends StatefulWidget {

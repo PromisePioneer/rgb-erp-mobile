@@ -508,8 +508,8 @@ class ViolationReportApi {
 
   ViolationReportApi(this._dio);
 
-  /// GET /patrol-violation/projects - Get projects for violation report
-  Future<Map<String, dynamic>> getProjects() async {
+  /// GET /patrol-violation/projects - Get areas for violation report
+  Future<Map<String, dynamic>> getAreas() async {
     try {
       final response = await _dio.get(ApiEndpoints.violationReportProjects);
       return response.data as Map<String, dynamic>;
@@ -518,12 +518,12 @@ class ViolationReportApi {
     }
   }
 
-  /// GET /patrol-violation/employees - Get employees by project
-  Future<Map<String, dynamic>> getEmployeesByProject(int projectId) async {
+  /// GET /patrol-violation/employees - Get employees by area
+  Future<Map<String, dynamic>> getEmployeesByArea(int areaId) async {
     try {
       final response = await _dio.get(
         ApiEndpoints.violationReportEmployees,
-        queryParameters: {'project_id': projectId},
+        queryParameters: {'area_id': areaId},
       );
       return response.data as Map<String, dynamic>;
     } on DioException catch (e) {
@@ -533,7 +533,7 @@ class ViolationReportApi {
 
   /// POST /patrol-violation - Submit violation report (multipart)
   Future<Map<String, dynamic>> submitViolation({
-    required int projectId,
+    required int areaId,
     required int employeeId,
     required int violationTypeId,
     required String capturedAt,
@@ -546,7 +546,7 @@ class ViolationReportApi {
     try {
       final formData = FormData();
 
-      formData.fields.add(MapEntry('projects_id', projectId.toString()));
+      formData.fields.add(MapEntry('area_id', areaId.toString()));
       formData.fields.add(MapEntry('employee_id', employeeId.toString()));
       formData.fields.add(MapEntry('violation_type_id', violationTypeId.toString()));
       formData.fields.add(MapEntry('captured_at', capturedAt));
@@ -649,6 +649,82 @@ class ReportApi {
           'lat': latitude,
           'lng': longitude,
           if (location != null) 'location': location,
+        },
+      );
+      return response.data as Map<String, dynamic>;
+    } on DioException catch (e) {
+      throw ApiException.fromDioException(e);
+    }
+  }
+}
+
+class BackupOfferApi {
+  final Dio _dio;
+
+  BackupOfferApi(this._dio);
+
+  /// GET /backup-offers - Get pending backup offers
+  Future<Map<String, dynamic>> getPendingOffers() async {
+    try {
+      final response = await _dio.get(ApiEndpoints.backupOffers);
+      return response.data as Map<String, dynamic>;
+    } on DioException catch (e) {
+      throw ApiException.fromDioException(e);
+    }
+  }
+
+  /// POST /backup-offers/{id}/accept - Accept backup offer
+  Future<Map<String, dynamic>> acceptOffer(String offerId) async {
+    try {
+      final response = await _dio.post(ApiEndpoints.backupOfferAccept(offerId));
+      return response.data as Map<String, dynamic>;
+    } on DioException catch (e) {
+      throw ApiException.fromDioException(e);
+    }
+  }
+
+  /// POST /backup-offers/{id}/reject - Reject backup offer
+  Future<Map<String, dynamic>> rejectOffer(String offerId, {String? reason}) async {
+    try {
+      final response = await _dio.post(
+        ApiEndpoints.backupOfferReject(offerId),
+        data: reason != null ? {'reason': reason} : null,
+      );
+      return response.data as Map<String, dynamic>;
+    } on DioException catch (e) {
+      throw ApiException.fromDioException(e);
+    }
+  }
+}
+
+class ShiftResponseApi {
+  final Dio _dio;
+
+  ShiftResponseApi(this._dio);
+
+  /// GET /shift/pending-responses - Get pending shift responses
+  Future<Map<String, dynamic>> getPendingResponses() async {
+    try {
+      final response = await _dio.get(ApiEndpoints.shiftPendingResponses);
+      return response.data as Map<String, dynamic>;
+    } on DioException catch (e) {
+      throw ApiException.fromDioException(e);
+    }
+  }
+
+  /// POST /shift/{id}/respond - Respond to shift (accept/reject)
+  Future<Map<String, dynamic>> respond({
+    required String scheduleId,
+    required String action,
+    String? reason,
+  }) async {
+    try {
+      final endpoint = ApiEndpoints.shiftRespond.replaceAll('{id}', scheduleId);
+      final response = await _dio.post(
+        endpoint,
+        data: {
+          'action': action,
+          if (reason != null) 'reason': reason,
         },
       );
       return response.data as Map<String, dynamic>;

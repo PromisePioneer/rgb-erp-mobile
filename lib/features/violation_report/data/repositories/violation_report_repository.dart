@@ -53,10 +53,10 @@ class ViolationReportRepository {
     }
   }
 
-  /// Get projects for violation report
-  Future<List<ViolationProject>> getProjects() async {
+  /// Get areas for violation report
+  Future<List<ViolationArea>> getAreas() async {
     try {
-      final response = await _api.getProjects();
+      final response = await _api.getAreas();
 
       // Handle different response formats safely
       final responseData = response['data'];
@@ -72,22 +72,22 @@ class ViolationReportRepository {
       }
 
       return dataList
-          .map((json) => ViolationProject.fromJson(_safeToMap(json)!))
+          .map((json) => ViolationArea.fromJson(_safeToMap(json)!))
           .toList();
     } on ApiException {
       rethrow;
     } catch (e) {
       throw ApiException(
-        message: 'Gagal memuat daftar project: $e',
+        message: 'Gagal memuat daftar area: $e',
         statusCode: 500,
       );
     }
   }
 
-  /// Get employees by project
-  Future<List<ViolationEmployee>> getEmployeesByProject(int projectId) async {
+  /// Get employees by area
+  Future<List<ViolationEmployee>> getEmployeesByArea(int areaId) async {
     try {
-      final response = await _api.getEmployeesByProject(projectId);
+      final response = await _api.getEmployeesByArea(areaId);
 
       // Handle different response formats safely
       final responseData = response['data'];
@@ -117,7 +117,7 @@ class ViolationReportRepository {
 
   /// Submit violation report
   Future<ViolationReportResult> submitViolation({
-    required int projectId,
+    required int areaId,
     required int employeeId,
     required int violationTypeId,
     required String capturedAt,
@@ -129,7 +129,7 @@ class ViolationReportRepository {
   }) async {
     try {
       final response = await _api.submitViolation(
-        projectId: projectId,
+        areaId: areaId,
         employeeId: employeeId,
         violationTypeId: violationTypeId,
         capturedAt: capturedAt,

@@ -60,6 +60,9 @@ class NotificationService {
   /// Callback when shift reminder is received (foreground only)
   void Function(String? message)? onShiftReminderReceived;
 
+  /// Callback when backup offer is received (foreground only)
+  void Function(String? message, String? offerId, String? scheduleId)? onBackupOfferReceived;
+
   /// Callback when new notification is received
   void Function(NotificationItem)? onNotificationReceived;
 
@@ -204,6 +207,7 @@ class NotificationService {
 
     final isPatrolAlarm = data['type'] == 'patrol_alarm';
     final isShiftReminder = data['type'] == 'shift_reminder';
+    final isBackupOffer = data['type'] == 'backup_offer';
 
     // Check if this is a patrol alarm
     if (isPatrolAlarm && !_isAlarmDismissed) {
@@ -243,6 +247,20 @@ class NotificationService {
       onShiftReminderReceived?.call(reminderMessage);
     }
 
+    // Check if this is a backup offer notification
+    if (isBackupOffer) {
+      debugPrint('NOTIF: This is a backup_offer!');
+      final offerId = data['backup_offer_id'];
+      final scheduleId = data['schedule_id'];
+      final offerMessage = message.notification?.body ?? 'Anda mendapat tawaran backup jaga!';
+
+      // Stop alarm if playing
+      _stopAlarmSound();
+
+      // Trigger callback for backup offer
+      onBackupOfferReceived?.call(offerMessage, offerId, scheduleId);
+    }
+
     await _showLocalNotification(
       title: title,
       body: body,
@@ -250,7 +268,7 @@ class NotificationService {
       isAlarm: isPatrolAlarm || isShiftReminder,
       channelId: isPatrolAlarm
           ? 'patrol_alarm'
-          : (isShiftReminder ? 'shift_reminder' : 'default'),
+          : (isShiftReminder ? 'shift_reminder' : (isBackupOffer ? 'backup_offer' : 'default')),
     );
 
     // Add to notification list
@@ -272,15 +290,16 @@ class NotificationService {
     final effectiveChannelId = channelId ?? (isAlarm ? 'default' : 'default');
     final isShiftReminder = effectiveChannelId == 'shift_reminder';
     final isPatrolAlarm = effectiveChannelId == 'patrol_alarm';
+    final isBackupOffer = effectiveChannelId == 'backup_offer';
 
     final androidDetails = AndroidNotificationDetails(
       effectiveChannelId,
       isPatrolAlarm
           ? 'Alarm Patroli'
-          : (isShiftReminder ? 'Pengingat Shift' : 'Notifikasi'),
+          : (isShiftReminder ? 'Pengingat Shift' : (isBackupOffer ? 'Backup Jaga' : 'Notifikasi')),
       channelDescription: isPatrolAlarm
           ? 'Notifikasi patroli checkpoint'
-          : (isShiftReminder ? 'Pengingat jadwal shift' : 'Notifikasi umum'),
+          : (isShiftReminder ? 'Pengingat jadwal shift' : (isBackupOffer ? 'Tawaran backup jaga' : 'Notifikasi umum')),
       importance: isAlarm ? Importance.max : Importance.high,
       priority: isAlarm ? Priority.high : Priority.high,
       ongoing: isAlarm,
@@ -305,7 +324,9 @@ class NotificationService {
         ? AppConstants.shiftReminderNotificationId
         : (isPatrolAlarm
             ? AppConstants.patrolAlarmNotificationId
-            : DateTime.now().millisecondsSinceEpoch ~/ 1000);
+            : (isBackupOffer
+                ? AppConstants.patrolAlarmNotificationId + 1 // Different ID for backup offers
+                : DateTime.now().millisecondsSinceEpoch ~/ 1000));
 
     await _localNotif.show(
       notificationId,
@@ -330,6 +351,9 @@ class NotificationService {
       // Stop alarm sound for shift reminders and navigate to attendance
       _stopAlarmSound();
       _navigateToAttendance();
+    } else if (type == 'backup_offer') {
+      // Navigate to backup offer screen
+      _navigateToBackupOffer();
     }
   }
 
@@ -346,6 +370,9 @@ class NotificationService {
       // Stop alarm sound and navigate to attendance screen
       _stopAlarmSound();
       _navigateToAttendance();
+    } else if (payload == 'backup_offer') {
+      // Navigate to backup offer screen
+      _navigateToBackupOffer();
     } else {
       // Navigate to schedule screen for other notifications
       _navigateToSchedule();
@@ -386,6 +413,13 @@ class NotificationService {
     // This will be called from main.dart which handles actual navigation
     // We use a callback mechanism instead of directly accessing router
     debugPrint('NotificationService: Should navigate to /attendance');
+  }
+
+  /// Navigate to backup offer screen
+  void _navigateToBackupOffer() {
+    // This will be called from main.dart which handles actual navigation
+    // We use a callback mechanism instead of directly accessing router
+    debugPrint('NotificationService: Should navigate to /backup-offers');
   }
 
   /// Register FCM token with backend
@@ -703,6 +737,13 @@ Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   // Handle shift reminder - also shows as alarm notification
   if (type == 'shift_reminder') {
     debugPrint('NotificationService: Background shift reminder received');
+    // Background handler - notification will be shown by system
+    // Just log for now
+  }
+
+  // Handle backup offer
+  if (type == 'backup_offer') {
+    debugPrint('NotificationService: Background backup offer received');
     // Background handler - notification will be shown by system
     // Just log for now
   }

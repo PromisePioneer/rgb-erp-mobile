@@ -5,7 +5,8 @@ class ScheduleItem extends Equatable {
   final String id;
   final DateTime date;
   final String title;
-  final String description;
+  final String areaName;
+  final String? clientName;
   final String? time;
   final String location;
 
@@ -13,7 +14,8 @@ class ScheduleItem extends Equatable {
     required this.id,
     required this.date,
     required this.title,
-    required this.description,
+    required this.areaName,
+    this.clientName,
     this.time,
     required this.location,
   });
@@ -23,9 +25,10 @@ class ScheduleItem extends Equatable {
       id: json['id'] as String,
       date: DateTime.parse(json['date'] as String),
       title: json['title'] as String,
-      description: json['description'] as String,
+      areaName: json['description'] as String? ?? '-',
+      clientName: json['client_name'] as String?,
       time: json['time'] as String?,
-      location: json['location'] as String,
+      location: json['location'] as String? ?? '-',
     );
   }
 
@@ -34,12 +37,13 @@ class ScheduleItem extends Equatable {
       'id': id,
       'date': date.toIso8601String().split('T').first,
       'title': title,
-      'description': description,
+      'description': areaName,
+      'client_name': clientName,
       'time': time,
       'location': location,
     };
   }
 
   @override
-  List<Object?> get props => [id, date, title, description, time, location];
+  List<Object?> get props => [id, date, title, areaName, clientName, time, location];
 }
