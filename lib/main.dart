@@ -7,6 +7,7 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 
 import 'core/core.dart';
 import 'core/services/notification_dialog_handler.dart';
+import 'core/services/foreground_task_manager.dart';
 import 'features/auth/presentation/providers/auth_provider.dart';
 import 'features/auth/data/repositories/auth_repository.dart';
 import 'features/attendance/presentation/providers/attendance_provider.dart';
@@ -38,6 +39,10 @@ void main() async {
 
   // Initialize Firebase
   await Firebase.initializeApp();
+
+  // Foreground service disabled for now (causes crash)
+  // await foregroundTaskManager.init();
+  // await foregroundTaskManager.startService();
 
   // Register background message handler (REQUIRED - for FCM when app is killed)
   FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
@@ -178,9 +183,9 @@ void _setupAlarmNavigation() {
   };
 
   // Setup shift reminder notification callback - show dialog
-  notificationService.onShiftReminderReceived = (message) {
-    debugPrint('MAIN: onShiftReminderReceived called with: $message');
-    notificationDialogHandler.handleShiftReminderNotification(message: message);
+  notificationService.onShiftReminderReceived = (message, scheduleId) {
+    debugPrint('MAIN: onShiftReminderReceived called with: $message, scheduleId: $scheduleId');
+    notificationDialogHandler.handleShiftReminderNotification(message: message, scheduleId: scheduleId);
   };
 
   // Setup backup offer notification callback - show dialog

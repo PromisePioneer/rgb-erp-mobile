@@ -33,6 +33,7 @@ class _ShiftResponseScreenState extends State<ShiftResponseScreen> {
   }
 
   Future<void> _loadShift() async {
+    // Load pending responses to check if this shift exists and show details
     await _notifier.loadPendingResponses();
     final shifts = _notifier.state.pendingShifts;
     final found = shifts.where((s) => s.id == widget.shiftId).firstOrNull;
@@ -40,9 +41,8 @@ class _ShiftResponseScreenState extends State<ShiftResponseScreen> {
     setState(() {
       _shift = found;
       _isLoading = false;
-      if (found == null) {
-        _error = 'Shift tidak ditemukan';
-      }
+      // Note: We don't show error even if not found - accept/reject will still work
+      // The backend will validate if user has access to this schedule
     });
   }
 
@@ -146,11 +146,12 @@ class _ShiftResponseScreenState extends State<ShiftResponseScreen> {
   }
 
   Widget _buildContent() {
-    final shift = _shift!;
-    return Padding(
+    final shift = _shift;
+    return SingleChildScrollView(
       padding: const EdgeInsets.all(AppSpacing.lg),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
+        mainAxisSize: MainAxisSize.min,
         children: [
           // Info Card
           Container(
@@ -159,24 +160,29 @@ class _ShiftResponseScreenState extends State<ShiftResponseScreen> {
               color: AppColors.sky50,
               borderRadius: AppRadius.radiusLg,
             ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildRow(Icons.calendar_today, 'Tanggal', shift.date),
-                const SizedBox(height: AppSpacing.sm),
-                if (shift.areaName != null) _buildRow(Icons.location_on, 'Area', shift.areaName!),
-                if (shift.posName != null) ...[
-                  const SizedBox(height: AppSpacing.sm),
-                  _buildRow(Icons.place, 'POS', shift.posName!),
-                ],
-                if (shift.shiftName != null) ...[
-                  const SizedBox(height: AppSpacing.sm),
-                  _buildRow(Icons.access_time, 'Shift', shift.shiftName!),
-                ],
-                const SizedBox(height: AppSpacing.sm),
-                _buildRow(Icons.schedule, 'Jam Mulai', shift.shiftStartTime),
-              ],
-            ),
+            child: shift != null
+                ? Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildRow(Icons.calendar_today, 'Tanggal', shift.date),
+                      const SizedBox(height: AppSpacing.sm),
+                      if (shift.areaName != null) _buildRow(Icons.location_on, 'Area', shift.areaName!),
+                      if (shift.posName != null) ...[
+                        const SizedBox(height: AppSpacing.sm),
+                        _buildRow(Icons.place, 'POS', shift.posName!),
+                      ],
+                      if (shift.shiftName != null) ...[
+                        const SizedBox(height: AppSpacing.sm),
+                        _buildRow(Icons.access_time, 'Shift', shift.shiftName!),
+                      ],
+                      const SizedBox(height: AppSpacing.sm),
+                      _buildRow(Icons.schedule, 'Jam Mulai', shift.shiftStartTime),
+                    ],
+                  )
+                : const Text(
+                    'Loading shift details...',
+                    style: TextStyle(color: AppColors.textSecondary),
+                  ),
           ),
 
           const SizedBox(height: AppSpacing.lg),
@@ -203,48 +209,50 @@ class _ShiftResponseScreenState extends State<ShiftResponseScreen> {
             ),
           ),
 
-          const Spacer(),
+          const SizedBox(height: AppSpacing.xl),
 
           // Buttons
-          Row(
-            children: [
-              Expanded(
-                child: OutlinedButton(
-                  onPressed: _isSubmitting ? null : _reject,
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: AppColors.danger,
-                    side: const BorderSide(color: AppColors.danger),
-                    padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
+          SizedBox(
+            height: 50,
+            child: Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: _isSubmitting ? null : _reject,
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: AppColors.danger,
+                      side: const BorderSide(color: AppColors.danger),
+                    ),
+                    child: _isSubmitting
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Text('TOLAK'),
                   ),
-                  child: _isSubmitting
-                      ? const SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : const Text('TOLAK'),
                 ),
-              ),
-              const SizedBox(width: AppSpacing.md),
-              Expanded(
-                child: ElevatedButton(
-                  onPressed: _isSubmitting ? null : _accept,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.success,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
+                const SizedBox(width: AppSpacing.md),
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: _isSubmitting ? null : _accept,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.success,
+                      foregroundColor: Colors.white,
+                    ),
+                    child: _isSubmitting
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                          )
+                        : const Text('TERIMA'),
                   ),
-                  child: _isSubmitting
-                      ? const SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-                        )
-                      : const Text('TERIMA'),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
+          const SizedBox(height: AppSpacing.lg),
         ],
       ),
     );

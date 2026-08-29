@@ -949,86 +949,89 @@ class _NotificationButton extends StatelessWidget {
                 color: Colors.white,
                 borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
               ),
-              child: Column(
-                children: [
-                  // Handle bar
-                  GestureDetector(
-                    onTap: () {}, // Consume tap
-                    child: Container(
-                      margin: const EdgeInsets.only(top: 12),
-                      width: 40,
-                      height: 4,
-                      decoration: BoxDecoration(
-                        color: AppColors.slate300,
-                        borderRadius: BorderRadius.circular(2),
+              child: Material(
+                color: Colors.white,
+                child: Column(
+                  children: [
+                    // Handle bar
+                    GestureDetector(
+                      onTap: () {}, // Consume tap
+                      child: Container(
+                        margin: const EdgeInsets.only(top: 12),
+                        width: 40,
+                        height: 4,
+                        decoration: BoxDecoration(
+                          color: AppColors.slate300,
+                          borderRadius: BorderRadius.circular(2),
+                        ),
                       ),
                     ),
-                  ),
-                  // Header
-                  Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Text(
-                          'Notifikasi',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: AppColors.slate800,
-                          ),
-                        ),
-                        if (notifService.unreadCount > 0)
-                          TextButton(
-                            onPressed: () {
-                              notifService.markAllAsRead();
-                            },
-                            child: const Text('Tandai semua dibaca'),
-                          ),
-                      ],
-                    ),
-                  ),
-                  const Divider(height: 1),
-                  // Notification list
-                  Expanded(
-                    child: notifService.notifications.isEmpty
-                        ? Center(
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(Icons.notifications_none, size: 64, color: AppColors.slate300),
-                                const SizedBox(height: 16),
-                                Text(
-                                  'Belum ada notifikasi',
-                                  style: TextStyle(color: AppColors.slate500),
-                                ),
-                              ],
+                    // Header
+                    Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text(
+                            'Notifikasi',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.slate800,
                             ),
-                          )
-                        : ListView.separated(
-                            controller: scrollController,
-                            padding: const EdgeInsets.symmetric(vertical: 8),
-                            itemCount: notifService.notifications.length,
-                            separatorBuilder: (_, __) => const Divider(height: 1, indent: 72),
-                            itemBuilder: (context, index) {
-                              final notif = notifService.notifications[index];
-                              return _NotificationItem(
-                                notification: notif,
-                                onTap: () {
-                                  notifService.markAsRead(notif.id);
-                                  Navigator.pop(sheetContext);
-                                  // Navigate based on type
-                                  if (notif.type == 'patrol_alarm') {
-                                    context.push('/patrol');
-                                  } else if (notif.type == 'shift_reminder') {
-                                    context.push('/attendance');
-                                  }
-                                },
-                              );
-                            },
                           ),
-                  ),
-                ],
+                          if (notifService.unreadCount > 0)
+                            TextButton(
+                              onPressed: () {
+                                notifService.markAllAsRead();
+                              },
+                              child: const Text('Tandai semua dibaca'),
+                            ),
+                        ],
+                      ),
+                    ),
+                    const Divider(height: 1),
+                    // Notification list
+                    Expanded(
+                      child: notifService.notifications.isEmpty
+                          ? Center(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(Icons.notifications_none, size: 64, color: AppColors.slate300),
+                                  const SizedBox(height: 16),
+                                  Text(
+                                    'Belum ada notifikasi',
+                                    style: TextStyle(color: AppColors.slate500),
+                                  ),
+                                ],
+                              ),
+                            )
+                          : ListView.separated(
+                              controller: scrollController,
+                              padding: const EdgeInsets.symmetric(vertical: 8),
+                              itemCount: notifService.notifications.length,
+                              separatorBuilder: (_, __) => const Divider(height: 1, indent: 72),
+                              itemBuilder: (context, index) {
+                                final notif = notifService.notifications[index];
+                                return _NotificationItem(
+                                  notification: notif,
+                                  onTap: () {
+                                    notifService.markAsRead(notif.id);
+                                    Navigator.pop(sheetContext);
+                                    // Navigate based on type
+                                    if (notif.type == 'patrol_alarm') {
+                                      context.push('/patrol');
+                                    } else if (notif.type == 'shift_reminder') {
+                                      context.push('/attendance');
+                                    }
+                                  },
+                                );
+                              },
+                            ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),

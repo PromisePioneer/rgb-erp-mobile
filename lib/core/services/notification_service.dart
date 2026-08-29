@@ -58,7 +58,7 @@ class NotificationService {
   void Function(String? message)? onPatrolAlarmReceived;
 
   /// Callback when shift reminder is received (foreground only)
-  void Function(String? message)? onShiftReminderReceived;
+  void Function(String? message, String? scheduleId)? onShiftReminderReceived;
 
   /// Callback when backup offer is received (foreground only)
   void Function(String? message, String? offerId, String? scheduleId)? onBackupOfferReceived;
@@ -243,8 +243,9 @@ class NotificationService {
 
       // Navigate to attendance screen via static callback
       final reminderMessage = message.notification?.body ?? 'Waktunya absen shift!';
-      debugPrint('NOTIF: Calling onShiftReminderReceived with: $reminderMessage');
-      onShiftReminderReceived?.call(reminderMessage);
+      final scheduleId = data['schedule_id'];
+      debugPrint('NOTIF: Calling onShiftReminderReceived with: $reminderMessage, scheduleId: $scheduleId');
+      onShiftReminderReceived?.call(reminderMessage, scheduleId);
     }
 
     // Check if this is a backup offer notification
@@ -367,12 +368,15 @@ class NotificationService {
       _stopAlarmSound();
       _navigateToPatrol();
     } else if (payload == 'shift_reminder') {
-      // Stop alarm sound and navigate to attendance screen
+      // Stop alarm sound and navigate to shift response screen
       _stopAlarmSound();
-      _navigateToAttendance();
+      // Call the callback to load data and navigate (no scheduleId from local notification)
+      onShiftReminderReceived?.call(null, null);
     } else if (payload == 'backup_offer') {
-      // Navigate to backup offer screen
-      _navigateToBackupOffer();
+      // Stop alarm sound
+      _stopAlarmSound();
+      // Call the callback to load data and navigate
+      onBackupOfferReceived?.call(null, null, null);
     } else {
       // Navigate to schedule screen for other notifications
       _navigateToSchedule();
