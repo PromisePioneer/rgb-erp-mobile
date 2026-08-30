@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:forui/forui.dart';
+
 import '../../../../core/core.dart';
+import '../../../../shared/widgets/buttons/primary_button.dart';
+import '../../../../shared/widgets/feedback/loading_indicator.dart';
+import '../../../../shared/widgets/icons/forui_icon_map.dart';
 import '../../../backup_offer/domain/models/backup_offer.dart';
 import '../../../backup_offer/data/repositories/backup_offer_repository.dart';
 import '../../../backup_offer/presentation/providers/backup_offer_provider.dart';
@@ -88,6 +93,7 @@ class _BackupOfferScreenState extends State<BackupOfferScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = FTheme.of(context);
     return Scaffold(
       appBar: AppBar(
         title: const Text('Tawaran Backup Jaga'),
@@ -97,14 +103,15 @@ class _BackupOfferScreenState extends State<BackupOfferScreen> {
         ),
       ),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
+          ? const Center(child: LoadingIndicator(size: 32))
           : _error != null
-              ? Center(child: Text(_error!, style: const TextStyle(color: AppColors.danger)))
+              ? Center(child: Text(_error!, style: TextStyle(color: theme.colors.destructive)))
               : _buildContent(),
     );
   }
 
   Widget _buildContent() {
+    final theme = FTheme.of(context);
     final offer = _offer!;
     return SingleChildScrollView(
       padding: const EdgeInsets.all(AppSpacing.lg),
@@ -113,23 +120,27 @@ class _BackupOfferScreenState extends State<BackupOfferScreen> {
         mainAxisSize: MainAxisSize.min,
         children: [
           // Icon
-          const Center(
-            child: Icon(Icons.swap_horiz, size: 64, color: AppColors.primary),
+          Center(
+            child: Icon(IconMap.swapHoriz, size: 64, color: theme.colors.primary),
           ),
           const SizedBox(height: AppSpacing.lg),
 
           // Title
-          const Center(
+          Center(
             child: Text(
               'Tawaran Backup Jaga',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: theme.colors.foreground,
+              ),
             ),
           ),
           const SizedBox(height: AppSpacing.sm),
           Center(
             child: Text(
               'Anda ditawari untuk jaga menggantikan',
-              style: TextStyle(color: AppColors.textSecondary),
+              style: TextStyle(color: theme.colors.mutedForeground),
             ),
           ),
 
@@ -139,18 +150,18 @@ class _BackupOfferScreenState extends State<BackupOfferScreen> {
           Container(
             padding: const EdgeInsets.all(AppSpacing.lg),
             decoration: BoxDecoration(
-              color: AppColors.sky50,
+              color: theme.colors.card,
               borderRadius: AppRadius.radiusLg,
             ),
             child: Column(
               children: [
-                _buildRow(Icons.location_on, 'Area', offer.areaName ?? '-'),
+                _buildRow(IconMap.locationOn, 'Area', offer.areaName ?? '-'),
                 const SizedBox(height: AppSpacing.md),
-                _buildRow(Icons.calendar_today, 'Tanggal', offer.date),
+                _buildRow(IconMap.calendarToday, 'Tanggal', offer.date),
                 const SizedBox(height: AppSpacing.md),
-                _buildRow(Icons.access_time, 'Shift', offer.shiftName ?? '-'),
+                _buildRow(IconMap.schedule, 'Shift', offer.shiftName ?? '-'),
                 const SizedBox(height: AppSpacing.md),
-                _buildRow(Icons.place, 'POS', offer.posName ?? '-'),
+                _buildRow(IconMap.place, 'POS', offer.posName ?? '-'),
               ],
             ),
           ),
@@ -162,18 +173,17 @@ class _BackupOfferScreenState extends State<BackupOfferScreen> {
             Container(
               padding: const EdgeInsets.all(AppSpacing.md),
               decoration: BoxDecoration(
-                color: AppColors.amber50,
+                color: theme.colors.secondary,
                 borderRadius: AppRadius.radiusMd,
-                border: Border.all(color: AppColors.amber200),
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.timer, color: AppColors.amber600),
+                  Icon(IconMap.timer, color: theme.colors.secondaryForeground),
                   const SizedBox(width: AppSpacing.sm),
                   Expanded(
                     child: Text(
                       'Berlaku hingga: ${_formatDateTime(offer.expiresAt!)}',
-                      style: const TextStyle(color: AppColors.amber600),
+                      style: TextStyle(color: theme.colors.secondaryForeground),
                     ),
                   ),
                 ],
@@ -188,36 +198,19 @@ class _BackupOfferScreenState extends State<BackupOfferScreen> {
             child: Row(
               children: [
                 Expanded(
-                  child: OutlinedButton(
+                  child: SecondaryButton(
+                    label: 'TOLAK',
                     onPressed: _isSubmitting ? null : _reject,
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: AppColors.danger,
-                      side: const BorderSide(color: AppColors.danger),
-                    ),
-                    child: _isSubmitting
-                        ? const SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : const Text('TOLAK'),
+                    isDanger: true,
+                    isLoading: _isSubmitting,
                   ),
                 ),
                 const SizedBox(width: AppSpacing.md),
                 Expanded(
-                  child: ElevatedButton(
+                  child: PrimaryButton(
+                    label: 'TERIMA',
                     onPressed: _isSubmitting ? null : _accept,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.success,
-                      foregroundColor: Colors.white,
-                    ),
-                    child: _isSubmitting
-                        ? const SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-                          )
-                        : const Text('TERIMA'),
+                    isLoading: _isSubmitting,
                   ),
                 ),
               ],
@@ -230,13 +223,14 @@ class _BackupOfferScreenState extends State<BackupOfferScreen> {
   }
 
   Widget _buildRow(IconData icon, String label, String value) {
+    final theme = FTheme.of(context);
     return Row(
       children: [
-        Icon(icon, size: 18, color: AppColors.textSecondary),
+        Icon(icon, size: 18, color: theme.colors.mutedForeground),
         const SizedBox(width: AppSpacing.sm),
-        Text('$label: ', style: const TextStyle(color: AppColors.textSecondary)),
+        Text('$label: ', style: TextStyle(color: theme.colors.mutedForeground)),
         Expanded(
-          child: Text(value, style: const TextStyle(fontWeight: FontWeight.w600)),
+          child: Text(value, style: TextStyle(fontWeight: FontWeight.w600, color: theme.colors.foreground)),
         ),
       ],
     );

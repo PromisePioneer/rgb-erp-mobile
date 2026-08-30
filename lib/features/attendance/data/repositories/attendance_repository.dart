@@ -100,10 +100,14 @@ class AttendanceRepository {
 
   /// Check attendance job status (for polling)
   Future<AttendanceJobStatusResult> checkJobStatus(String jobUuid) async {
+    print('POLL_API: Calling GET /attendance/status/$jobUuid');
     try {
       final response = await _api.getAttendanceStatus(jobUuid);
+      print('POLL_API: Raw response: $response');
       return AttendanceJobStatusResult.fromJson(response);
     } on DioException catch (e) {
+      print('POLL_API: DioException - ${e.message}, type: ${e.type}, statusCode: ${e.response?.statusCode}');
+      print('POLL_API: Response data: ${e.response?.data}');
       throw ApiException.fromDioException(e);
     }
   }
@@ -111,22 +115,48 @@ class AttendanceRepository {
   /// Poll job status until completed or failed
   Future<AttendanceJobStatusResult> pollJobStatus(
     String jobUuid, {
-    int maxAttempts = 15,
-    Duration interval = const Duration(seconds: 2),
+    int maxAttempts = 60,  // 60 attempts = 60-120 seconds with exponential backoff
+    Duration initialInterval = const Duration(seconds: 2),
+    Duration maxInterval = const Duration(seconds: 5),
   }) async {
-    for (int i = 0; i < maxAttempts; i++) {
-      final status = await checkJobStatus(jobUuid);
+    print('POLL: Starting poll for job $jobUuid (max $maxAttempts attempts)');
+    Duration currentInterval = initialInterval;
 
-      if (status.isCompleted || status.isFailed) {
-        return status;
+    for (int i = 0; i < maxAttempts; i++) {
+      print('POLL: Attempt ${i + 1}/$maxAttempts (interval: ${currentInterval.inSeconds}s)');
+      try {
+        final status = await checkJobStatus(jobUuid);
+        print('POLL: Status response - status: ${status.status}, message: ${status.message}, isCompleted: ${status.isCompleted}, isFailed: ${status.isFailed}');
+
+        if (status.isCompleted || status.isFailed) {
+          print('POLL: Job finished with status: ${status.status}');
+          return status;
+        }
+
+        // Show progress to user (update every 5 attempts)
+        if (i > 0 && i % 5 == 0) {
+          print('POLL: Still processing... (${i * currentInterval.inSeconds}s elapsed)');
+        }
+      } catch (e, stackTrace) {
+        print('POLL: Error on attempt ${i + 1}: $e');
+        print('POLL: Stack trace: $stackTrace');
+        // Continue polling on error, don't fail immediately
       }
 
       if (i < maxAttempts - 1) {
-        await Future.delayed(interval);
+        await Future.delayed(currentInterval);
+        // Exponential backoff: increase interval but cap at maxInterval
+        currentInterval = Duration(
+          seconds: (currentInterval.inSeconds * 1.5).clamp(
+            initialInterval.inSeconds,
+            maxInterval.inSeconds,
+          ).toInt(),
+        );
       }
     }
 
     // Timeout - return as failed
+    print('POLL: Timeout after $maxAttempts attempts');
     return AttendanceJobStatusResult(
       status: AttendanceJobStatus.failed,
       message: 'Verifikasi wajah timeout, silakan coba lagi',

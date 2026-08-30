@@ -1,20 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
+import 'package:forui/forui.dart';
+
 import '../../../../core/core.dart';
 import '../../../../shared/widgets/buttons/primary_button.dart';
+import '../../../../shared/widgets/feedback/loading_indicator.dart';
 import '../../../../shared/widgets/inputs/app_text_field.dart';
 import '../../../../shared/widgets/layout/top_gradient_background.dart';
+import '../../../../shared/widgets/icons/forui_icon_map.dart';
 import '../../domain/domain.dart';
 import '../providers/attendance_provider.dart';
-import '../../../backup_offer/domain/models/backup_offer.dart';
-import '../../../backup_offer/domain/models/shift_response.dart';
-import '../../../backup_offer/data/repositories/backup_offer_repository.dart';
-import '../../../backup_offer/data/repositories/shift_response_repository.dart';
-import '../../../backup_offer/presentation/providers/backup_offer_provider.dart';
-import '../../../backup_offer/presentation/providers/shift_response_provider.dart';
-import '../../../backup_offer/presentation/widgets/backup_offer_dialog.dart';
-import '../../../backup_offer/presentation/widgets/shift_response_dialog.dart';
 
 /// Attendance home screen
 class AttendanceHomeScreen extends StatefulWidget {
@@ -38,20 +34,16 @@ class _AttendanceHomeScreenState extends State<AttendanceHomeScreen> {
   Future<void> _handleAttendance({String? earlyLeaveNotes}) async {
     // Prevent double invocation
     if (_isProcessingAttendance) {
-      print('HOME: Already processing, ignoring duplicate call');
       return;
     }
     _isProcessingAttendance = true;
 
-    print('HOME: Starting _handleAttendance');
     final notifier = context.read<AttendanceNotifier>();
 
     try {
       // 1. Get location first
-      print('HOME: Step 1 - Getting location...');
       final location = await notifier.getCurrentLocation();
       if (location == null) {
-        print('HOME: Location null, showing error');
         if (notifier.state.error != null && mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -62,85 +54,71 @@ class _AttendanceHomeScreenState extends State<AttendanceHomeScreen> {
         }
         return;
       }
-      print('HOME: Location obtained - lat: ${location.latitude}, lng: ${location.longitude}');
 
-    // 2. Navigate to camera capture
-    print('HOME: Step 2 - Navigating to camera capture...');
-    final photoPath = await context.push<String>('/attendance/capture');
-    print('HOME: Camera returned photoPath: $photoPath');
-    if (photoPath == null || !mounted) {
-      print('HOME: Returning early - photoPath null or not mounted');
-      return;
-    }
-
-    // Generate capturedAt timestamp once for idempotency
-    final capturedAt = DateTime.now().toIso8601String();
-
-    // 3. Face verify
-    print('HOME: Step 3 - Face verify...');
-    final type = notifier.state.hasCheckedIn ? 'check_out' : 'check_in';
-    final verifyResult = await notifier.faceVerify(
-      photoPath: photoPath,
-      capturedAt: capturedAt,
-      lat: location.latitude,
-      lng: location.longitude,
-      type: type,
-    );
-    print('HOME: faceVerify result: ${verifyResult?.match}');
-
-    if (verifyResult == null) {
-      print('HOME: verifyResult is null');
-      if (!mounted) return;
-      _handleError(notifier.state.error!);
-      return;
-    }
-
-    if (!verifyResult.match) {
-      print('HOME: Face match failed - ${verifyResult.message}');
-      if (mounted) {
-        _handleError(verifyResult.message);
+      // 2. Navigate to camera capture
+      final photoPath = await context.push<String>('/attendance/capture');
+      if (photoPath == null || !mounted) {
+        return;
       }
-      return;
-    }
 
-    // 4. If job_id exists, poll for status
-    String? jobUuid = verifyResult.jobId;
-    if (jobUuid != null) {
-      print('HOME: Step 4 - Polling job status: $jobUuid');
-      final status = await notifier.pollJobStatus(jobUuid);
-      if (status == null || status.isFailed) {
-        print('HOME: Job status failed');
+      // Generate capturedAt timestamp once for idempotency
+      final capturedAt = DateTime.now().toIso8601String();
+
+      // 3. Face verify
+      final type = notifier.state.hasCheckedIn ? 'check_out' : 'check_in';
+      final verifyResult = await notifier.faceVerify(
+        photoPath: photoPath,
+        capturedAt: capturedAt,
+        lat: location.latitude,
+        lng: location.longitude,
+        type: type,
+      );
+
+      if (verifyResult == null) {
+        if (!mounted) return;
+        _handleError(notifier.state.error!);
+        return;
+      }
+
+      if (!verifyResult.match) {
         if (mounted) {
-          _handleError(status?.message ?? 'Verifikasi gagal');
+          _handleError(verifyResult.message);
         }
         return;
       }
-    }
 
-    // 5. Record attendance (same capturedAt for idempotency)
-    print('HOME: Step 5 - Recording attendance...');
-    final record = await notifier.recordAttendance(
-      photoPath: photoPath,
-      capturedAt: capturedAt,
-      lat: location.latitude,
-      lng: location.longitude,
-      faceMatchScore: verifyResult.score,
-      earlyLeaveNotes: earlyLeaveNotes,
-    );
-    print('HOME: record result: ${record?.id}');
+      // 4. If job_id exists, poll for status
+      String? jobUuid = verifyResult.jobId;
+      if (jobUuid != null) {
+        final status = await notifier.pollJobStatus(jobUuid);
+        if (status == null || status.isFailed) {
+          if (mounted) {
+            _handleError(status?.message ?? 'Verifikasi gagal');
+          }
+          return;
+        }
+      }
 
-    if (record != null && mounted) {
-      print('HOME: Attendance recorded successfully!');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('${record.isCheckIn ? 'Absen Masuk' : 'Absen Pulang'} berhasil'),
-          backgroundColor: AppColors.success,
-        ),
+      // 5. Record attendance (same capturedAt for idempotency)
+      final record = await notifier.recordAttendance(
+        photoPath: photoPath,
+        capturedAt: capturedAt,
+        lat: location.latitude,
+        lng: location.longitude,
+        faceMatchScore: verifyResult.score,
+        earlyLeaveNotes: earlyLeaveNotes,
       );
-    } else if (notifier.state.error != null && mounted) {
-      print('HOME: Recording failed with error');
-      _handleError(notifier.state.error!);
-    }
+
+      if (record != null && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('${record.isCheckIn ? 'Absen Masuk' : 'Absen Pulang'} berhasil'),
+            backgroundColor: AppColors.success,
+          ),
+        );
+      } else if (notifier.state.error != null && mounted) {
+        _handleError(notifier.state.error!);
+      }
     } finally {
       _isProcessingAttendance = false;
     }
@@ -169,24 +147,25 @@ class _AttendanceHomeScreenState extends State<AttendanceHomeScreen> {
   }
 
   void _showGeofenceErrorDialog(String error) {
+    final theme = FTheme.of(context);
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Row(
+        shape: RoundedRectangleBorder(borderRadius: AppRadius.radiusLg),
+        title: Row(
           children: [
-            Icon(Icons.location_off, color: AppColors.danger),
-            SizedBox(width: AppSpacing.sm),
-            Text('Lokasi Jauh'),
+            Icon(IconMap.locationOff, color: theme.colors.destructive),
+            const SizedBox(width: AppSpacing.sm),
+            const Text('Lokasi Jauh'),
           ],
         ),
         content: Text(error),
+        actionsAlignment: MainAxisAlignment.spaceEvenly,
+        actionsPadding: const EdgeInsets.fromLTRB(24, 0, 24, 16),
         actions: [
-          ElevatedButton(
-            onPressed: () => Navigator.pop(context),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primary,
-              foregroundColor: Colors.white,
-            ),
+          FButton(
+            onPress: () => Navigator.pop(context),
+            variant: FButtonVariant.primary,
             child: const Text('Mengerti'),
           ),
         ],
@@ -198,21 +177,22 @@ class _AttendanceHomeScreenState extends State<AttendanceHomeScreen> {
     final result = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: AppRadius.radiusLg),
         title: const Text('Wajah Belum Terdaftar'),
         content: const Text(
           'Anda perlu mendaftarkan wajah terlebih dahulu untuk dapat melakukan absensi dengan verifikasi wajah.',
         ),
+        actionsAlignment: MainAxisAlignment.spaceEvenly,
+        actionsPadding: const EdgeInsets.fromLTRB(24, 0, 24, 16),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
+          FButton(
+            onPress: () => Navigator.pop(context, false),
+            variant: FButtonVariant.ghost,
             child: const Text('Nanti Saja'),
           ),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primary,
-              foregroundColor: Colors.white,
-            ),
+          FButton(
+            onPress: () => Navigator.pop(context, true),
+            variant: FButtonVariant.primary,
             child: const Text('Daftarkan Wajah'),
           ),
         ],
@@ -246,17 +226,17 @@ class _AttendanceHomeScreenState extends State<AttendanceHomeScreen> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Icon(Icons.error_outline, size: 64, color: AppColors.danger),
+                      Icon(IconMap.errorOutline, size: 64, color: FTheme.of(context).colors.destructive),
                       const SizedBox(height: AppSpacing.md),
                       Text(
                         notifier.state.error!,
                         textAlign: TextAlign.center,
-                        style: const TextStyle(color: AppColors.textSecondary),
+                        style: TextStyle(color: FTheme.of(context).colors.mutedForeground),
                       ),
                       const SizedBox(height: AppSpacing.lg),
-                      ElevatedButton(
+                      PrimaryButton(
+                        label: 'Coba Lagi',
                         onPressed: () => notifier.loadTodayAttendance(),
-                        child: const Text('Coba Lagi'),
                       ),
                     ],
                   ),
@@ -265,7 +245,7 @@ class _AttendanceHomeScreenState extends State<AttendanceHomeScreen> {
             }
 
             if (notifier.state.isLoading && notifier.state.todayData == null) {
-              return const Center(child: CircularProgressIndicator());
+              return const Center(child: LoadingIndicator(size: 32));
             }
 
             final data = notifier.state.todayData;
@@ -305,17 +285,17 @@ class _AttendanceHomeScreenState extends State<AttendanceHomeScreen> {
                       Container(
                         padding: const EdgeInsets.all(AppSpacing.md),
                         decoration: BoxDecoration(
-                          color: AppColors.dangerBg,
+                          color: FTheme.of(context).colors.destructive,
                           borderRadius: AppRadius.radiusMd,
                         ),
                         child: Row(
                           children: [
-                            const Icon(Icons.error_outline, color: AppColors.danger),
+                            Icon(IconMap.errorOutline, color: FTheme.of(context).colors.destructiveForeground),
                             const SizedBox(width: AppSpacing.sm),
                             Expanded(
                               child: Text(
                                 notifier.state.error!,
-                                style: const TextStyle(color: AppColors.danger),
+                                style: TextStyle(color: FTheme.of(context).colors.destructiveForeground),
                               ),
                             ),
                           ],
@@ -333,32 +313,14 @@ class _AttendanceHomeScreenState extends State<AttendanceHomeScreen> {
   }
 
   Widget _buildStatusCard(AttendanceNotifier notifier) {
+    final theme = FTheme.of(context);
     final data = notifier.state.todayData;
     final statusText = data?.statusText ?? 'Memuat...';
-
-    Color statusColor;
-    IconData statusIcon;
-
-    if (data?.hasSchedule == false) {
-      statusColor = AppColors.warning;
-      statusIcon = Icons.event_busy;
-    } else if (data?.hasCheckedOut == true) {
-      statusColor = AppColors.success;
-      statusIcon = Icons.check_circle;
-    } else if (data?.hasCheckedIn == true) {
-      statusColor = AppColors.primary;
-      statusIcon = Icons.login;
-    } else {
-      statusColor = AppColors.amber600;
-      statusIcon = Icons.schedule;
-    }
 
     return Container(
       padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [statusColor, statusColor.withAlpha(200)],
-        ),
+        color: theme.colors.primary,
         borderRadius: AppRadius.radiusLg,
       ),
       child: Column(
@@ -366,20 +328,20 @@ class _AttendanceHomeScreenState extends State<AttendanceHomeScreen> {
         children: [
           Row(
             children: [
-              Icon(statusIcon, color: Colors.white, size: 32),
+              Icon(IconMap.schedule, color: theme.colors.primaryForeground, size: 32),
               const SizedBox(width: AppSpacing.md),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
+                    Text(
                       'Status Hari Ini',
-                      style: TextStyle(color: Colors.white70, fontSize: 14),
+                      style: TextStyle(color: theme.colors.primaryForeground.withAlpha(179)),
                     ),
                     Text(
                       statusText,
-                      style: const TextStyle(
-                        color: Colors.white,
+                      style: TextStyle(
+                        color: theme.colors.primaryForeground,
                         fontSize: 24,
                         fontWeight: FontWeight.bold,
                       ),
@@ -391,7 +353,7 @@ class _AttendanceHomeScreenState extends State<AttendanceHomeScreen> {
           ),
           if (data?.hasCheckedIn == true && data?.checkInTime != null) ...[
             const SizedBox(height: AppSpacing.md),
-            const Divider(color: Colors.white24),
+            Divider(color: theme.colors.primaryForeground.withAlpha(61)),
             const SizedBox(height: AppSpacing.sm),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -399,13 +361,13 @@ class _AttendanceHomeScreenState extends State<AttendanceHomeScreen> {
                 _buildTimeColumn(
                   'Masuk',
                   _formatTime(data!.checkInTime!),
-                  Icons.login,
+                  IconMap.login,
                 ),
                 if (data.checkOutTime != null)
                   _buildTimeColumn(
                     'Pulang',
                     _formatTime(data.checkOutTime!),
-                    Icons.logout,
+                    IconMap.logout,
                   ),
               ],
             ),
@@ -416,21 +378,22 @@ class _AttendanceHomeScreenState extends State<AttendanceHomeScreen> {
   }
 
   Widget _buildTimeColumn(String label, String time, IconData icon) {
+    final theme = FTheme.of(context);
     return Row(
       children: [
-        Icon(icon, color: Colors.white70, size: 16),
+        Icon(icon, color: theme.colors.primaryForeground.withAlpha(179), size: 16),
         const SizedBox(width: AppSpacing.xs),
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
               label,
-              style: const TextStyle(color: Colors.white54, fontSize: 12),
+              style: TextStyle(color: theme.colors.primaryForeground.withAlpha(138), fontSize: 12),
             ),
             Text(
               time,
-              style: const TextStyle(
-                color: Colors.white,
+              style: TextStyle(
+                color: theme.colors.primaryForeground,
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
               ),
@@ -442,10 +405,11 @@ class _AttendanceHomeScreenState extends State<AttendanceHomeScreen> {
   }
 
   Widget _buildScheduleCard(AttendanceData? data) {
+    final theme = FTheme.of(context);
     return Container(
       padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: theme.colors.card,
         borderRadius: AppRadius.radiusLg,
         boxShadow: AppShadows.card,
       ),
@@ -458,10 +422,10 @@ class _AttendanceHomeScreenState extends State<AttendanceHomeScreen> {
                 width: 40,
                 height: 40,
                 decoration: BoxDecoration(
-                  color: AppColors.sky100,
+                  color: theme.colors.secondary,
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: const Icon(Icons.work, color: AppColors.sky600),
+                child: Icon(IconMap.work, color: theme.colors.secondaryForeground),
               ),
               const SizedBox(width: AppSpacing.md),
               Expanded(
@@ -470,17 +434,17 @@ class _AttendanceHomeScreenState extends State<AttendanceHomeScreen> {
                   children: [
                     Text(
                       data?.pos?.name ?? data?.client?.name ?? 'Lokasi Kerja',
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontWeight: FontWeight.w600,
-                        color: AppColors.textPrimary,
+                        color: theme.colors.foreground,
                       ),
                     ),
                     if (data?.shift != null)
                       Text(
                         'Shift: ${data!.shift!.name} (${data.shift!.startTime} - ${data.shift!.endTime})',
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 12,
-                          color: AppColors.textSecondary,
+                          color: theme.colors.mutedForeground,
                         ),
                       ),
                   ],
@@ -492,14 +456,14 @@ class _AttendanceHomeScreenState extends State<AttendanceHomeScreen> {
             const SizedBox(height: AppSpacing.md),
             Row(
               children: [
-                const Icon(Icons.location_on, size: 16, color: AppColors.textSecondary),
+                Icon(IconMap.locationOn, size: 16, color: theme.colors.mutedForeground),
                 const SizedBox(width: AppSpacing.xs),
                 Expanded(
                   child: Text(
                     'Radius: ${data!.client!.radiusMeters}m dari lokasi',
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 12,
-                      color: AppColors.textSecondary,
+                      color: theme.colors.mutedForeground,
                     ),
                   ),
                 ),
@@ -512,6 +476,7 @@ class _AttendanceHomeScreenState extends State<AttendanceHomeScreen> {
   }
 
   Widget _buildAttendanceButton(AttendanceNotifier notifier, bool isLoading) {
+    final theme = FTheme.of(context);
     final canAttend = notifier.state.canAttend;
     final nextAction = notifier.state.nextAction;
     final isDone = nextAction == 'done';
@@ -521,18 +486,17 @@ class _AttendanceHomeScreenState extends State<AttendanceHomeScreen> {
       return Container(
         padding: const EdgeInsets.all(AppSpacing.lg),
         decoration: BoxDecoration(
-          color: AppColors.amber50,
+          color: theme.colors.secondary,
           borderRadius: AppRadius.radiusLg,
-          border: Border.all(color: AppColors.amber200),
         ),
         child: Row(
           children: [
-            const Icon(Icons.info_outline, color: AppColors.amber600),
+            Icon(IconMap.infoOutline, color: theme.colors.secondaryForeground),
             const SizedBox(width: AppSpacing.md),
             Expanded(
               child: Text(
                 notifier.state.todayData?.message ?? 'Tidak ada jadwal kerja hari ini',
-                style: TextStyle(color: AppColors.amber600),
+                style: TextStyle(color: theme.colors.secondaryForeground),
               ),
             ),
           ],
@@ -542,24 +506,24 @@ class _AttendanceHomeScreenState extends State<AttendanceHomeScreen> {
 
     // Show warning if user is about to check out early
     if (willCheckOutEarly && nextAction == 'check_out') {
+      final theme = FTheme.of(context);
       final minutesToEnd = notifier.state.todayData?.minutesToShiftEnd ?? 0;
       return Container(
         padding: const EdgeInsets.all(AppSpacing.lg),
         decoration: BoxDecoration(
-          color: AppColors.amber50,
+          color: theme.colors.secondary,
           borderRadius: AppRadius.radiusLg,
-          border: Border.all(color: AppColors.amber600),
         ),
         child: Column(
           children: [
             Row(
               children: [
-                const Icon(Icons.warning_amber_rounded, color: AppColors.amber600),
+                Icon(IconMap.warning, color: theme.colors.secondaryForeground),
                 const SizedBox(width: AppSpacing.md),
                 Expanded(
                   child: Text(
                     'Pulang lebih awal dari jadwal ($minutesToEnd menit sebelum waktu pulang)',
-                    style: const TextStyle(color: AppColors.amber600),
+                    style: TextStyle(color: theme.colors.secondaryForeground),
                   ),
                 ),
               ],
@@ -567,7 +531,7 @@ class _AttendanceHomeScreenState extends State<AttendanceHomeScreen> {
             const SizedBox(height: AppSpacing.md),
             PrimaryButton(
               label: 'Absen Pulang',
-              icon: Icons.fingerprint,
+              icon: IconMap.fingerprint,
               isLoading: isLoading || _isProcessingAttendance,
               onPressed: _isProcessingAttendance
                   ? null
@@ -582,7 +546,7 @@ class _AttendanceHomeScreenState extends State<AttendanceHomeScreen> {
       label: isDone
           ? 'Selesai'
           : (nextAction == 'check_in' ? 'Absen Masuk' : 'Absen Pulang'),
-      icon: isDone ? Icons.check_circle : Icons.fingerprint,
+      icon: isDone ? IconMap.checkCircle : IconMap.fingerprint,
       isLoading: isLoading || _isProcessingAttendance,
       onPressed: isDone || !canAttend || _isProcessingAttendance
           ? null
@@ -613,15 +577,16 @@ class _AttendanceHomeScreenState extends State<AttendanceHomeScreen> {
   }
 
   Widget _buildRecordsList(List<dynamic> records) {
+    final theme = FTheme.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           'Riwayat Hari Ini',
           style: TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.w600,
-            color: AppColors.textPrimary,
+            color: theme.colors.foreground,
           ),
         ),
         const SizedBox(height: AppSpacing.sm),
@@ -629,7 +594,7 @@ class _AttendanceHomeScreenState extends State<AttendanceHomeScreen> {
               margin: const EdgeInsets.only(bottom: AppSpacing.sm),
               padding: const EdgeInsets.all(AppSpacing.md),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: theme.colors.card,
                 borderRadius: AppRadius.radiusMd,
                 boxShadow: AppShadows.cardSubtle,
               ),
@@ -640,15 +605,15 @@ class _AttendanceHomeScreenState extends State<AttendanceHomeScreen> {
                     height: 40,
                     decoration: BoxDecoration(
                       color: record.isCheckIn
-                          ? AppColors.emerald100
-                          : AppColors.rose100,
+                          ? theme.colors.primary.withAlpha(25)
+                          : theme.colors.secondary.withAlpha(25),
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Icon(
-                      record.isCheckIn ? Icons.login : Icons.logout,
+                      record.isCheckIn ? IconMap.login : IconMap.logout,
                       color: record.isCheckIn
-                          ? AppColors.emerald600
-                          : AppColors.rose600,
+                          ? theme.colors.primary
+                          : theme.colors.secondary,
                       size: 20,
                     ),
                   ),
@@ -659,23 +624,23 @@ class _AttendanceHomeScreenState extends State<AttendanceHomeScreen> {
                       children: [
                         Text(
                           record.isCheckIn ? 'Absen Masuk' : 'Absen Pulang',
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontWeight: FontWeight.w500,
-                            color: AppColors.textPrimary,
+                            color: theme.colors.foreground,
                           ),
                         ),
                         if (record.recordedAt != null)
                           Text(
                             _formatDateTime(record.recordedAt!),
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 12,
-                              color: AppColors.textSecondary,
+                              color: theme.colors.mutedForeground,
                             ),
                           ),
                       ],
                     ),
                   ),
-                  const Icon(Icons.check_circle, color: AppColors.success, size: 20),
+                  Icon(IconMap.checkCircle, color: theme.colors.primary, size: 20),
                 ],
               ),
             )),
@@ -727,12 +692,14 @@ class _EarlyLeaveDialogState extends State<EarlyLeaveDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = FTheme.of(context);
     return AlertDialog(
-      title: const Row(
+      shape: RoundedRectangleBorder(borderRadius: AppRadius.radiusLg),
+      title: Row(
         children: [
-          Icon(Icons.warning_amber_rounded, color: AppColors.amber600),
-          SizedBox(width: AppSpacing.sm),
-          Text('Pulang Lebih Awal'),
+          Icon(IconMap.warning, color: theme.colors.secondary),
+          const SizedBox(width: AppSpacing.sm),
+          const Text('Pulang Lebih Awal'),
         ],
       ),
       content: SingleChildScrollView(
@@ -742,13 +709,10 @@ class _EarlyLeaveDialogState extends State<EarlyLeaveDialog> {
           children: [
             Text(
               'Anda akan pulang ${widget.minutesEarly} menit lebih awal dari jadwal.',
-              style: const TextStyle(color: AppColors.textSecondary),
+              style: TextStyle(color: theme.colors.mutedForeground),
             ),
             const SizedBox(height: AppSpacing.md),
-            const Text(
-              'Mohon isi alasan kepulangan lebih awal:',
-              style: TextStyle(fontWeight: FontWeight.w500),
-            ),
+            const Text('Mohon isi alasan kepulangan lebih awal:'),
             const SizedBox(height: AppSpacing.sm),
             AppTextField(
               controller: _notesController,
@@ -763,30 +727,30 @@ class _EarlyLeaveDialogState extends State<EarlyLeaveDialog> {
               },
             ),
             const SizedBox(height: AppSpacing.sm),
-            const Text(
+            Text(
               'Catatan: Anda bisa menunggu hingga waktu pulang untuk menghindari pencatatan ini.',
               style: TextStyle(
                 fontSize: 12,
-                color: AppColors.textSecondary,
+                color: theme.colors.mutedForeground,
               ),
             ),
           ],
         ),
       ),
+      actionsAlignment: MainAxisAlignment.spaceEvenly,
+      actionsPadding: const EdgeInsets.fromLTRB(24, 0, 24, 16),
       actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(
+        FButton(
+          onPress: () => Navigator.pop(
             context,
             EarlyLeaveDialogResult(action: EarlyLeaveAction.wait),
           ),
+          variant: FButtonVariant.ghost,
           child: const Text('Tunggu Sampai Jadwal'),
         ),
-        ElevatedButton(
-          onPressed: _onContinue,
-          style: ElevatedButton.styleFrom(
-            backgroundColor: AppColors.primary,
-            foregroundColor: Colors.white,
-          ),
+        FButton(
+          onPress: _onContinue,
+          variant: FButtonVariant.primary,
           child: const Text('Tetap Pulang'),
         ),
       ],

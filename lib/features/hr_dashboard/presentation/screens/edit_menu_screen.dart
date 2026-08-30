@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:forui/forui.dart';
+
 import '../../../../core/core.dart';
+import '../../../../shared/widgets/buttons/primary_button.dart';
+import '../../../../shared/widgets/icons/forui_icon_map.dart';
 
 /// Edit Main Menu screen - for configuring which menu items to show
 class EditMenuScreen extends StatefulWidget {
@@ -17,15 +21,15 @@ class _EditMenuScreenState extends State<EditMenuScreen> {
   // Minimum items required to be visible
   static const int _minItems = 3;
 
-  // Menu items data (reuse from _menuGrid)
+  // Menu items data with Forui icons
   final List<Map<String, dynamic>> _menuItems = [
-    {'label': 'Pendaftaran Wajah', 'icon': Icons.face, 'bg': AppColors.indigo100, 'fg': AppColors.indigo600, 'route': '/face-enrollment', 'badge': 'NEW'},
-    {'label': 'Jadwal', 'icon': Icons.calendar_today, 'bg': AppColors.amber100, 'fg': AppColors.amber600, 'route': '/schedule', 'badge': null},
-    {'label': 'Cuti', 'icon': Icons.beach_access, 'bg': AppColors.emerald100, 'fg': AppColors.emerald600, 'route': '/leave', 'badge': null},
-    {'label': 'Payroll', 'icon': Icons.account_balance_wallet, 'bg': AppColors.amber100, 'fg': AppColors.amber600, 'route': '/payroll', 'badge': null},
-    {'label': 'Training', 'icon': Icons.school, 'bg': AppColors.rose100, 'fg': AppColors.rose600, 'route': null, 'badge': null},
-    {'label': 'Approval', 'icon': Icons.checklist, 'bg': AppColors.indigo100, 'fg': AppColors.indigo600, 'route': null, 'badge': null},
-    {'label': 'Patroli', 'icon': Icons.security, 'bg': AppColors.teal100, 'fg': AppColors.teal600, 'route': null, 'badge': null},
+    {'label': 'Pendaftaran Wajah', 'icon': IconMap.face, 'route': '/face-enrollment', 'badge': 'NEW'},
+    {'label': 'Jadwal', 'icon': IconMap.calendarToday, 'route': '/schedule', 'badge': null},
+    {'label': 'Cuti', 'icon': IconMap.beachAccess, 'route': '/leave', 'badge': null},
+    {'label': 'Payroll', 'icon': IconMap.accountBalanceWallet, 'route': '/payroll', 'badge': null},
+    {'label': 'Training', 'icon': IconMap.school, 'route': null, 'badge': null},
+    {'label': 'Approval', 'icon': IconMap.checklist, 'route': null, 'badge': null},
+    {'label': 'Patroli', 'icon': IconMap.security, 'route': null, 'badge': null},
   ];
 
   int get _visibleCount => _menuItems.length - _excludedLabels.length;
@@ -56,18 +60,15 @@ class _EditMenuScreenState extends State<EditMenuScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = FTheme.of(context);
     return Scaffold(
       backgroundColor: AppColors.slate100,
       body: Column(
         children: [
-          // Header with gradient
+          // Header with FTheme primary color
           Container(
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                colors: [AppColors.indigo600, AppColors.indigo500],
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-              ),
+            decoration: BoxDecoration(
+              color: theme.colors.primary,
             ),
             child: SafeArea(
               bottom: false,
@@ -77,7 +78,7 @@ class _EditMenuScreenState extends State<EditMenuScreen> {
                   children: [
                     IconButton(
                       onPressed: () => context.pop(),
-                      icon: const Icon(Icons.arrow_back, color: Colors.white),
+                      icon: Icon(IconMap.arrowBack, color: Colors.white),
                     ),
                     const Expanded(
                       child: Text(
@@ -130,10 +131,10 @@ class _EditMenuScreenState extends State<EditMenuScreen> {
                               ),
                               TextButton(
                                 onPressed: _clearAll,
-                                child: const Text(
+                                child: Text(
                                   'Clear All',
                                   style: TextStyle(
-                                    color: AppColors.primary,
+                                    color: theme.colors.primary,
                                     fontWeight: FontWeight.w600,
                                   ),
                                 ),
@@ -143,25 +144,27 @@ class _EditMenuScreenState extends State<EditMenuScreen> {
                         ),
 
                         // Menu items grid
-                        Padding(
-                          padding: const EdgeInsets.all(16),
-                          child: Wrap(
-                            spacing: 16,
-                            runSpacing: 16,
-                            children: _menuItems.map((item) {
-                              final label = item['label'] as String;
-                              final isExcluded = _excludedLabels.contains(label);
+                        Builder(
+                          builder: (context) {
+                            final theme = FTheme.of(context);
+                            return Wrap(
+                              spacing: 16,
+                              runSpacing: 16,
+                              children: _menuItems.map((item) {
+                                final label = item['label'] as String;
+                                final isExcluded = _excludedLabels.contains(label);
 
-                              return _EditMenuItem(
-                                label: label,
-                                icon: item['icon'] as IconData,
-                                bg: item['bg'] as Color,
-                                fg: item['fg'] as Color,
-                                isExcluded: isExcluded,
-                                onToggle: () => _toggleExclude(label),
-                              );
-                            }).toList(),
-                          ),
+                                return _EditMenuItem(
+                                  label: label,
+                                  icon: item['icon'] as IconData,
+                                  bg: theme.colors.muted,
+                                  fg: theme.colors.primary,
+                                  isExcluded: isExcluded,
+                                  onToggle: () => _toggleExclude(label),
+                                );
+                              }).toList(),
+                            );
+                          },
                         ),
                       ],
                     ),
@@ -242,24 +245,10 @@ class _EditMenuScreenState extends State<EditMenuScreen> {
               top: false,
               child: SizedBox(
                 width: double.infinity,
-                child: ElevatedButton(
+                child: PrimaryButton(
+                  label: _canSave ? 'Simpan' : 'Minimal $_minItems item harus ditampilkan',
                   onPressed: _canSave ? _save : null,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primary,
-                    foregroundColor: Colors.white,
-                    disabledBackgroundColor: AppColors.slate300,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(26),
-                    ),
-                  ),
-                  child: Text(
-                    _canSave ? 'Simpan' : 'Minimal $_minItems item harus ditampilkan',
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
+                  isLoading: false,
                 ),
               ),
             ),
@@ -319,12 +308,12 @@ class _EditMenuItem extends StatelessWidget {
                     width: 24,
                     height: 24,
                     decoration: BoxDecoration(
-                      color: isExcluded ? AppColors.emerald500 : AppColors.red500,
+                      color: isExcluded ? AppColors.emerald500 : AppColors.danger,
                       shape: BoxShape.circle,
                       border: Border.all(color: Colors.white, width: 2),
                     ),
                     child: Icon(
-                      isExcluded ? Icons.add : Icons.remove,
+                      isExcluded ? IconMap.add : IconMap.remove,
                       color: Colors.white,
                       size: 14,
                     ),

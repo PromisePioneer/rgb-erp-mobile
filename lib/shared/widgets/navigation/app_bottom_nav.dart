@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:forui/forui.dart';
 
 import '../../../../core/core.dart';
 
@@ -28,26 +29,27 @@ class AppBottomNavBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = FTheme.of(context);
     return SizedBox(
       height: 80, // Extra height for FAB overlap
       child: Stack(
         clipBehavior: Clip.none,
         children: [
-          // Bottom nav bar background
+          // Bottom nav bar background with FTheme colors
           Positioned(
             left: 0,
             right: 0,
             bottom: 0,
             child: Container(
               height: 64,
-              decoration: const BoxDecoration(
-                color: AppColors.primary,
-                borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+              decoration: BoxDecoration(
+                color: theme.colors.primary,
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
                 boxShadow: [
                   BoxShadow(
-                    color: Color(0x1A000000),
+                    color: AppColors.gray200.withAlpha(128),
                     blurRadius: 8,
-                    offset: Offset(0, -2),
+                    offset: const Offset(0, -2),
                   ),
                 ],
               ),
@@ -91,7 +93,7 @@ class AppBottomNavBar extends StatelessWidget {
               ),
             ),
           ),
-          // Floating center button (FAB)
+          // Floating center button (FAB) with FTheme primary
           Positioned(
             left: 0,
             right: 0,
@@ -104,26 +106,19 @@ class AppBottomNavBar extends StatelessWidget {
                   width: 60,
                   height: 60,
                   decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [
-                        Color(0xFF06B6D4),
-                        Color(0xFF0891B2),
-                      ], // Cyan gradient
-                    ),
+                    color: theme.colors.primary,
                     shape: BoxShape.circle,
                     boxShadow: [
                       BoxShadow(
-                        color: const Color(0xFF06B6D4).withAlpha(77),
+                        color: AppColors.gray300.withAlpha(102),
                         blurRadius: 12,
                         offset: const Offset(0, 4),
                       ),
                     ],
                   ),
-                  child: const Icon(
+                  child: Icon(
                     Icons.qr_code_scanner,
-                    color: Colors.white,
+                    color: theme.colors.primaryForeground,
                     size: 28,
                   ),
                 ),
@@ -136,13 +131,14 @@ class AppBottomNavBar extends StatelessWidget {
   }
 
   void _showScanBottomSheet(BuildContext context) {
+    final theme = FTheme.of(context);
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
       builder: (context) => Container(
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.vertical(
+        decoration: BoxDecoration(
+          color: theme.colors.background,
+          borderRadius: const BorderRadius.vertical(
             top: Radius.circular(AppRadius.xxl),
           ),
         ),
@@ -155,20 +151,20 @@ class AppBottomNavBar extends StatelessWidget {
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                color: AppColors.slate300,
+                color: theme.colors.mutedForeground,
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
             const SizedBox(height: 20),
             // Title
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 20),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Text(
                 'Pilih Metode Scan',
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
-                  color: AppColors.slate800,
+                  color: theme.colors.foreground,
                 ),
               ),
             ),
@@ -181,8 +177,8 @@ class AppBottomNavBar extends StatelessWidget {
                   // Scan Presensi
                   _ScanOptionTile(
                     icon: Icons.fingerprint,
-                    iconColor: AppColors.indigo600,
-                    iconBg: AppColors.indigo100,
+                    iconColor: theme.colors.primary,
+                    iconBg: theme.colors.muted,
                     title: 'Absen',
                     subtitle: 'Absen dengan wajah',
                     onTap: () {
@@ -194,8 +190,8 @@ class AppBottomNavBar extends StatelessWidget {
                   // Scan Patroli
                   _ScanOptionTile(
                     icon: Icons.qr_code_scanner,
-                    iconColor: AppColors.teal600,
-                    iconBg: AppColors.teal100,
+                    iconColor: theme.colors.primary,
+                    iconBg: theme.colors.muted,
                     title: 'Patroli',
                     subtitle: 'Scan QR di titik patroli',
                     onTap: () {
@@ -232,6 +228,10 @@ class _NavItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = FTheme.of(context);
+    final activeColor = theme.colors.primaryForeground;
+    final inactiveColor = theme.colors.primaryForeground.withAlpha(179); // 70% opacity
+
     final widget = GestureDetector(
       onTap: onTap,
       behavior: HitTestBehavior.opaque,
@@ -242,8 +242,7 @@ class _NavItem extends StatelessWidget {
           children: [
             Icon(
               isActive ? activeIcon : icon,
-              color: Colors.white.withAlpha(isActive ? 255 : 179),
-              // 70% opacity when inactive
+              color: isActive ? activeColor : inactiveColor,
               size: 24,
             ),
             const SizedBox(height: 4),
@@ -252,7 +251,7 @@ class _NavItem extends StatelessWidget {
               style: TextStyle(
                 fontSize: 10,
                 fontWeight: isActive ? FontWeight.w600 : FontWeight.normal,
-                color: Colors.white.withAlpha(isActive ? 255 : 179),
+                color: isActive ? activeColor : inactiveColor,
               ),
             ),
           ],
@@ -287,6 +286,7 @@ class _ScanOptionTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = FTheme.of(context);
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -295,9 +295,9 @@ class _ScanOptionTile extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: AppColors.slate50,
+            color: theme.colors.muted,
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: AppColors.slate200),
+            border: Border.all(color: theme.colors.border),
           ),
           child: Row(
             children: [
@@ -317,26 +317,26 @@ class _ScanOptionTile extends StatelessWidget {
                   children: [
                     Text(
                       title,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.w600,
-                        color: AppColors.slate800,
+                        color: theme.colors.foreground,
                       ),
                     ),
                     const SizedBox(height: 2),
                     Text(
                       subtitle,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 12,
-                        color: AppColors.slate500,
+                        color: theme.colors.mutedForeground,
                       ),
                     ),
                   ],
                 ),
               ),
-              const Icon(
+              Icon(
                 Icons.chevron_right,
-                color: AppColors.slate400,
+                color: theme.colors.mutedForeground,
                 size: 24,
               ),
             ],

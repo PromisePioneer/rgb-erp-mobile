@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import 'package:forui/forui.dart';
+
 import '../../../../core/core.dart';
+import '../../../../shared/widgets/feedback/loading_indicator.dart';
 import '../../../../shared/widgets/layout/top_gradient_background.dart';
+import '../../../../shared/widgets/icons/forui_icon_map.dart';
 import '../../domain/domain.dart';
 import '../providers/violation_report_provider.dart';
 
@@ -17,16 +21,17 @@ class ViolationReportDetailScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = FTheme.of(context);
     return TopGradientBackground(
       gradientHeight: 120,
       child: Scaffold(
-        backgroundColor: AppColors.slate100,
+        backgroundColor: theme.colors.muted,
         appBar: AppBar(
           title: const Text('Detail Laporan Patroli'),
           backgroundColor: Colors.transparent,
           elevation: 0,
           leading: IconButton(
-            icon: Icon(Icons.arrow_back, color: AppColors.slate800),
+            icon: Icon(IconMap.arrowBack, color: theme.colors.foreground),
             onPressed: () => context.pop(),
           ),
         ),
@@ -41,11 +46,11 @@ class ViolationReportDetailScreen extends StatelessWidget {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(Icons.error_outline, size: 64, color: AppColors.danger),
+                    Icon(IconMap.errorOutline, size: 64, color: theme.colors.destructive),
                     SizedBox(height: AppSpacing.md),
                     Text(
                       'Laporan tidak ditemukan',
-                      style: TextStyle(color: AppColors.slate600),
+                      style: TextStyle(color: theme.colors.mutedForeground),
                     ),
                   ],
                 ),
@@ -58,64 +63,64 @@ class ViolationReportDetailScreen extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // Header Card
-                  _buildHeaderCard(violation),
+                  _buildHeaderCard(violation, context),
                   SizedBox(height: AppSpacing.md),
 
                   // Info Section
-                  _buildSectionTitle('Informasi Pelanggaran'),
+                  _buildSectionTitle('Informasi Pelanggaran', context),
                   SizedBox(height: AppSpacing.sm),
                   _buildInfoCard([
                     _InfoItem(
-                      icon: Icons.business,
+                      icon: IconMap.business,
                       label: 'Project/Site',
                       value: violation.areaName ?? '-',
                     ),
                     _InfoItem(
-                      icon: Icons.person,
+                      icon: IconMap.person,
                       label: 'Karyawan Pelanggar',
                       value: violation.employeeName ?? '-',
                     ),
                     _InfoItem(
-                      icon: Icons.warning,
+                      icon: IconMap.warning,
                       label: 'Jenis Pelanggaran',
                       value: violation.violationTypeName ?? '-',
                     ),
-                  ]),
+                  ], context),
                   SizedBox(height: AppSpacing.md),
 
                   // Waktu Section
-                  _buildSectionTitle('Waktu & Lokasi'),
+                  _buildSectionTitle('Waktu & Lokasi', context),
                   SizedBox(height: AppSpacing.sm),
                   _buildInfoCard([
                     _InfoItem(
-                      icon: Icons.calendar_today,
+                      icon: IconMap.calendarToday,
                       label: 'Tanggal & Waktu',
                       value: _formatDateTime(violation.capturedAt),
                     ),
-                  ]),
+                  ], context),
                   SizedBox(height: AppSpacing.md),
 
                   // Catatan Section
                   if (violation.notes != null && violation.notes!.isNotEmpty) ...[
-                    _buildSectionTitle('Catatan'),
+                    _buildSectionTitle('Catatan', context),
                     SizedBox(height: AppSpacing.sm),
-                    _buildTextCard(violation.notes!),
+                    _buildTextCard(violation.notes!, context),
                     SizedBox(height: AppSpacing.md),
                   ],
 
                   // Tindakan Section
                   if (violation.action != null && violation.action!.isNotEmpty) ...[
-                    _buildSectionTitle('Tindakan yang Dilakukan'),
+                    _buildSectionTitle('Tindakan yang Dilakukan', context),
                     SizedBox(height: AppSpacing.sm),
-                    _buildTextCard(violation.action!),
+                    _buildTextCard(violation.action!, context),
                     SizedBox(height: AppSpacing.md),
                   ],
 
                   // Photos Section
                   if (violation.photos.isNotEmpty) ...[
-                    _buildSectionTitle('Foto Bukti (${violation.photoCount})'),
+                    _buildSectionTitle('Foto Bukti (${violation.photoCount})', context),
                     SizedBox(height: AppSpacing.sm),
-                    _buildPhotoGallery(violation.photos),
+                    _buildPhotoGallery(violation.photos, context),
                     SizedBox(height: AppSpacing.md),
                   ],
 
@@ -129,31 +134,33 @@ class ViolationReportDetailScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildSectionTitle(String title) {
+  Widget _buildSectionTitle(String title, BuildContext context) {
+    final theme = FTheme.of(context);
     return Text(
       title,
       style: TextStyle(
         fontSize: 16,
         fontWeight: FontWeight.w600,
-        color: AppColors.slate800,
+        color: theme.colors.foreground,
       ),
     );
   }
 
-  Widget _buildHeaderCard(ViolationReportResult violation) {
+  Widget _buildHeaderCard(ViolationReportResult violation, BuildContext context) {
+    final theme = FTheme.of(context);
     return Container(
       width: double.infinity,
       padding: EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [AppColors.rose600, AppColors.rose600.withAlpha(204)],
+          colors: [theme.colors.destructive, theme.colors.destructive.withAlpha(204)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: AppColors.rose100.withAlpha(128),
+            color: theme.colors.destructive.withAlpha(128),
             blurRadius: 12,
             offset: Offset(0, 4),
           ),
@@ -170,7 +177,7 @@ class ViolationReportDetailScreen extends StatelessWidget {
                   vertical: AppSpacing.xs,
                 ),
                 decoration: BoxDecoration(
-                  color: Colors.white.withAlpha(51),
+                  color: theme.colors.destructiveForeground.withAlpha(51),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
@@ -178,7 +185,7 @@ class ViolationReportDetailScreen extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w600,
-                    color: Colors.white,
+                    color: theme.colors.destructiveForeground,
                   ),
                 ),
               ),
@@ -187,7 +194,7 @@ class ViolationReportDetailScreen extends StatelessWidget {
           SizedBox(height: AppSpacing.md),
           Row(
             children: [
-              Icon(Icons.warning, color: Colors.white, size: 28),
+              Icon(IconMap.warning, color: theme.colors.destructiveForeground, size: 28),
               SizedBox(width: AppSpacing.sm),
               Expanded(
                 child: Text(
@@ -195,7 +202,7 @@ class ViolationReportDetailScreen extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
-                    color: Colors.white,
+                    color: theme.colors.destructiveForeground,
                   ),
                 ),
               ),
@@ -204,13 +211,13 @@ class ViolationReportDetailScreen extends StatelessWidget {
           SizedBox(height: AppSpacing.sm),
           Row(
             children: [
-              Icon(Icons.business, color: Colors.white70, size: 16),
+              Icon(IconMap.business, color: theme.colors.destructiveForeground.withAlpha(179), size: 16),
               SizedBox(width: AppSpacing.xs),
               Text(
                 violation.areaName ?? '-',
                 style: TextStyle(
                   fontSize: 14,
-                  color: Colors.white70,
+                  color: theme.colors.destructiveForeground.withAlpha(179),
                 ),
               ),
             ],
@@ -218,13 +225,13 @@ class ViolationReportDetailScreen extends StatelessWidget {
           SizedBox(height: AppSpacing.xs),
           Row(
             children: [
-              Icon(Icons.person, color: Colors.white70, size: 16),
+              Icon(IconMap.person, color: theme.colors.destructiveForeground.withAlpha(179), size: 16),
               SizedBox(width: AppSpacing.xs),
               Text(
                 'Pelanggar: ${violation.employeeName ?? '-'}',
                 style: TextStyle(
                   fontSize: 14,
-                  color: Colors.white70,
+                  color: theme.colors.destructiveForeground.withAlpha(179),
                 ),
               ),
             ],
@@ -233,19 +240,19 @@ class ViolationReportDetailScreen extends StatelessWidget {
           Container(
             padding: EdgeInsets.all(AppSpacing.sm),
             decoration: BoxDecoration(
-              color: Colors.white.withAlpha(26),
+              color: theme.colors.destructiveForeground.withAlpha(26),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Row(
               children: [
-                Icon(Icons.access_time, color: Colors.white, size: 20),
+                Icon(IconMap.accessTime, color: theme.colors.destructiveForeground, size: 20),
                 SizedBox(width: AppSpacing.sm),
                 Text(
                   _formatDateTime(violation.capturedAt),
                   style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w500,
-                    color: Colors.white,
+                    color: theme.colors.destructiveForeground,
                   ),
                 ),
               ],
@@ -256,12 +263,13 @@ class ViolationReportDetailScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildInfoCard(List<_InfoItem> items) {
+  Widget _buildInfoCard(List<_InfoItem> items, BuildContext context) {
+    final theme = FTheme.of(context);
     return Container(
       width: double.infinity,
       padding: EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: theme.colors.card,
         borderRadius: BorderRadius.circular(12),
         boxShadow: AppShadows.card,
       ),
@@ -271,7 +279,7 @@ class ViolationReportDetailScreen extends StatelessWidget {
           final item = entry.value;
           return Column(
             children: [
-              if (index > 0) Divider(height: AppSpacing.md, color: AppColors.slate100),
+              if (index > 0) Divider(height: AppSpacing.md, color: theme.colors.muted),
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -279,10 +287,10 @@ class ViolationReportDetailScreen extends StatelessWidget {
                     width: 40,
                     height: 40,
                     decoration: BoxDecoration(
-                      color: AppColors.slate100,
+                      color: theme.colors.muted,
                       borderRadius: BorderRadius.circular(10),
                     ),
-                    child: Icon(item.icon, color: AppColors.slate600, size: 20),
+                    child: Icon(item.icon, color: theme.colors.mutedForeground, size: 20),
                   ),
                   SizedBox(width: AppSpacing.md),
                   Expanded(
@@ -293,7 +301,7 @@ class ViolationReportDetailScreen extends StatelessWidget {
                           item.label,
                           style: TextStyle(
                             fontSize: 12,
-                            color: AppColors.slate500,
+                            color: theme.colors.mutedForeground,
                           ),
                         ),
                         SizedBox(height: 2),
@@ -302,7 +310,7 @@ class ViolationReportDetailScreen extends StatelessWidget {
                           style: TextStyle(
                             fontSize: 15,
                             fontWeight: FontWeight.w500,
-                            color: AppColors.slate800,
+                            color: theme.colors.foreground,
                           ),
                         ),
                       ],
@@ -317,12 +325,13 @@ class ViolationReportDetailScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildTextCard(String text) {
+  Widget _buildTextCard(String text, BuildContext context) {
+    final theme = FTheme.of(context);
     return Container(
       width: double.infinity,
       padding: EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: theme.colors.card,
         borderRadius: BorderRadius.circular(12),
         boxShadow: AppShadows.card,
       ),
@@ -330,19 +339,20 @@ class ViolationReportDetailScreen extends StatelessWidget {
         text,
         style: TextStyle(
           fontSize: 14,
-          color: AppColors.slate700,
+          color: theme.colors.foreground,
           height: 1.5,
         ),
       ),
     );
   }
 
-  Widget _buildPhotoGallery(List<ViolationPhoto> photos) {
+  Widget _buildPhotoGallery(List<ViolationPhoto> photos, BuildContext context) {
+    final theme = FTheme.of(context);
     return Container(
       width: double.infinity,
       padding: EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: theme.colors.card,
         borderRadius: BorderRadius.circular(12),
         boxShadow: AppShadows.card,
       ),
@@ -369,7 +379,7 @@ class ViolationReportDetailScreen extends StatelessWidget {
                 },
                 child: Container(
                   decoration: BoxDecoration(
-                    color: AppColors.slate100,
+                    color: theme.colors.muted,
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: ClipRRect(
@@ -380,18 +390,15 @@ class ViolationReportDetailScreen extends StatelessWidget {
                             fit: BoxFit.cover,
                             width: double.infinity,
                             height: double.infinity,
-                            errorBuilder: (ctx, error, stack) => _buildPhotoError(),
+                            errorBuilder: (ctx, error, stack) => _buildPhotoError(context),
                             loadingBuilder: (ctx, child, loading) {
                               if (loading == null) return child;
                               return Center(
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  color: AppColors.primary,
-                                ),
+                                child: LoadingIndicator(size: 24),
                               );
                             },
                           )
-                        : _buildPhotoError(),
+                        : _buildPhotoError(context),
                   ),
                 ),
               );
@@ -402,7 +409,7 @@ class ViolationReportDetailScreen extends StatelessWidget {
             'Tap foto untuk memperbesar',
             style: TextStyle(
               fontSize: 12,
-              color: AppColors.slate400,
+              color: theme.colors.mutedForeground,
             ),
           ),
         ],
@@ -410,13 +417,14 @@ class ViolationReportDetailScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildPhotoError() {
+  Widget _buildPhotoError(BuildContext context) {
+    final theme = FTheme.of(context);
     return Container(
-      color: AppColors.slate100,
+      color: theme.colors.muted,
       child: Center(
         child: Icon(
-          Icons.broken_image,
-          color: AppColors.slate400,
+          IconMap.brokenImage,
+          color: theme.colors.mutedForeground,
           size: 40,
         ),
       ),
@@ -424,6 +432,7 @@ class ViolationReportDetailScreen extends StatelessWidget {
   }
 
   void _showPhotoDialog(BuildContext context, String url) {
+    final theme = FTheme.of(context);
     showDialog(
       context: context,
       builder: (ctx) => Dialog(
@@ -453,13 +462,13 @@ class ViolationReportDetailScreen extends StatelessWidget {
                     fit: BoxFit.contain,
                     errorBuilder: (ctx, error, stack) => Container(
                       padding: EdgeInsets.all(AppSpacing.xl),
-                      color: Colors.white,
+                      color: theme.colors.card,
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(Icons.broken_image, size: 64, color: AppColors.danger),
+                          Icon(IconMap.brokenImage, size: 64, color: theme.colors.destructive),
                           SizedBox(height: AppSpacing.md),
-                          Text('Gagal memuat foto', style: TextStyle(color: Colors.white)),
+                          Text('Gagal memuat foto', style: TextStyle(color: theme.colors.foreground)),
                         ],
                       ),
                     ),
@@ -475,10 +484,10 @@ class ViolationReportDetailScreen extends StatelessWidget {
                 icon: Container(
                   padding: EdgeInsets.all(4),
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: theme.colors.card,
                     shape: BoxShape.circle,
                   ),
-                  child: Icon(Icons.close, color: AppColors.slate800, size: 20),
+                  child: Icon(IconMap.close, color: theme.colors.foreground, size: 20),
                 ),
               ),
             ),

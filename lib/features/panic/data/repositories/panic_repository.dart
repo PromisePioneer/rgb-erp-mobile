@@ -18,6 +18,7 @@ class PanicRepository {
     required double longitude,
     String? description,
   }) async {
+    print('PANIC_REPO: Calling API - type=$type, lat=$latitude, lng=$longitude');
     try {
       final data = await _api.sendPanicAlert(
         type: type,
@@ -25,10 +26,12 @@ class PanicRepository {
         longitude: longitude,
         description: description,
       );
+      print('PANIC_REPO: API response - $data');
       return PanicAlertResult.fromJson(data);
     } on ApiException {
       rethrow;
     } catch (e) {
+      print('PANIC_REPO: Exception - $e');
       throw ApiException(
         message: 'Gagal mengirim panic alert: $e',
         statusCode: 500,

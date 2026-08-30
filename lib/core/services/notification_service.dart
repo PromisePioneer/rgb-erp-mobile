@@ -35,7 +35,9 @@ class NotificationItem {
 /// Service for handling push notifications (FCM) and local notifications
 class NotificationService {
   static final NotificationService _instance = NotificationService._internal();
+
   factory NotificationService() => _instance;
+
   NotificationService._internal();
 
   final FirebaseMessaging _fcm = FirebaseMessaging.instance;
@@ -52,6 +54,7 @@ class NotificationService {
 
   /// List of received notifications
   final List<NotificationItem> _notifications = [];
+
   List<NotificationItem> get notifications => List.unmodifiable(_notifications);
 
   /// Callback when patrol alarm is received (foreground only)
@@ -95,7 +98,8 @@ class NotificationService {
 
   /// Initialize local notifications plugin
   Future<void> _initLocalNotifications() async {
-    const androidSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
+    const androidSettings = AndroidInitializationSettings(
+        '@mipmap/ic_launcher');
     const iosSettings = DarwinInitializationSettings(
       requestAlertPermission: false,
       requestBadgePermission: false,
@@ -126,7 +130,8 @@ class NotificationService {
       );
 
       await _localNotif
-          .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
+          .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin>()
           ?.createNotificationChannel(androidChannel);
 
       // Create default channel for regular notifications (shift reminders, etc.)
@@ -140,7 +145,8 @@ class NotificationService {
       );
 
       await _localNotif
-          .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
+          .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin>()
           ?.createNotificationChannel(defaultChannel);
 
       // Create shift reminder channel (alarm-like notification)
@@ -155,7 +161,8 @@ class NotificationService {
         );
 
         await _localNotif
-            .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
+            .resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin>()
             ?.createNotificationChannel(shiftReminderChannel);
       }
     }
@@ -223,8 +230,10 @@ class NotificationService {
       }
 
       // Navigate to alarm screen via static callback
-      final alarmMessage = message.notification?.body ?? 'Waktunya patroli checkpoint berikutnya!';
-      debugPrint('NOTIF: Calling PatrolNotifier.onAlarmNavigated with: $alarmMessage');
+      final alarmMessage = message.notification?.body ??
+          'Waktunya patroli checkpoint berikutnya!';
+      debugPrint(
+          'NOTIF: Calling PatrolNotifier.onAlarmNavigated with: $alarmMessage');
       PatrolNotifier.onAlarmNavigated?.call(alarmMessage);
     }
 
@@ -236,15 +245,19 @@ class NotificationService {
       try {
         await _alarmPlayer.stop();
         await _alarmPlayer.play(AssetSource('sounds/alarm.mp3'));
-        debugPrint('NotificationService: Shift reminder alarm sound started (looping)');
+        debugPrint(
+            'NotificationService: Shift reminder alarm sound started (looping)');
       } catch (e) {
-        debugPrint('NotificationService: Failed to play shift reminder alarm sound: $e');
+        debugPrint(
+            'NotificationService: Failed to play shift reminder alarm sound: $e');
       }
 
       // Navigate to attendance screen via static callback
-      final reminderMessage = message.notification?.body ?? 'Waktunya absen shift!';
+      final reminderMessage = message.notification?.body ??
+          'Waktunya absen shift!';
       final scheduleId = data['schedule_id'];
-      debugPrint('NOTIF: Calling onShiftReminderReceived with: $reminderMessage, scheduleId: $scheduleId');
+      debugPrint(
+          'NOTIF: Calling onShiftReminderReceived with: $reminderMessage, scheduleId: $scheduleId');
       onShiftReminderReceived?.call(reminderMessage, scheduleId);
     }
 
@@ -253,7 +266,8 @@ class NotificationService {
       debugPrint('NOTIF: This is a backup_offer!');
       final offerId = data['backup_offer_id'];
       final scheduleId = data['schedule_id'];
-      final offerMessage = message.notification?.body ?? 'Anda mendapat tawaran backup jaga!';
+      final offerMessage = message.notification?.body ??
+          'Anda mendapat perintah backup!';
 
       // Stop alarm if playing
       _stopAlarmSound();
@@ -269,7 +283,9 @@ class NotificationService {
       isAlarm: isPatrolAlarm || isShiftReminder,
       channelId: isPatrolAlarm
           ? 'patrol_alarm'
-          : (isShiftReminder ? 'shift_reminder' : (isBackupOffer ? 'backup_offer' : 'default')),
+          : (isShiftReminder ? 'shift_reminder' : (isBackupOffer
+          ? 'backup_offer'
+          : 'default')),
     );
 
     // Add to notification list
@@ -297,10 +313,14 @@ class NotificationService {
       effectiveChannelId,
       isPatrolAlarm
           ? 'Alarm Patroli'
-          : (isShiftReminder ? 'Pengingat Shift' : (isBackupOffer ? 'Backup Jaga' : 'Notifikasi')),
+          : (isShiftReminder ? 'Pengingat Shift' : (isBackupOffer
+          ? 'Backup Jaga'
+          : 'Notifikasi')),
       channelDescription: isPatrolAlarm
           ? 'Notifikasi patroli checkpoint'
-          : (isShiftReminder ? 'Pengingat jadwal shift' : (isBackupOffer ? 'Tawaran backup jaga' : 'Notifikasi umum')),
+          : (isShiftReminder ? 'Pengingat jadwal shift' : (isBackupOffer
+          ? 'Tawaran backup jaga'
+          : 'Notifikasi umum')),
       importance: isAlarm ? Importance.max : Importance.high,
       priority: isAlarm ? Priority.high : Priority.high,
       ongoing: isAlarm,
@@ -324,10 +344,13 @@ class NotificationService {
     final notificationId = isShiftReminder
         ? AppConstants.shiftReminderNotificationId
         : (isPatrolAlarm
-            ? AppConstants.patrolAlarmNotificationId
-            : (isBackupOffer
-                ? AppConstants.patrolAlarmNotificationId + 1 // Different ID for backup offers
-                : DateTime.now().millisecondsSinceEpoch ~/ 1000));
+        ? AppConstants.patrolAlarmNotificationId
+        : (isBackupOffer
+        ? AppConstants.patrolAlarmNotificationId +
+        1 // Different ID for backup offers
+        : DateTime
+        .now()
+        .millisecondsSinceEpoch ~/ 1000));
 
     await _localNotif.show(
       notificationId,
@@ -360,7 +383,8 @@ class NotificationService {
 
   /// Handle local notification tap
   void _handleLocalNotificationTap(NotificationResponse response) {
-    debugPrint('NotificationService: Local notification tapped: ${response.payload}');
+    debugPrint(
+        'NotificationService: Local notification tapped: ${response.payload}');
 
     final payload = response.payload;
     if (payload == 'patrol_alarm') {
@@ -432,7 +456,8 @@ class NotificationService {
 
     // Prevent multiple simultaneous registrations
     if (_isRegisteringToken) {
-      debugPrint('NotificationService: Token registration already in progress, skipping');
+      debugPrint(
+          'NotificationService: Token registration already in progress, skipping');
       return;
     }
     _isRegisteringToken = true;
@@ -479,7 +504,11 @@ class NotificationService {
 
   /// Generate a unique device ID
   String _generateDeviceId() {
-    return 'device_${DateTime.now().millisecondsSinceEpoch}_${(DateTime.now().microsecond % 10000).toString().padLeft(4, '0')}';
+    return 'device_${DateTime
+        .now()
+        .millisecondsSinceEpoch}_${(DateTime
+        .now()
+        .microsecond % 10000).toString().padLeft(4, '0')}';
   }
 
   /// Get current FCM token
@@ -531,7 +560,8 @@ class NotificationService {
 
     // Don't schedule if time is in the past
     if (scheduledTime.isBefore(DateTime.now())) {
-      debugPrint('NotificationService: Scheduled time is in the past, skipping');
+      debugPrint(
+          'NotificationService: Scheduled time is in the past, skipping');
       return;
     }
 
@@ -546,7 +576,8 @@ class NotificationService {
       enableVibration: true,
       playSound: true,
       styleInformation: BigTextStyleInformation(
-        roundInfo ?? 'Waktunya patroli checkpoint berikutnya! Segera lakukan scan checkpoint.',
+        roundInfo ??
+            'Waktunya patroli checkpoint berikutnya! Segera lakukan scan checkpoint.',
         contentTitle: 'Alarm Patroli - Checkpoint Berikutnya',
         summaryText: 'Patroli',
       ),
@@ -571,7 +602,7 @@ class NotificationService {
       details,
       androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
       uiLocalNotificationDateInterpretation:
-          UILocalNotificationDateInterpretation.absoluteTime,
+      UILocalNotificationDateInterpretation.absoluteTime,
       payload: 'patrol_alarm',
     );
 
@@ -662,7 +693,10 @@ class NotificationService {
   bool get isAlarmPlaying => _isAlarmPlaying;
 
   /// Get count of unread notifications
-  int get unreadCount => _notifications.where((n) => !n.isRead).length;
+  int get unreadCount =>
+      _notifications
+          .where((n) => !n.isRead)
+          .length;
 
   /// Add a notification to the list
   void _addNotification({
@@ -671,7 +705,10 @@ class NotificationService {
     String? type,
   }) {
     final item = NotificationItem(
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      id: DateTime
+          .now()
+          .millisecondsSinceEpoch
+          .toString(),
       title: title,
       body: body,
       type: type,
@@ -727,7 +764,8 @@ class NotificationService {
 Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   // If Firebase is not yet initialized, initialize it
   // This is called when app is in background/terminated
-  debugPrint('NotificationService: Handling background message: ${message.data}');
+  debugPrint(
+      'NotificationService: Handling background message: ${message.data}');
 
   final type = message.data['type'];
 

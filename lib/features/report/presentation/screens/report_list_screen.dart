@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import 'package:forui/forui.dart';
 
 import '../../../../core/core.dart';
+import '../../../../shared/widgets/buttons/primary_button.dart';
+import '../../../../shared/widgets/feedback/loading_indicator.dart';
+import '../../../../shared/widgets/icons/forui_icon_map.dart';
 import '../../../../shared/widgets/navigation/app_bottom_nav.dart';
 import '../../domain/domain.dart';
 import '../providers/report_provider.dart';
@@ -44,7 +48,7 @@ class _ReportListScreenState extends State<ReportListScreen> {
         builder: (context, notifier, child) {
           if (notifier.state.isLoadingAreas) {
             return const Center(
-              child: CircularProgressIndicator(color: AppColors.primary),
+              child: LoadingIndicator(size: 32),
             );
           }
 
@@ -53,7 +57,7 @@ class _ReportListScreenState extends State<ReportListScreen> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.error_outline, size: 48, color: AppColors.danger),
+                  Icon(IconMap.errorOutline, size: 48, color: AppColors.danger),
                   const SizedBox(height: AppSpacing.md),
                   Text(
                     notifier.state.areasError!,
@@ -61,9 +65,13 @@ class _ReportListScreenState extends State<ReportListScreen> {
                     style: TextStyle(color: AppColors.danger),
                   ),
                   const SizedBox(height: AppSpacing.md),
-                  ElevatedButton(
-                    onPressed: () => notifier.loadReportsByArea(),
-                    child: const Text('Coba Lagi'),
+                  SizedBox(
+                    width: 150,
+                    child: PrimaryButton(
+                      label: 'Coba Lagi',
+                      onPressed: () => notifier.loadReportsByArea(),
+                      fullWidth: false,
+                    ),
                   ),
                 ],
               ),
@@ -76,7 +84,7 @@ class _ReportListScreenState extends State<ReportListScreen> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Icon(
-                    Icons.assignment_outlined,
+                    IconMap.calendarToday,
                     size: 64,
                     color: AppColors.gray400,
                   ),
@@ -150,7 +158,7 @@ class _ReportListScreenState extends State<ReportListScreen> {
           ),
           child: Row(
             children: [
-              Icon(Icons.location_on, color: Colors.white, size: 18),
+              Icon(IconMap.locationOn, color: Colors.white, size: 18),
               const SizedBox(width: AppSpacing.sm),
               Expanded(
                 child: Text(
@@ -200,7 +208,7 @@ class _ReportListScreenState extends State<ReportListScreen> {
         children: [
           Row(
             children: [
-              Icon(Icons.calendar_today, size: 14, color: AppColors.gray400),
+              Icon(IconMap.calendarToday, size: 14, color: AppColors.gray400),
               const SizedBox(width: 4),
               Text(
                 '${report.date} ${report.time}',
@@ -208,7 +216,7 @@ class _ReportListScreenState extends State<ReportListScreen> {
               ),
               const Spacer(),
               if (report.image != null)
-                Icon(Icons.photo, size: 14, color: AppColors.gray400),
+                Icon(IconMap.cameraAlt, size: 14, color: AppColors.gray400),
             ],
           ),
           const SizedBox(height: AppSpacing.sm),
@@ -222,7 +230,7 @@ class _ReportListScreenState extends State<ReportListScreen> {
           Row(
             children: [
               Icon(
-                Icons.location_on_outlined,
+                IconMap.locationOn,
                 size: 14,
                 color: AppColors.gray400,
               ),
@@ -240,7 +248,7 @@ class _ReportListScreenState extends State<ReportListScreen> {
             const SizedBox(height: AppSpacing.xs),
             Row(
               children: [
-                Icon(Icons.person_outline, size: 14, color: AppColors.gray400),
+                Icon(IconMap.person, size: 14, color: AppColors.gray400),
                 const SizedBox(width: 4),
                 Text(
                   report.employeeName!,

@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
+
 import '../../../../core/theme/app_spacing.dart';
+import '../../../../shared/widgets/buttons/primary_button.dart';
+import '../../../../shared/widgets/feedback/loading_indicator.dart';
+import '../../../../shared/widgets/icons/forui_icon_map.dart';
 
 /// Scanner screen for scanning checkpoint QR codes
 class PatrolScannerScreen extends StatefulWidget {
@@ -71,7 +75,7 @@ class _PatrolScannerScreenState extends State<PatrolScannerScreen> {
               _buildError()
             else if (!_isInitialized)
               const Center(
-                child: CircularProgressIndicator(color: Colors.white),
+                child: LoadingIndicator(size: 32),
               )
             else if (_controller != null)
               _buildScanner(),
@@ -113,15 +117,19 @@ class _PatrolScannerScreenState extends State<PatrolScannerScreen> {
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: AppSpacing.lg),
-              ElevatedButton(
-                onPressed: () {
-                  setState(() {
-                    _errorMessage = null;
-                    _isInitialized = false;
-                  });
-                  _initializeScanner();
-                },
-                child: const Text('Coba Lagi'),
+              SizedBox(
+                width: 150,
+                child: PrimaryButton(
+                  label: 'Coba Lagi',
+                  onPressed: () {
+                    setState(() {
+                      _errorMessage = null;
+                      _isInitialized = false;
+                    });
+                    _initializeScanner();
+                  },
+                  fullWidth: false,
+                ),
               ),
             ],
           ),
@@ -180,7 +188,7 @@ class _PatrolScannerScreenState extends State<PatrolScannerScreen> {
               if (_controller != null)
                 IconButton(
                   onPressed: () => _controller?.toggleTorch(),
-                  icon: const Icon(Icons.flash_off, color: Colors.white, size: 28),
+                  icon: Icon(IconMap.flashOff, color: Colors.white, size: 28),
                 ),
               const SizedBox(height: AppSpacing.md),
               // Cancel button

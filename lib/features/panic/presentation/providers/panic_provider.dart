@@ -62,25 +62,30 @@ class PanicNotifier extends ChangeNotifier {
     required double longitude,
     String? description,
   }) async {
+    print('PANIC_PROVIDER: Starting sendPanicAlert - type=$type, lat=$latitude, lng=$longitude');
     _state = _state.copyWith(isSending: true, clearError: true);
     notifyListeners();
 
     try {
+      print('PANIC_PROVIDER: Calling repository...');
       final result = await _repository.sendPanicAlert(
         type: type,
         latitude: latitude,
         longitude: longitude,
         description: description,
       );
+      print('PANIC_PROVIDER: Success - result=$result');
       _state = _state.copyWith(isSending: false, lastResult: result);
       notifyListeners();
       return true;
     } on ApiException catch (e) {
+      print('PANIC_PROVIDER: ApiException - ${e.message}');
       _state = _state.copyWith(isSending: false, sendError: e.message);
       notifyListeners();
       return false;
     } catch (e) {
-      _state = _state.copyWith(isSending: false, sendError: 'Gagal mengirim panic alert');
+      print('PANIC_PROVIDER: Exception - $e');
+      _state = _state.copyWith(isSending: false, sendError: 'Gagal mengirim panic alert: $e');
       notifyListeners();
       return false;
     }

@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import 'package:forui/forui.dart';
 
 import '../../../../core/core.dart';
 import '../../../../shared/widgets/buttons/primary_button.dart';
+import '../../../../shared/widgets/feedback/loading_indicator.dart';
 import '../../../../shared/widgets/layout/top_gradient_background.dart';
+import '../../../../shared/widgets/icons/forui_icon_map.dart';
 import '../../domain/domain.dart';
 import '../providers/patrol_provider.dart';
 import '../widgets/checkpoint_path.dart';
@@ -77,6 +80,7 @@ class _PatrolHomeScreenState extends State<PatrolHomeScreen> {
   }
 
   void _handleError(PatrolScanResult result) {
+    final theme = FTheme.of(context);
     final code = result.errorCode;
     final message = result.errorMessage ?? 'Scan gagal';
 
@@ -90,7 +94,7 @@ class _PatrolHomeScreenState extends State<PatrolHomeScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(message),
-          backgroundColor: AppColors.danger,
+          backgroundColor: theme.colors.destructive,
           duration: const Duration(seconds: 4),
         ),
       );
@@ -98,22 +102,25 @@ class _PatrolHomeScreenState extends State<PatrolHomeScreen> {
   }
 
   void _showMockLocationDialog(String message) {
+    final theme = FTheme.of(context);
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Row(
+        shape: RoundedRectangleBorder(borderRadius: AppRadius.radiusLg),
+        title: Row(
           children: [
-            Icon(Icons.warning, color: AppColors.danger),
-            SizedBox(width: 8),
-            Text('GPS Palsu Terdeteksi'),
+            Icon(IconMap.warning, color: theme.colors.destructive),
+            const SizedBox(width: 8),
+            const Text('GPS Palsu Terdeteksi'),
           ],
         ),
         content: Text(
           message.isNotEmpty ? message : 'GPS palsu (fake GPS) terdeteksi. Matikan aplikasi fake GPS untuk melanjutkan patroli.',
         ),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
+          FButton(
+            onPress: () => Navigator.pop(context),
+            variant: FButtonVariant.ghost,
             child: const Text('Tutup'),
           ),
         ],
@@ -122,22 +129,25 @@ class _PatrolHomeScreenState extends State<PatrolHomeScreen> {
   }
 
   void _showTOTPErrorDialog(String message) {
+    final theme = FTheme.of(context);
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Row(
+        shape: RoundedRectangleBorder(borderRadius: AppRadius.radiusLg),
+        title: Row(
           children: [
-            Icon(Icons.lock, color: AppColors.danger),
-            SizedBox(width: 8),
-            Text('Kode OTP Salah'),
+            Icon(IconMap.lock, color: theme.colors.destructive),
+            const SizedBox(width: 8),
+            const Text('Kode OTP Salah'),
           ],
         ),
         content: Text(
           message.isNotEmpty ? message : 'Kode OTP tidak valid atau sudah kadaluarsa. Pastikan waktu perangkat Anda sudah sinkron.',
         ),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
+          FButton(
+            onPress: () => Navigator.pop(context),
+            variant: FButtonVariant.ghost,
             child: const Text('Tutup'),
           ),
         ],
@@ -146,22 +156,25 @@ class _PatrolHomeScreenState extends State<PatrolHomeScreen> {
   }
 
   void _showTimeDriftDialog(String message) {
+    final theme = FTheme.of(context);
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Row(
+        shape: RoundedRectangleBorder(borderRadius: AppRadius.radiusLg),
+        title: Row(
           children: [
-            Icon(Icons.schedule, color: AppColors.warning),
-            SizedBox(width: 8),
-            Text('Waktu Tidak Sinkron'),
+            Icon(IconMap.schedule, color: theme.colors.secondary),
+            const SizedBox(width: 8),
+            const Text('Waktu Tidak Sinkron'),
           ],
         ),
         content: Text(
           message.isNotEmpty ? message : 'Waktu perangkat Anda tidak sinkron dengan server. Mohon perbarui waktu otomatis di pengaturan perangkat.',
         ),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
+          FButton(
+            onPress: () => Navigator.pop(context),
+            variant: FButtonVariant.ghost,
             child: const Text('Tutup'),
           ),
         ],
@@ -208,7 +221,7 @@ class _PatrolHomeScreenState extends State<PatrolHomeScreen> {
 
             if (notifier.state.isLoading &&
                 notifier.state.todayStatus == null) {
-              return const Center(child: CircularProgressIndicator());
+              return const Center(child: LoadingIndicator(size: 32));
             }
 
             final status = notifier.state.todayStatus;
@@ -232,27 +245,28 @@ class _PatrolHomeScreenState extends State<PatrolHomeScreen> {
   }
 
   Widget _buildCountdownBadge(String text, bool isOverdue) {
+    final theme = FTheme.of(context);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-        color: isOverdue ? AppColors.danger : AppColors.primary,
+        color: isOverdue ? theme.colors.destructive : theme.colors.primary,
         borderRadius: BorderRadius.circular(16),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(
-            isOverdue ? Icons.warning_rounded : Icons.timer,
+            isOverdue ? IconMap.warning : IconMap.timer,
             size: 16,
-            color: Colors.white,
+            color: isOverdue ? theme.colors.destructiveForeground : theme.colors.primaryForeground,
           ),
           const SizedBox(width: 6),
           Text(
             text,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.w600,
-              color: Colors.white,
+              color: isOverdue ? theme.colors.destructiveForeground : theme.colors.primaryForeground,
             ),
           ),
         ],
@@ -261,23 +275,28 @@ class _PatrolHomeScreenState extends State<PatrolHomeScreen> {
   }
 
   Widget _buildError(PatrolNotifier notifier) {
+    final theme = FTheme.of(context);
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(AppSpacing.lg),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.error_outline, size: 64, color: AppColors.danger),
+            Icon(IconMap.errorOutline, size: 64, color: theme.colors.destructive),
             const SizedBox(height: AppSpacing.md),
             Text(
               notifier.state.error ?? 'Terjadi kesalahan',
               textAlign: TextAlign.center,
-              style: const TextStyle(color: AppColors.textSecondary),
+              style: TextStyle(color: theme.colors.mutedForeground),
             ),
             const SizedBox(height: AppSpacing.lg),
-            ElevatedButton(
-              onPressed: () => notifier.loadTodayStatus(),
-              child: const Text('Coba Lagi'),
+            SizedBox(
+              width: 150,
+              child: PrimaryButton(
+                label: 'Coba Lagi',
+                onPressed: () => notifier.loadTodayStatus(),
+                fullWidth: false,
+              ),
             ),
           ],
         ),
@@ -286,17 +305,18 @@ class _PatrolHomeScreenState extends State<PatrolHomeScreen> {
   }
 
   Widget _buildNoSchedule() {
+    final theme = FTheme.of(context);
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(AppSpacing.lg),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
-          children: const [
-            Icon(Icons.event_busy, size: 64, color: AppColors.slate400),
-            SizedBox(height: AppSpacing.md),
+          children: [
+            Icon(IconMap.eventBusy, size: 64, color: theme.colors.muted),
+            const SizedBox(height: AppSpacing.md),
             Text(
               'Tidak ada jadwal patroli hari ini',
-              style: TextStyle(fontSize: 16, color: AppColors.textSecondary),
+              style: TextStyle(fontSize: 16, color: theme.colors.mutedForeground),
             ),
           ],
         ),
@@ -358,7 +378,7 @@ class _PatrolHomeScreenState extends State<PatrolHomeScreen> {
         label: isLoading
             ? 'Memproses...'
             : 'Scan Checkpoint #${notifier.state.nextExpectedSequence}',
-        icon: Icons.qr_code_scanner,
+        icon: IconMap.qrCodeScanner,
         isLoading: isLoading,
         onPressed: isLoading ? null : _handleScan,
       ),
@@ -366,6 +386,7 @@ class _PatrolHomeScreenState extends State<PatrolHomeScreen> {
   }
 
   Widget _buildCountdownCard(PatrolNotifier notifier) {
+    final theme = FTheme.of(context);
     final progress = notifier.state.todayStatus?.currentProgress;
     if (progress == null) return const SizedBox.shrink();
 
@@ -376,12 +397,12 @@ class _PatrolHomeScreenState extends State<PatrolHomeScreen> {
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [AppColors.primary, AppColors.primary.withAlpha(204)],
+          colors: [theme.colors.primary, theme.colors.primary.withAlpha(204)],
         ),
         borderRadius: AppRadius.radiusLg,
         boxShadow: [
           BoxShadow(
-            color: AppColors.primary.withAlpha(77),
+            color: theme.colors.primary.withAlpha(77),
             blurRadius: 8,
             offset: const Offset(0, 4),
           ),
@@ -395,27 +416,27 @@ class _PatrolHomeScreenState extends State<PatrolHomeScreen> {
                 width: 48,
                 height: 48,
                 decoration: BoxDecoration(
-                  color: Colors.white.withAlpha(51),
+                  color: theme.colors.primaryForeground.withAlpha(51),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: const Icon(Icons.timer, color: Colors.white, size: 28),
+                child: Icon(IconMap.timer, color: theme.colors.primaryForeground, size: 28),
               ),
               const SizedBox(width: AppSpacing.md),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
+                    Text(
                       'Checkpoint Berikutnya',
-                      style: TextStyle(fontSize: 14, color: Colors.white70),
+                      style: TextStyle(fontSize: 14, color: theme.colors.primaryForeground.withAlpha(179)),
                     ),
                     const SizedBox(height: 4),
                     Text(
                       notifier.state.roundCountdownText ?? '',
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
-                        color: Colors.white,
+                        color: theme.colors.primaryForeground,
                       ),
                     ),
                   ],
@@ -428,16 +449,16 @@ class _PatrolHomeScreenState extends State<PatrolHomeScreen> {
                       'Jam',
                       style: TextStyle(
                         fontSize: 12,
-                        color: Colors.white.withAlpha(179),
+                        color: theme.colors.primaryForeground.withAlpha(179),
                       ),
                     ),
                     const SizedBox(height: 2),
                     Text(
                       _formatTime(progress.currentRoundDueAt!),
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
-                        color: Colors.white,
+                        color: theme.colors.primaryForeground,
                       ),
                     ),
                   ],
@@ -453,6 +474,7 @@ class _PatrolHomeScreenState extends State<PatrolHomeScreen> {
   }
 
   Widget _buildCountdownProgressBar(CurrentProgressInfo progress) {
+    final theme = FTheme.of(context);
     // Calculate progress based on interval and time elapsed
     final intervalMinutes = progress.intervalMinutes;
     final dueAt = progress.currentRoundDueAt;
@@ -473,8 +495,8 @@ class _PatrolHomeScreenState extends State<PatrolHomeScreen> {
           borderRadius: BorderRadius.circular(4),
           child: LinearProgressIndicator(
             value: progressValue,
-            backgroundColor: Colors.white.withAlpha(51),
-            valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
+            backgroundColor: theme.colors.primaryForeground.withAlpha(51),
+            valueColor: AlwaysStoppedAnimation<Color>(theme.colors.primaryForeground),
             minHeight: 6,
           ),
         ),
@@ -486,14 +508,14 @@ class _PatrolHomeScreenState extends State<PatrolHomeScreen> {
               'Mulai: ${_formatTime(startTime)}',
               style: TextStyle(
                 fontSize: 11,
-                color: Colors.white.withAlpha(179),
+                color: theme.colors.primaryForeground.withAlpha(179),
               ),
             ),
             Text(
               'Selesai: ${_formatTime(dueAt)}',
               style: TextStyle(
                 fontSize: 11,
-                color: Colors.white.withAlpha(179),
+                color: theme.colors.primaryForeground.withAlpha(179),
               ),
             ),
           ],
@@ -507,13 +529,14 @@ class _PatrolHomeScreenState extends State<PatrolHomeScreen> {
   }
 
   Widget _buildScheduleCard(PatrolTodayStatus status) {
+    final theme = FTheme.of(context);
     final schedule = status.schedule;
     if (schedule == null) return const SizedBox.shrink();
 
     return Container(
       padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: theme.colors.card,
         borderRadius: AppRadius.radiusLg,
         boxShadow: AppShadows.card,
       ),
@@ -523,10 +546,10 @@ class _PatrolHomeScreenState extends State<PatrolHomeScreen> {
             width: 48,
             height: 48,
             decoration: BoxDecoration(
-              color: AppColors.teal100,
+              color: theme.colors.secondary,
               borderRadius: BorderRadius.circular(12),
             ),
-            child: const Icon(Icons.location_city, color: AppColors.teal600),
+            child: Icon(IconMap.locationCity, color: theme.colors.secondaryForeground),
           ),
           const SizedBox(width: AppSpacing.md),
           Expanded(
@@ -535,17 +558,17 @@ class _PatrolHomeScreenState extends State<PatrolHomeScreen> {
               children: [
                 Text(
                   schedule.areaName,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontWeight: FontWeight.w600,
-                    color: AppColors.textPrimary,
+                    color: theme.colors.foreground,
                   ),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   '${schedule.shiftName} (${schedule.shiftStartTime} - ${schedule.shiftEndTime})',
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 12,
-                    color: AppColors.textSecondary,
+                    color: theme.colors.mutedForeground,
                   ),
                 ),
               ],
@@ -563,8 +586,8 @@ class _PatrolHomeScreenState extends State<PatrolHomeScreen> {
           child: _buildStatCard(
             'Ronde Selesai',
             '${status.stats?.completedRounds ?? 0}',
-            Icons.check_circle,
-            AppColors.teal500,
+            IconMap.checkCircle,
+            FTheme.of(context).colors.primary,
           ),
         ),
         const SizedBox(width: AppSpacing.md),
@@ -572,8 +595,8 @@ class _PatrolHomeScreenState extends State<PatrolHomeScreen> {
           child: _buildStatCard(
             'Sedang Berlangsung',
             '${status.stats?.inProgressRounds ?? 0}',
-            Icons.play_circle,
-            AppColors.primary,
+            IconMap.playCircle,
+            FTheme.of(context).colors.secondary,
           ),
         ),
         const SizedBox(width: AppSpacing.md),
@@ -581,8 +604,8 @@ class _PatrolHomeScreenState extends State<PatrolHomeScreen> {
           child: _buildStatCard(
             'Total Titik',
             '${status.stats?.totalCheckpoints ?? 0}',
-            Icons.place,
-            AppColors.slate500,
+            IconMap.place,
+            FTheme.of(context).colors.muted,
           ),
         ),
       ],
@@ -595,10 +618,11 @@ class _PatrolHomeScreenState extends State<PatrolHomeScreen> {
     IconData icon,
     Color color,
   ) {
+    final theme = FTheme.of(context);
     return Container(
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: theme.colors.card,
         borderRadius: AppRadius.radiusMd,
         boxShadow: AppShadows.card,
       ),
@@ -616,9 +640,9 @@ class _PatrolHomeScreenState extends State<PatrolHomeScreen> {
           ),
           Text(
             label,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 10,
-              color: AppColors.textSecondary,
+              color: theme.colors.mutedForeground,
             ),
             textAlign: TextAlign.center,
           ),
@@ -631,6 +655,7 @@ class _PatrolHomeScreenState extends State<PatrolHomeScreen> {
     PatrolNotifier notifier,
     PatrolTodayStatus status,
   ) {
+    final theme = FTheme.of(context);
     final total = status.stats?.totalCheckpoints ?? 0;
     final nextSeq = status.nextExpectedSequence;
 
@@ -657,7 +682,7 @@ class _PatrolHomeScreenState extends State<PatrolHomeScreen> {
     return Container(
       padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: theme.colors.card,
         borderRadius: AppRadius.radiusLg,
         boxShadow: AppShadows.card,
       ),
@@ -667,12 +692,12 @@ class _PatrolHomeScreenState extends State<PatrolHomeScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
+              Text(
                 'Peta Checkpoint',
                 style: TextStyle(
                   fontWeight: FontWeight.w600,
                   fontSize: 16,
-                  color: AppColors.textPrimary,
+                  color: theme.colors.foreground,
                 ),
               ),
               if (notifier.state.isCountingDown)
@@ -682,23 +707,23 @@ class _PatrolHomeScreenState extends State<PatrolHomeScreen> {
                     vertical: 4,
                   ),
                   decoration: BoxDecoration(
-                    color: AppColors.amber100,
+                    color: theme.colors.secondary,
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Icon(
-                        Icons.timer,
+                      Icon(
+                        IconMap.timer,
                         size: 14,
-                        color: AppColors.amber600,
+                        color: theme.colors.secondaryForeground,
                       ),
                       const SizedBox(width: 4),
                       Text(
                         '${notifier.state.countdownSeconds}s',
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 12,
-                          color: AppColors.amber600,
+                          color: theme.colors.secondaryForeground,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
@@ -729,15 +754,16 @@ class _PatrolHomeScreenState extends State<PatrolHomeScreen> {
   }
 
   Widget _buildSessionHistory(PatrolTodayStatus status) {
+    final theme = FTheme.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           'Riwayat Ronde Hari Ini',
           style: TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.w600,
-            color: AppColors.textPrimary,
+            color: theme.colors.foreground,
           ),
         ),
         const SizedBox(height: AppSpacing.sm),
@@ -747,21 +773,22 @@ class _PatrolHomeScreenState extends State<PatrolHomeScreen> {
   }
 
   Widget _buildSessionItem(PatrolSession session) {
+    final theme = FTheme.of(context);
     Color statusColor;
     IconData statusIcon;
 
     switch (session.status) {
       case 'in_progress':
-        statusColor = AppColors.primary;
-        statusIcon = Icons.play_circle;
+        statusColor = theme.colors.primary;
+        statusIcon = IconMap.playCircle;
         break;
       case 'completed':
-        statusColor = AppColors.teal500;
-        statusIcon = Icons.check_circle;
+        statusColor = theme.colors.primary;
+        statusIcon = IconMap.checkCircle;
         break;
       default:
-        statusColor = AppColors.slate400;
-        statusIcon = Icons.cancel;
+        statusColor = theme.colors.muted;
+        statusIcon = IconMap.cancel;
     }
 
     String timeText = '-';
@@ -778,7 +805,7 @@ class _PatrolHomeScreenState extends State<PatrolHomeScreen> {
       margin: const EdgeInsets.only(bottom: AppSpacing.sm),
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: theme.colors.card,
         borderRadius: AppRadius.radiusMd,
         boxShadow: AppShadows.cardSubtle,
       ),
@@ -800,16 +827,16 @@ class _PatrolHomeScreenState extends State<PatrolHomeScreen> {
               children: [
                 Text(
                   'Ronde ${session.roundNumber}',
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontWeight: FontWeight.w500,
-                    color: AppColors.textPrimary,
+                    color: theme.colors.foreground,
                   ),
                 ),
                 Text(
                   timeText,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 12,
-                    color: AppColors.textSecondary,
+                    color: theme.colors.mutedForeground,
                   ),
                 ),
               ],
@@ -817,9 +844,9 @@ class _PatrolHomeScreenState extends State<PatrolHomeScreen> {
           ),
           Text(
             '${session.scansCount} scan',
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 12,
-              color: AppColors.textSecondary,
+              color: theme.colors.mutedForeground,
             ),
           ),
         ],

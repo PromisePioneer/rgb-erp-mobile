@@ -1,5 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:forui/forui.dart';
+
 import '../../../../core/core.dart';
+import '../../../../shared/widgets/buttons/primary_button.dart';
+import '../../../../shared/widgets/feedback/loading_indicator.dart';
+import '../../../../shared/widgets/icons/forui_icon_map.dart';
 import '../../domain/models/shift_response.dart';
 
 /// Dialog for responding to shift reminder
@@ -70,11 +75,11 @@ class _ShiftResponseDialogState extends State<ShiftResponseDialog> {
     return showDialog<String>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Row(
+        title: Row(
           children: [
-            Icon(Icons.warning_amber_rounded, color: AppColors.warning),
-            SizedBox(width: AppSpacing.sm),
-            Text('Alasan Penolakan'),
+            Icon(IconMap.warningRounded, color: AppColors.warning),
+            const SizedBox(width: AppSpacing.sm),
+            const Text('Alasan Penolakan'),
           ],
         ),
         content: Column(
@@ -94,12 +99,13 @@ class _ShiftResponseDialogState extends State<ShiftResponseDialog> {
           ],
         ),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
+          FButton(
+            onPress: () => Navigator.pop(context),
+            variant: FButtonVariant.ghost,
             child: const Text('Batal'),
           ),
-          ElevatedButton(
-            onPressed: () {
+          FButton(
+            onPress: () {
               final reason = _reasonController.text.trim();
               if (reason.isEmpty) {
                 ScaffoldMessenger.of(context).showSnackBar(
@@ -109,10 +115,7 @@ class _ShiftResponseDialogState extends State<ShiftResponseDialog> {
               }
               Navigator.pop(context, reason);
             },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.danger,
-              foregroundColor: Colors.white,
-            ),
+            variant: FButtonVariant.destructive,
             child: const Text('Tolak Shift'),
           ),
         ],
@@ -122,12 +125,14 @@ class _ShiftResponseDialogState extends State<ShiftResponseDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = FTheme.of(context);
+
     return AlertDialog(
-      title: const Row(
+      title: Row(
         children: [
-          Icon(Icons.schedule, color: AppColors.primary),
-          SizedBox(width: AppSpacing.sm),
-          Expanded(child: Text('Konfirmasi Jadwal Shift')),
+          Icon(IconMap.schedule, color: theme.colors.primary),
+          const SizedBox(width: AppSpacing.sm),
+          const Expanded(child: Text('Konfirmasi Jadwal Shift')),
         ],
       ),
       content: Column(
@@ -143,18 +148,18 @@ class _ShiftResponseDialogState extends State<ShiftResponseDialog> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildInfoRow(Icons.calendar_today, 'Tanggal', widget.shift.date),
+                _buildInfoRow(IconMap.calendarToday, 'Tanggal', widget.shift.date),
                 const SizedBox(height: AppSpacing.sm),
                 if (widget.shift.areaName != null)
-                  _buildInfoRow(Icons.location_on, 'Area', widget.shift.areaName!),
+                  _buildInfoRow(IconMap.locationOn, 'Area', widget.shift.areaName!),
                 const SizedBox(height: AppSpacing.sm),
                 if (widget.shift.posName != null)
-                  _buildInfoRow(Icons.place, 'POS', widget.shift.posName!),
+                  _buildInfoRow(IconMap.place, 'POS', widget.shift.posName!),
                 const SizedBox(height: AppSpacing.sm),
                 if (widget.shift.shiftName != null)
-                  _buildInfoRow(Icons.access_time, 'Shift', widget.shift.shiftName!),
+                  _buildInfoRow(IconMap.accessTime, 'Shift', widget.shift.shiftName!),
                 const SizedBox(height: AppSpacing.sm),
-                _buildInfoRow(Icons.schedule, 'Jam Mulai', widget.shift.shiftStartTime),
+                _buildInfoRow(IconMap.schedule, 'Jam Mulai', widget.shift.shiftStartTime),
               ],
             ),
           ),
@@ -166,11 +171,11 @@ class _ShiftResponseDialogState extends State<ShiftResponseDialog> {
               borderRadius: AppRadius.radiusMd,
               border: Border.all(color: AppColors.amber200),
             ),
-            child: const Row(
+            child: Row(
               children: [
-                Icon(Icons.info_outline, color: AppColors.amber600, size: 20),
-                SizedBox(width: AppSpacing.sm),
-                Expanded(
+                Icon(IconMap.infoOutline, color: AppColors.amber600, size: 20),
+                const SizedBox(width: AppSpacing.sm),
+                const Expanded(
                   child: Text(
                     'Jika ditolak, sistem akan mencari backup secara otomatis.',
                     style: TextStyle(
@@ -186,31 +191,17 @@ class _ShiftResponseDialogState extends State<ShiftResponseDialog> {
       ),
       actions: [
         // Reject button
-        OutlinedButton(
+        SecondaryButton(
+          label: 'TOLAK',
           onPressed: _isLoading ? null : _reject,
-          style: OutlinedButton.styleFrom(
-            foregroundColor: AppColors.danger,
-            side: const BorderSide(color: AppColors.danger),
-          ),
-          child: const Text('TOLAK'),
+          isDanger: true,
+          isLoading: _isLoading,
         ),
         // Accept button
-        ElevatedButton(
+        PrimaryButton(
+          label: 'TERIMA',
           onPressed: _isLoading ? null : _accept,
-          style: ElevatedButton.styleFrom(
-            backgroundColor: AppColors.success,
-            foregroundColor: Colors.white,
-          ),
-          child: _isLoading
-              ? const SizedBox(
-                  width: 20,
-                  height: 20,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                  ),
-                )
-              : const Text('TERIMA'),
+          isLoading: _isLoading,
         ),
       ],
     );

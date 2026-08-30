@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import 'package:forui/forui.dart';
 
 import '../../../../core/core.dart';
 import '../../../../shared/widgets/buttons/primary_button.dart';
+import '../../../../shared/widgets/feedback/loading_indicator.dart';
+import '../../../../shared/widgets/icons/forui_icon_map.dart';
 import '../providers/report_provider.dart';
 
 /// Field report form screen - simple form with auto location & time
@@ -77,15 +80,16 @@ class _ReportFormScreenState extends State<ReportFormScreen> {
       builder: (ctx) => AlertDialog(
         title: Row(
           children: [
-            Icon(Icons.error_outline, color: AppColors.danger),
+            Icon(IconMap.errorOutline, color: AppColors.danger),
             const SizedBox(width: 8),
             Text(title),
           ],
         ),
         content: Text(message),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
+          FButton(
+            onPress: () => Navigator.pop(ctx),
+            variant: FButtonVariant.ghost,
             child: const Text('Tutup'),
           ),
         ],
@@ -100,23 +104,22 @@ class _ReportFormScreenState extends State<ReportFormScreen> {
       builder: (ctx) => AlertDialog(
         title: Row(
           children: [
-            Icon(Icons.check_circle, color: AppColors.success),
+            Icon(IconMap.checkCircle, color: AppColors.success),
             const SizedBox(width: 8),
             const Text('Berhasil'),
           ],
         ),
         content: const Text('Laporan mutasi berhasil disimpan.'),
         actions: [
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(ctx);
-              context.pop();
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primary,
-              foregroundColor: Colors.white,
+          SizedBox(
+            width: double.infinity,
+            child: PrimaryButton(
+              label: 'OK',
+              onPressed: () {
+                Navigator.pop(ctx);
+                context.pop();
+              },
             ),
-            child: const Text('OK'),
           ),
         ],
       ),
@@ -158,7 +161,7 @@ class _ReportFormScreenState extends State<ReportFormScreen> {
                   // Submit button
                   PrimaryButton(
                     label: 'Simpan Laporan',
-                    icon: Icons.send,
+                    icon: IconMap.send,
                     isLoading: notifier.state.isSubmitting,
                     onPressed: notifier.state.canSubmit ? _handleSubmit : null,
                   ),
@@ -171,7 +174,7 @@ class _ReportFormScreenState extends State<ReportFormScreen> {
                 Container(
                   color: Colors.black26,
                   child: const Center(
-                    child: CircularProgressIndicator(color: AppColors.primary),
+                    child: LoadingIndicator(size: 48),
                   ),
                 ),
             ],
@@ -191,7 +194,7 @@ class _ReportFormScreenState extends State<ReportFormScreen> {
       ),
       child: Row(
         children: [
-          Icon(Icons.info_outline, color: AppColors.info, size: 20),
+          Icon(IconMap.infoOutline, color: AppColors.info, size: 20),
           const SizedBox(width: AppSpacing.sm),
           Expanded(
             child: Text(
@@ -259,7 +262,7 @@ class _ReportFormScreenState extends State<ReportFormScreen> {
       child: Row(
         children: [
           Icon(
-            location != null ? Icons.location_on : Icons.location_off,
+            location != null ? IconMap.locationOn : IconMap.locationOn,
             color: location != null ? AppColors.success : AppColors.danger,
           ),
           const SizedBox(width: AppSpacing.sm),

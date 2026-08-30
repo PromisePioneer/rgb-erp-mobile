@@ -219,7 +219,9 @@ class AttendanceNotifier extends ChangeNotifier {
     notifyListeners();
 
     try {
+      print('ATT_POLL: Starting poll for job $jobUuid');
       final status = await _repository.pollJobStatus(jobUuid);
+      print('ATT_POLL: Final status - ${status.status}, isCompleted: ${status.isCompleted}, isFailed: ${status.isFailed}');
 
       _state = _state.copyWith(
         isVerifying: false,
@@ -228,10 +230,12 @@ class AttendanceNotifier extends ChangeNotifier {
       notifyListeners();
 
       return status;
-    } catch (e) {
+    } catch (e, stackTrace) {
+      print('ATT_POLL: Exception - $e');
+      print('ATT_POLL: Stack trace: $stackTrace');
       _state = _state.copyWith(
         isVerifying: false,
-        error: 'Gagal memeriksa status',
+        error: 'Gagal memeriksa status: $e',
       );
       notifyListeners();
       return null;

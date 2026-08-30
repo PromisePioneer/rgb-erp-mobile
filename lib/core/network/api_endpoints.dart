@@ -103,4 +103,29 @@ class ApiEndpoints {
   static const String violationReportHistory = '/patrol-violation/history';
   static const String violationTypes = '/violation-types';
   static const String violationTypesList = '/violation-types/list';
+
+  // ====================
+  // Daily Task Endpoints
+  // ====================
+  static const String dailyTaskToday = '/daily-task/today';
+  static const String dailyTask = '/daily-task';
+  static const String dailyTaskItems = '/daily-task/items';
+  static const String dailyTaskTools = '/daily-task/tools';
+  static const String dailyTaskChemicals = '/daily-task/chemicals';
+  static const String dailyTaskPpes = '/daily-task/ppes';
+  static const String dailyTaskHistory = '/daily-task/history';
+
+  // ====================
+  // Daily Task Assignment Endpoints (Supervisor)
+  // ====================
+  static const String dailyTaskAssignments = '/admin/daily-task-assignments';
+  static const String dailyTaskAssignmentEmployees = '/admin/daily-task-assignments/employees';
+
+  // ====================
+  // Daily Task Mobile Assignment Endpoints
+  // ====================
+  static const String dailyTaskMobileAssign = '/daily-task/assign';
+  static const String dailyTaskMobileAssignEmployees = '/daily-task/assign/employees';
+  static const String dailyTaskMyAssignments = '/daily-task/assignments/my';
+  static const String dailyTaskReviewCriteria = '/daily-task/review-criteria';
 }

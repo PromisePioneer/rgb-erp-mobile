@@ -47,6 +47,9 @@ class User extends Equatable {
   /// Check if user is Super Admin
   bool get isSuperAdmin => position?.toLowerCase() == 'super admin';
 
+  /// Check if user is Team Leader (can assign tasks)
+  bool get isTeamLeader => position?.toLowerCase() == 'team leader';
+
   /// Check if user has a specific privilege
   bool hasPrivilege(String key) => privileges.contains(key);
 

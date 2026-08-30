@@ -1,7 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
+import 'package:forui/forui.dart';
+
 import '../../../../core/core.dart';
+import '../../../../shared/widgets/buttons/primary_button.dart';
+import '../../../../shared/widgets/dialogs/confirm_dialog.dart';
+import '../../../../shared/widgets/feedback/loading_indicator.dart';
+import '../../../../shared/widgets/icons/forui_icon_map.dart';
 import '../../../../shared/widgets/layout/top_gradient_background.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 
@@ -90,17 +96,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
             _buildSectionHeader('Keamanan'),
             _buildSettingsCard([
             _SettingsTile(
-              icon: Icons.fingerprint,
+              icon: IconMap.fingerprint,
               iconColor: AppColors.primary,
               title: 'Login Fingerprint',
               subtitle: authState.biometricAvailable
                   ? 'Gunakan sidik jari untuk login'
                   : 'Fingerprint tidak tersedia di perangkat ini',
               trailing: authState.biometricAvailable
-                  ? Switch(
+                  ? FSwitch(
                       value: authState.biometricEnabled,
-                      onChanged: _isLoading ? null : (value) => _toggleBiometric(value),
-                      activeColor: AppColors.primary,
+                      onChange: _isLoading ? null : (value) => _toggleBiometric(value),
                     )
                   : null,
               onTap: authState.biometricAvailable
@@ -115,14 +120,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
           _buildSectionHeader('Tentang Aplikasi'),
           _buildSettingsCard([
             _SettingsTile(
-              icon: Icons.info_outline,
+              icon: IconMap.infoOutline,
               iconColor: AppColors.slate500,
               title: 'Versi Aplikasi',
               subtitle: '1.0.0',
             ),
             const Divider(height: 1),
             _SettingsTile(
-              icon: Icons.business,
+              icon: IconMap.business,
               iconColor: AppColors.slate500,
               title: 'RGB ERP Mobile',
               subtitle: 'Employee Self Service',
@@ -135,7 +140,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           _buildSectionHeader('Akun'),
           _buildSettingsCard([
             _SettingsTile(
-              icon: Icons.lock_outline,
+              icon: IconMap.lock,
               iconColor: AppColors.primary,
               title: 'Ganti Password',
               subtitle: 'Ubah password akun Anda',
@@ -143,7 +148,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
             const Divider(height: 1),
             _SettingsTile(
-              icon: Icons.logout,
+              icon: IconMap.logout,
               iconColor: AppColors.danger,
               title: 'Logout',
               subtitle: 'Keluar dari aplikasi',
@@ -196,38 +201,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Future<void> _showLogoutDialog(BuildContext context) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Konfirmasi Logout'),
-        content: const Text('Apakah Anda yakin ingin keluar dari aplikasi?'),
-        actions: [
-          SizedBox(
-            width: 100,
-            child: OutlinedButton(
-              onPressed: () => Navigator.pop(context, false),
-              style: OutlinedButton.styleFrom(
-                foregroundColor: AppColors.slate600,
-                side: const BorderSide(color: AppColors.slate300),
-              ),
-              child: const Text('Batal'),
-            ),
-          ),
-          const SizedBox(width: 12),
-          SizedBox(
-            width: 100,
-            child: ElevatedButton(
-              onPressed: () => Navigator.pop(context, true),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.danger,
-                foregroundColor: Colors.white,
-              ),
-              child: const Text('Logout'),
-            ),
-          ),
-        ],
-      ),
-    );
+    final confirmed = await LogoutDialog.show(context);
 
     if (confirmed == true && mounted) {
       await context.read<AuthNotifier>().logout();
@@ -303,8 +277,8 @@ class _SettingsTile extends StatelessWidget {
               ),
               if (trailing != null) trailing!,
               if (trailing == null && onTap != null)
-                const Icon(
-                  Icons.chevron_right,
+                Icon(
+                  IconMap.chevronRight,
                   color: AppColors.slate400,
                 ),
             ],

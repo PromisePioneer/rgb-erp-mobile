@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/core.dart';
 import '../../../../shared/widgets/inputs/app_text_field.dart';
 import '../../../../shared/widgets/banners/banner_carousel.dart';
+import '../../../../shared/widgets/buttons/primary_button.dart';
 import '../providers/auth_provider.dart';
 import '../widgets/biometric_section.dart';
 
@@ -272,7 +273,6 @@ class _LoginScreenState extends State<LoginScreen> {
                         children: [
                           TextFormField(
                             controller: _nikController,
-                            initialValue: !_isEditingNik ? authState.savedNik : null,
                             onChanged: (value) {
                               setState(() {
                                 _nikError = null;
@@ -328,25 +328,14 @@ class _LoginScreenState extends State<LoginScreen> {
                         final authNotifier = context.watch<AuthNotifier>();
                         final isLoading = authNotifier.state.isLoading;
                         print('LOGIN_BUILD: isLoading=$isLoading, savedNik=${authNotifier.state.savedNik}, _isEditingNik=$_isEditingNik');
-                        return ElevatedButton(
-                          onPressed: isLoading
-                              ? null
-                              : () {
-                                  print('LOGIN_BUTTON: tapped, _isEditingNik=$_isEditingNik, nikController=${_nikController.text}');
-                                  _handlePasswordLogin();
-                                },
-                          child: isLoading
-                              ? const SizedBox(
-                                  width: 24,
-                                  height: 24,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    valueColor: AlwaysStoppedAnimation<Color>(
-                                      Colors.white,
-                                    ),
-                                  ),
-                                )
-                              : const Text('Masuk'),
+                        return PrimaryButton(
+                          label: 'Masuk',
+                          isLoading: isLoading,
+                          fullWidth: true,
+                          onPressed: () {
+                            print('LOGIN_BUTTON: tapped, _isEditingNik=$_isEditingNik');
+                            _handlePasswordLogin();
+                          },
                         );
                       },
                     ),

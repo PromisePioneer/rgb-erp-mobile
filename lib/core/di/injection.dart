@@ -205,8 +205,17 @@ class AttendanceApi {
 
   /// GET /attendance/status/{jobUuid} - Check attendance job status
   Future<Map<String, dynamic>> getAttendanceStatus(String jobUuid) async {
-    final response = await _dio.get(ApiEndpoints.attendanceStatus(jobUuid));
-    return response.data as Map<String, dynamic>;
+    print('ATT_API: Calling GET /attendance/status/$jobUuid');
+    try {
+      final response = await _dio.get(ApiEndpoints.attendanceStatus(jobUuid));
+      print('ATT_API: Status response - statusCode: ${response.statusCode}, data: ${response.data}');
+      return response.data as Map<String, dynamic>;
+    } on DioException catch (e) {
+      print('ATT_API: DioException - message: ${e.message}, type: ${e.type}');
+      print('ATT_API: Response statusCode: ${e.response?.statusCode}');
+      print('ATT_API: Response data: ${e.response?.data}');
+      throw e;
+    }
   }
 }
 
@@ -375,6 +384,7 @@ class PanicApi {
     required double longitude,
     String? description,
   }) async {
+    print('PANIC_API: POST ${ApiEndpoints.panicAlert} - type=$type, lat=$latitude, lng=$longitude');
     final response = await _dio.post(
       ApiEndpoints.panicAlert,
       data: {
@@ -384,6 +394,7 @@ class PanicApi {
         if (description != null) 'description': description,
       },
     );
+    print('PANIC_API: Response - ${response.data}');
     return response.data;
   }
 
@@ -462,6 +473,7 @@ class PayrollApi {
       throw ApiException.fromDioException(e);
     }
   }
+
 }
 
 class LeaveApi {
@@ -501,6 +513,7 @@ class LeaveApi {
       throw ApiException.fromDioException(e);
     }
   }
+
 }
 
 class ViolationReportApi {
@@ -607,6 +620,7 @@ class ViolationReportApi {
       throw ApiException.fromDioException(e);
     }
   }
+
 }
 
 class ReportApi {
@@ -656,6 +670,7 @@ class ReportApi {
       throw ApiException.fromDioException(e);
     }
   }
+
 }
 
 class BackupOfferApi {
@@ -695,6 +710,7 @@ class BackupOfferApi {
       throw ApiException.fromDioException(e);
     }
   }
+
 }
 
 class ShiftResponseApi {
@@ -725,6 +741,335 @@ class ShiftResponseApi {
         data: {
           'action': action,
           if (reason != null) 'reason': reason,
+        },
+      );
+      return response.data as Map<String, dynamic>;
+    } on DioException catch (e) {
+      throw ApiException.fromDioException(e);
+    }
+  }
+
+}
+
+class DailyTaskApi {
+ final Dio _dio;
+
+ DailyTaskApi(this._dio);
+
+ /// GET /daily-task/today - Get today's daily tasks for logged in employee
+ Future<Map<String, dynamic>> getTodayTasks() async {
+ try {
+ final response = await _dio.get(ApiEndpoints.dailyTaskToday);
+ return response.data as Map<String, dynamic>;
+ } on DioException catch (e) {
+ throw ApiException.fromDioException(e);
+ }
+ }
+
+ /// GET /daily-task/{id} - Get task detail
+ Future<Map<String, dynamic>> getTaskDetail(int taskId) async {
+ try {
+ final response = await _dio.get('${ApiEndpoints.dailyTask}/$taskId');
+ return response.data as Map<String, dynamic>;
+ } on DioException catch (e) {
+ throw ApiException.fromDioException(e);
+ }
+ }
+
+ /// GET /daily-task/items - Get available task items
+ Future<Map<String, dynamic>> getItems() async {
+ try {
+ final response = await _dio.get(ApiEndpoints.dailyTaskItems);
+ return response.data as Map<String, dynamic>;
+ } on DioException catch (e) {
+ throw ApiException.fromDioException(e);
+ }
+ }
+
+ /// GET /daily-task/tools - Get available tools
+ Future<Map<String, dynamic>> getTools() async {
+ try {
+ final response = await _dio.get(ApiEndpoints.dailyTaskTools);
+ return response.data as Map<String, dynamic>;
+ } on DioException catch (e) {
+ throw ApiException.fromDioException(e);
+ }
+ }
+
+ /// GET /daily-task/chemicals - Get available chemicals
+ Future<Map<String, dynamic>> getChemicals() async {
+ try {
+ final response = await _dio.get(ApiEndpoints.dailyTaskChemicals);
+ return response.data as Map<String, dynamic>;
+ } on DioException catch (e) {
+ throw ApiException.fromDioException(e);
+ }
+ }
+
+ /// GET /daily-task/ppes - Get available PPEs
+ Future<Map<String, dynamic>> getPpes() async {
+ try {
+ final response = await _dio.get(ApiEndpoints.dailyTaskPpes);
+ return response.data as Map<String, dynamic>;
+ } on DioException catch (e) {
+ throw ApiException.fromDioException(e);
+ }
+ }
+
+ /// GET /daily-task/history - Get task history
+ Future<Map<String, dynamic>> getHistory({int page = 1, int perPage = 15}) async {
+ try {
+ final response = await _dio.get(
+ ApiEndpoints.dailyTaskHistory,
+ queryParameters: {'page': page, 'per_page': perPage},
+ );
+ return response.data as Map<String, dynamic>;
+ } on DioException catch (e) {
+ throw ApiException.fromDioException(e);
+ }
+ }
+
+ /// POST /daily-task/{id}/start - Start a task
+ Future<Map<String, dynamic>> startTask({
+ required int taskId,
+ required List<String> photos,
+ List<int>? toolIds,
+ List<int>? chemicalIds,
+ List<int>? ppeIds,
+ }) async {
+ try {
+ final formData = FormData();
+
+ // Add photos as base64
+ if (photos.isNotEmpty) {
+ for (int i = 0; i < photos.length; i++) {
+ final file = File(photos[i]);
+ if (await file.exists()) {
+ final bytes = await file.readAsBytes();
+ final base64 = base64Encode(bytes);
+ formData.fields.add(MapEntry(
+ 'photos[$i]',
+ base64,
+ ));
+ }
+ }
+ }
+
+ // Add tool IDs
+ if (toolIds != null && toolIds.isNotEmpty) {
+ for (int i = 0; i < toolIds.length; i++) {
+ formData.fields.add(MapEntry('tool_ids[$i]', toolIds[i].toString()));
+ }
+ }
+
+ // Add chemical IDs
+ if (chemicalIds != null && chemicalIds.isNotEmpty) {
+ for (int i = 0; i < chemicalIds.length; i++) {
+ formData.fields.add(MapEntry('chemical_ids[$i]', chemicalIds[i].toString()));
+ }
+ }
+
+ // Add PPE IDs
+ if (ppeIds != null && ppeIds.isNotEmpty) {
+ for (int i = 0; i < ppeIds.length; i++) {
+ formData.fields.add(MapEntry('ppe_ids[$i]', ppeIds[i].toString()));
+ }
+ }
+
+ final response = await _dio.post(
+ '${ApiEndpoints.dailyTask}/$taskId/start',
+ data: formData,
+ options: Options(
+ contentType: 'multipart/form-data',
+ ),
+ );
+ return response.data as Map<String, dynamic>;
+ } on DioException catch (e) {
+ throw ApiException.fromDioException(e);
+ }
+ }
+
+  /// POST /daily-task/{id}/finish - Finish a task
+  Future<Map<String, dynamic>> finishTask({
+    required int taskId,
+    required List<String> photos,
+    String? notes,
+  }) async {
+    try {
+      final formData = FormData();
+
+      // Add photos as base64
+      if (photos.isNotEmpty) {
+        for (int i = 0; i < photos.length; i++) {
+          final file = File(photos[i]);
+          if (await file.exists()) {
+            final bytes = await file.readAsBytes();
+            final base64 = base64Encode(bytes);
+            formData.fields.add(MapEntry(
+              'photos[$i]',
+              base64,
+            ));
+          }
+        }
+      }
+
+      // Add notes
+      if (notes != null && notes.isNotEmpty) {
+        formData.fields.add(MapEntry('notes', notes));
+      }
+
+      final response = await _dio.post(
+        '${ApiEndpoints.dailyTask}/$taskId/finish',
+        data: formData,
+        options: Options(
+          contentType: 'multipart/form-data',
+        ),
+      );
+      return response.data as Map<String, dynamic>;
+    } on DioException catch (e) {
+      throw ApiException.fromDioException(e);
+    }
+  }
+
+  // ====================
+  // Supervisor Assignment APIs
+  // ====================
+
+  /// GET /admin/daily-task-assignments - Get assignments list
+  Future<Map<String, dynamic>> getAssignments({int page = 1, int perPage = 15, String? status}) async {
+    try {
+      final response = await _dio.get(
+        ApiEndpoints.dailyTaskAssignments,
+        queryParameters: {
+          'page': page,
+          'per_page': perPage,
+          if (status != null) 'status': status,
+        },
+      );
+      return response.data as Map<String, dynamic>;
+    } on DioException catch (e) {
+      throw ApiException.fromDioException(e);
+    }
+  }
+
+  /// GET /admin/daily-task-assignments/employees - Get employees for assignment
+  Future<Map<String, dynamic>> getAssignmentEmployees() async {
+    try {
+      final response = await _dio.get(ApiEndpoints.dailyTaskAssignmentEmployees);
+      return response.data as Map<String, dynamic>;
+    } on DioException catch (e) {
+      throw ApiException.fromDioException(e);
+    }
+  }
+
+  /// POST /admin/daily-task-assignments - Create new assignment
+  Future<Map<String, dynamic>> createAssignment({
+    required int employeeId,
+    int? targetMinutes,
+    String? assignedDate,
+    String? notes,
+  }) async {
+    try {
+      final response = await _dio.post(
+        ApiEndpoints.dailyTaskAssignments,
+        data: {
+          'employee_id': employeeId,
+          if (targetMinutes != null) 'target_minutes': targetMinutes,
+          if (assignedDate != null) 'assigned_date': assignedDate,
+          if (notes != null) 'notes': notes,
+        },
+      );
+      return response.data as Map<String, dynamic>;
+    } on DioException catch (e) {
+      throw ApiException.fromDioException(e);
+    }
+  }
+
+  /// DELETE /admin/daily-task-assignments/{id} - Delete assignment
+  Future<Map<String, dynamic>> deleteAssignment(int id) async {
+    try {
+      final response = await _dio.delete('${ApiEndpoints.dailyTaskAssignments}/$id');
+      return response.data as Map<String, dynamic>;
+    } on DioException catch (e) {
+      throw ApiException.fromDioException(e);
+    }
+  }
+
+  // ====================
+  // Mobile Task Assignment APIs (uses daily_task_assign privilege)
+  // ====================
+
+  /// GET /daily-task/assign/employees - Get employees that can be assigned tasks
+  Future<Map<String, dynamic>> getMobileAssignEmployees() async {
+    try {
+      final response = await _dio.get(ApiEndpoints.dailyTaskMobileAssignEmployees);
+      return response.data as Map<String, dynamic>;
+    } on DioException catch (e) {
+      throw ApiException.fromDioException(e);
+    }
+  }
+
+  /// POST /daily-task/assign - Assign a task to an employee
+  Future<Map<String, dynamic>> mobileAssignTask({
+    required int employeeId,
+    int? itemId,
+    int? areaId,
+    int? targetMinutes,
+    String? targetNote,
+    String? notes,
+    String? assignedDate,
+  }) async {
+    try {
+      final response = await _dio.post(
+        ApiEndpoints.dailyTaskMobileAssign,
+        data: {
+          'employee_id': employeeId,
+          if (itemId != null) 'item_id': itemId,
+          if (areaId != null) 'area_id': areaId,
+          if (targetMinutes != null) 'target_minutes': targetMinutes,
+          if (targetNote != null) 'target_note': targetNote,
+          if (notes != null) 'notes': notes,
+          if (assignedDate != null) 'assigned_date': assignedDate,
+        },
+      );
+      return response.data as Map<String, dynamic>;
+    } on DioException catch (e) {
+      throw ApiException.fromDioException(e);
+    }
+  }
+
+  /// GET /daily-task/my-assignments - Get tasks assigned by current user (TL)
+  Future<Map<String, dynamic>> getMyAssignments() async {
+    try {
+      final response = await _dio.get(ApiEndpoints.dailyTaskMyAssignments);
+      return response.data as Map<String, dynamic>;
+    } on DioException catch (e) {
+      throw ApiException.fromDioException(e);
+    }
+  }
+
+  /// GET /daily-task/review-criteria - Get review criteria
+  Future<Map<String, dynamic>> getReviewCriteria() async {
+    try {
+      final response = await _dio.get(ApiEndpoints.dailyTaskReviewCriteria);
+      return response.data as Map<String, dynamic>;
+    } on DioException catch (e) {
+      throw ApiException.fromDioException(e);
+    }
+  }
+
+  /// POST /daily-task/{id}/review - Submit review for a task
+  Future<Map<String, dynamic>> submitReview({
+    required int taskId,
+    required List<Map<String, dynamic>> scores,
+    String? notes,
+  }) async {
+    try {
+      final response = await _dio.post(
+        '${ApiEndpoints.dailyTask}/$taskId/review',
+        data: {
+          'scores': scores,
+          if (notes != null) 'notes': notes,
         },
       );
       return response.data as Map<String, dynamic>;

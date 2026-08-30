@@ -4,8 +4,10 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:forui/forui.dart';
 
 import 'core/core.dart';
+import 'core/theme/app_ftheme.dart';
 import 'core/services/notification_dialog_handler.dart';
 import 'core/services/foreground_task_manager.dart';
 import 'features/auth/presentation/providers/auth_provider.dart';
@@ -19,6 +21,8 @@ import 'features/leave/presentation/providers/leave_provider.dart';
 import 'features/panic/presentation/providers/panic_provider.dart';
 import 'features/violation_report/presentation/providers/violation_report_provider.dart';
 import 'features/report/presentation/providers/report_provider.dart';
+import 'features/daily_task/data/repositories/daily_task_repository.dart';
+import 'features/daily_task/presentation/providers/daily_task_provider.dart';
 import 'navigation/app_router.dart';
 
 /// Global notification service instance
@@ -166,6 +170,13 @@ void main() async {
             locationService,
           ),
         ),
+
+        // Daily Task Provider (lazy loaded)
+        ChangeNotifierProvider<DailyTaskNotifier>(
+          create: (_) => DailyTaskNotifier(
+            createDailyTaskRepository(dio),
+          ),
+        ),
       ],
       child: const RGBERPApp(),
     ),
@@ -291,21 +302,24 @@ class _RGBERPAppState extends State<RGBERPApp> {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp.router(
-      title: 'RGB 86',
-      debugShowCheckedModeBanner: false,
-      theme: AppTheme.light,
-      routerConfig: appRouterProvider,
-      locale: const Locale('id', 'ID'),
-      supportedLocales: const [
-        Locale('id', 'ID'),
-        Locale('en', 'US'),
-      ],
-      localizationsDelegates: const [
-        GlobalMaterialLocalizations.delegate,
-        GlobalWidgetsLocalizations.delegate,
-        GlobalCupertinoLocalizations.delegate,
-      ],
+    return FTheme(
+      data: AppFTheme.light,
+      child: MaterialApp.router(
+        title: 'RGB 86',
+        debugShowCheckedModeBanner: false,
+        theme: AppTheme.light,
+        routerConfig: appRouterProvider,
+        locale: const Locale('id', 'ID'),
+        supportedLocales: const [
+          Locale('id', 'ID'),
+          Locale('en', 'US'),
+        ],
+        localizationsDelegates: const [
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+        ],
+      ),
     );
   }
 }

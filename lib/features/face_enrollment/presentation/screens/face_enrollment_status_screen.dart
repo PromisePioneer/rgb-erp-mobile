@@ -1,8 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
+import 'package:forui/forui.dart';
+
 import '../../../../core/core.dart';
 import '../../../../shared/widgets/buttons/primary_button.dart';
+import '../../../../shared/widgets/dialogs/confirm_dialog.dart';
+import '../../../../shared/widgets/feedback/loading_indicator.dart';
+import '../../../../shared/widgets/icons/forui_icon_map.dart';
 import '../../../../shared/widgets/layout/top_gradient_background.dart';
 import '../providers/face_enrollment_provider.dart';
 
@@ -38,7 +43,7 @@ class _FaceEnrollmentStatusScreenState extends State<FaceEnrollmentStatusScreen>
         body: Consumer<FaceEnrollmentNotifier>(
           builder: (context, notifier, child) {
             if (notifier.state.isLoading && notifier.state.status == null) {
-              return const Center(child: CircularProgressIndicator());
+              return const Center(child: LoadingIndicator(size: 32));
             }
 
             final isEnrolled = notifier.state.isEnrolled;
@@ -60,23 +65,23 @@ class _FaceEnrollmentStatusScreenState extends State<FaceEnrollmentStatusScreen>
                     const SizedBox(height: AppSpacing.lg),
                   ],
 
-                  // Error message
+                    // Error message
                   if (notifier.state.error != null) ...[
                     Container(
                       padding: const EdgeInsets.all(AppSpacing.md),
                       margin: const EdgeInsets.only(bottom: AppSpacing.md),
                       decoration: BoxDecoration(
-                        color: AppColors.dangerBg,
+                        color: context.theme.colors.destructive,
                         borderRadius: AppRadius.radiusMd,
                       ),
                       child: Row(
                         children: [
-                          const Icon(Icons.error_outline, color: AppColors.danger),
+                          Icon(IconMap.errorOutline, color: context.theme.colors.destructiveForeground),
                           const SizedBox(width: AppSpacing.sm),
                           Expanded(
                             child: Text(
                               notifier.state.error!,
-                              style: const TextStyle(color: AppColors.danger),
+                              style: TextStyle(color: context.theme.colors.destructiveForeground),
                             ),
                           ),
                         ],
@@ -99,28 +104,25 @@ class _FaceEnrollmentStatusScreenState extends State<FaceEnrollmentStatusScreen>
   }
 
   Widget _buildStatusCard(bool isEnrolled, dynamic faceInfo) {
+    final theme = FTheme.of(context);
     return Container(
       padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: isEnrolled
-              ? [AppColors.success, AppColors.success.withAlpha(200)]
-              : [AppColors.warning, AppColors.warning.withAlpha(200)],
-        ),
+        color: theme.colors.primary,
         borderRadius: AppRadius.radiusLg,
       ),
       child: Column(
         children: [
           Icon(
-            isEnrolled ? Icons.face : Icons.face_outlined,
+            IconMap.face,
             size: 80,
-            color: Colors.white,
+            color: theme.colors.primaryForeground,
           ),
           const SizedBox(height: AppSpacing.md),
           Text(
             isEnrolled ? 'Wajah Terdaftar' : 'Belum Terdaftar',
-            style: const TextStyle(
-              color: Colors.white,
+            style: TextStyle(
+              color: theme.colors.primaryForeground,
               fontSize: 24,
               fontWeight: FontWeight.bold,
             ),
@@ -129,8 +131,8 @@ class _FaceEnrollmentStatusScreenState extends State<FaceEnrollmentStatusScreen>
           Text(
             isEnrolled
                 ? 'Anda dapat melakukan absensi dengan verifikasi wajah'
-                : 'Daftarkan wajah Anda untuk dapat melakukan absensi',
-            style: const TextStyle(color: Colors.white70),
+                : 'Daftarkan wajah Anda untuk dapat absensi',
+            style: TextStyle(color: theme.colors.primaryForeground.withAlpha(179)),
             textAlign: TextAlign.center,
           ),
         ],
@@ -139,22 +141,23 @@ class _FaceEnrollmentStatusScreenState extends State<FaceEnrollmentStatusScreen>
   }
 
   Widget _buildFaceInfoCard(dynamic faceInfo) {
+    final theme = FTheme.of(context);
     return Container(
       padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: theme.colors.card,
         borderRadius: AppRadius.radiusLg,
         boxShadow: AppShadows.card,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             'Informasi Wajah',
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w600,
-              color: AppColors.textPrimary,
+              color: theme.colors.foreground,
             ),
           ),
           const SizedBox(height: AppSpacing.md),
@@ -172,6 +175,7 @@ class _FaceEnrollmentStatusScreenState extends State<FaceEnrollmentStatusScreen>
   }
 
   Widget _buildInfoRow(String label, String value) {
+    final theme = FTheme.of(context);
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
       child: Row(
@@ -179,13 +183,13 @@ class _FaceEnrollmentStatusScreenState extends State<FaceEnrollmentStatusScreen>
         children: [
           Text(
             label,
-            style: const TextStyle(color: AppColors.textSecondary),
+            style: TextStyle(color: theme.colors.mutedForeground),
           ),
           Text(
             value,
-            style: const TextStyle(
+            style: TextStyle(
               fontWeight: FontWeight.w500,
-              color: AppColors.textPrimary,
+              color: theme.colors.foreground,
             ),
           ),
         ],
@@ -194,25 +198,26 @@ class _FaceEnrollmentStatusScreenState extends State<FaceEnrollmentStatusScreen>
   }
 
   Widget _buildNotEnrolledContent(FaceEnrollmentNotifier notifier) {
+    final theme = FTheme.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Container(
           padding: const EdgeInsets.all(AppSpacing.lg),
           decoration: BoxDecoration(
-            color: AppColors.infoBg,
+            color: theme.colors.secondary,
             borderRadius: AppRadius.radiusLg,
           ),
           child: Column(
             children: [
-              const Icon(Icons.info_outline, color: AppColors.info, size: 40),
+              Icon(IconMap.infoOutline, color: theme.colors.secondaryForeground, size: 40),
               const SizedBox(height: AppSpacing.md),
-              const Text(
+              Text(
                 'Cara Mendaftarkan Wajah',
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
-                  color: AppColors.info,
+                  color: theme.colors.secondaryForeground,
                 ),
               ),
               const SizedBox(height: AppSpacing.md),
@@ -226,7 +231,7 @@ class _FaceEnrollmentStatusScreenState extends State<FaceEnrollmentStatusScreen>
         const SizedBox(height: AppSpacing.lg),
         PrimaryButton(
           label: 'Daftarkan Wajah',
-          icon: Icons.camera_alt,
+          icon: IconMap.cameraAlt,
           isLoading: notifier.state.isCapturing || notifier.state.isEnrolling,
           onPressed: () => _handleEnrollment(notifier),
         ),
@@ -235,6 +240,7 @@ class _FaceEnrollmentStatusScreenState extends State<FaceEnrollmentStatusScreen>
   }
 
   Widget _buildStep(int number, String text) {
+    final theme = FTheme.of(context);
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
       child: Row(
@@ -243,16 +249,16 @@ class _FaceEnrollmentStatusScreenState extends State<FaceEnrollmentStatusScreen>
             width: 24,
             height: 24,
             decoration: BoxDecoration(
-              color: AppColors.info.withAlpha(50),
+              color: theme.colors.secondaryForeground.withAlpha(50),
               shape: BoxShape.circle,
             ),
             child: Center(
               child: Text(
                 '$number',
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.bold,
-                  color: AppColors.info,
+                  color: theme.colors.secondaryForeground,
                 ),
               ),
             ),
@@ -261,7 +267,7 @@ class _FaceEnrollmentStatusScreenState extends State<FaceEnrollmentStatusScreen>
           Expanded(
             child: Text(
               text,
-              style: const TextStyle(color: AppColors.info),
+              style: TextStyle(color: theme.colors.secondaryForeground),
             ),
           ),
         ],
@@ -270,23 +276,24 @@ class _FaceEnrollmentStatusScreenState extends State<FaceEnrollmentStatusScreen>
   }
 
   Widget _buildEnrolledActions(FaceEnrollmentNotifier notifier) {
+    final theme = FTheme.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Container(
           padding: const EdgeInsets.all(AppSpacing.lg),
           decoration: BoxDecoration(
-            color: AppColors.successBg,
+            color: theme.colors.primary.withAlpha(25),
             borderRadius: AppRadius.radiusLg,
           ),
-          child: const Row(
+          child: Row(
             children: [
-              Icon(Icons.check_circle, color: AppColors.success),
+              Icon(IconMap.checkCircle, color: theme.colors.primary),
               SizedBox(width: AppSpacing.md),
               Expanded(
                 child: Text(
                   'Wajah Anda sudah terdaftar dan dapat digunakan untuk absensi',
-                  style: TextStyle(color: AppColors.success),
+                  style: TextStyle(color: theme.colors.primary),
                 ),
               ),
             ],
@@ -295,7 +302,7 @@ class _FaceEnrollmentStatusScreenState extends State<FaceEnrollmentStatusScreen>
         const SizedBox(height: AppSpacing.lg),
         SecondaryButton(
           label: 'Hapus Pendaftaran',
-          icon: Icons.delete_outline,
+          icon: IconMap.remove,
           isDanger: true,
           isLoading: notifier.state.isLoading,
           onPressed: () => _showDeleteConfirmation(notifier),
@@ -320,13 +327,14 @@ class _FaceEnrollmentStatusScreenState extends State<FaceEnrollmentStatusScreen>
           'Wajah yang terdaftar akan dihapus. Anda perlu mendaftarkan wajah kembali untuk dapat absen.',
         ),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
+          FButton(
+            onPress: () => Navigator.pop(context, false),
+            variant: FButtonVariant.ghost,
             child: const Text('Batal'),
           ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: TextButton.styleFrom(foregroundColor: AppColors.danger),
+          FButton(
+            onPress: () => Navigator.pop(context, true),
+            variant: FButtonVariant.destructive,
             child: const Text('Hapus'),
           ),
         ],
@@ -336,10 +344,11 @@ class _FaceEnrollmentStatusScreenState extends State<FaceEnrollmentStatusScreen>
     if (confirmed == true) {
       final success = await notifier.deleteEnrollment();
       if (success && mounted) {
+        final theme = FTheme.of(context);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Pendaftaran wajah berhasil dihapus'),
-            backgroundColor: AppColors.success,
+          SnackBar(
+            content: const Text('Pendaftaran wajah berhasil dihapus'),
+            backgroundColor: theme.colors.primary,
           ),
         );
       }

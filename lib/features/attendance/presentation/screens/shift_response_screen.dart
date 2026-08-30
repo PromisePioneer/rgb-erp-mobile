@@ -1,6 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:forui/forui.dart';
+
 import '../../../../core/core.dart';
+import '../../../../shared/widgets/buttons/primary_button.dart';
+import '../../../../shared/widgets/feedback/loading_indicator.dart';
+import '../../../../shared/widgets/inputs/app_text_field.dart';
+import '../../../../shared/widgets/icons/forui_icon_map.dart';
 import '../../../backup_offer/domain/models/shift_response.dart';
 import '../../../backup_offer/data/repositories/shift_response_repository.dart';
 import '../../../backup_offer/presentation/providers/shift_response_provider.dart';
@@ -91,44 +97,59 @@ class _ShiftResponseScreenState extends State<ShiftResponseScreen> {
 
   Future<String?> _showRejectDialog() async {
     final controller = TextEditingController();
+    String? errorText;
+
     return showDialog<String>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Alasan Penolakan'),
-        content: TextField(
-          controller: controller,
-          maxLines: 3,
-          decoration: const InputDecoration(
-            hintText: 'Contoh: Sakit, Urusan keluarga, dll',
-            border: OutlineInputBorder(),
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setState) => AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: AppRadius.radiusLg),
+          title: const Text('Alasan Penolakan'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              AppTextField(
+                controller: controller,
+                hint: 'Contoh: Sakit, Urusan keluarga, dll',
+                maxLines: 3,
+                errorText: errorText,
+                onChanged: (_) {
+                  if (errorText != null) {
+                    setState(() => errorText = null);
+                  }
+                },
+              ),
+            ],
           ),
+          actionsAlignment: MainAxisAlignment.spaceEvenly,
+          actionsPadding: const EdgeInsets.fromLTRB(24, 0, 24, 16),
+          actions: [
+            FButton(
+              onPress: () => Navigator.pop(ctx),
+              variant: FButtonVariant.ghost,
+              child: const Text('Batal'),
+            ),
+            FButton(
+              onPress: () {
+                final reason = controller.text.trim();
+                if (reason.isEmpty) {
+                  setState(() => errorText = 'Harap isi alasan');
+                  return;
+                }
+                Navigator.pop(ctx, reason);
+              },
+              variant: FButtonVariant.destructive,
+              child: const Text('Tolak'),
+            ),
+          ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Batal'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              final reason = controller.text.trim();
-              if (reason.isEmpty) {
-                ScaffoldMessenger.of(ctx).showSnackBar(
-                  const SnackBar(content: Text('Harap isi alasan')),
-                );
-                return;
-              }
-              Navigator.pop(ctx, reason);
-            },
-            style: ElevatedButton.styleFrom(backgroundColor: AppColors.danger),
-            child: const Text('Tolak', style: TextStyle(color: Colors.white)),
-          ),
-        ],
       ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
+    final theme = FTheme.of(context);
     return Scaffold(
       appBar: AppBar(
         title: const Text('Konfirmasi Jadwal Shift'),
@@ -138,14 +159,15 @@ class _ShiftResponseScreenState extends State<ShiftResponseScreen> {
         ),
       ),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
+          ? const Center(child: LoadingIndicator(size: 32))
           : _error != null
-              ? Center(child: Text(_error!, style: const TextStyle(color: AppColors.danger)))
+              ? Center(child: Text(_error!, style: TextStyle(color: theme.colors.destructive)))
               : _buildContent(),
     );
   }
 
   Widget _buildContent() {
+    final theme = FTheme.of(context);
     final shift = _shift;
     return SingleChildScrollView(
       padding: const EdgeInsets.all(AppSpacing.lg),
@@ -157,31 +179,31 @@ class _ShiftResponseScreenState extends State<ShiftResponseScreen> {
           Container(
             padding: const EdgeInsets.all(AppSpacing.lg),
             decoration: BoxDecoration(
-              color: AppColors.sky50,
+              color: theme.colors.card,
               borderRadius: AppRadius.radiusLg,
             ),
             child: shift != null
                 ? Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _buildRow(Icons.calendar_today, 'Tanggal', shift.date),
+                      _buildRow(IconMap.calendarToday, 'Tanggal', shift.date),
                       const SizedBox(height: AppSpacing.sm),
-                      if (shift.areaName != null) _buildRow(Icons.location_on, 'Area', shift.areaName!),
+                      if (shift.areaName != null) _buildRow(IconMap.locationOn, 'Area', shift.areaName!),
                       if (shift.posName != null) ...[
                         const SizedBox(height: AppSpacing.sm),
-                        _buildRow(Icons.place, 'POS', shift.posName!),
+                        _buildRow(IconMap.place, 'POS', shift.posName!),
                       ],
                       if (shift.shiftName != null) ...[
                         const SizedBox(height: AppSpacing.sm),
-                        _buildRow(Icons.access_time, 'Shift', shift.shiftName!),
+                        _buildRow(IconMap.schedule, 'Shift', shift.shiftName!),
                       ],
                       const SizedBox(height: AppSpacing.sm),
-                      _buildRow(Icons.schedule, 'Jam Mulai', shift.shiftStartTime),
+                      _buildRow(IconMap.accessTime, 'Jam Mulai', shift.shiftStartTime),
                     ],
                   )
-                : const Text(
+                : Text(
                     'Loading shift details...',
-                    style: TextStyle(color: AppColors.textSecondary),
+                    style: TextStyle(color: theme.colors.mutedForeground),
                   ),
           ),
 
@@ -191,18 +213,17 @@ class _ShiftResponseScreenState extends State<ShiftResponseScreen> {
           Container(
             padding: const EdgeInsets.all(AppSpacing.md),
             decoration: BoxDecoration(
-              color: AppColors.amber50,
+              color: theme.colors.secondary,
               borderRadius: AppRadius.radiusMd,
-              border: Border.all(color: AppColors.amber200),
             ),
-            child: const Row(
+            child: Row(
               children: [
-                Icon(Icons.info_outline, color: AppColors.amber600),
-                SizedBox(width: AppSpacing.sm),
+                Icon(IconMap.infoOutline, color: theme.colors.secondaryForeground),
+                const SizedBox(width: AppSpacing.sm),
                 Expanded(
                   child: Text(
                     'Jika ditolak, sistem akan mencari backup secara otomatis.',
-                    style: TextStyle(color: AppColors.amber600, fontSize: 13),
+                    style: TextStyle(color: theme.colors.secondaryForeground, fontSize: 13),
                   ),
                 ),
               ],
@@ -217,36 +238,19 @@ class _ShiftResponseScreenState extends State<ShiftResponseScreen> {
             child: Row(
               children: [
                 Expanded(
-                  child: OutlinedButton(
+                  child: SecondaryButton(
+                    label: 'TOLAK',
                     onPressed: _isSubmitting ? null : _reject,
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: AppColors.danger,
-                      side: const BorderSide(color: AppColors.danger),
-                    ),
-                    child: _isSubmitting
-                        ? const SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : const Text('TOLAK'),
+                    isDanger: true,
+                    isLoading: _isSubmitting,
                   ),
                 ),
                 const SizedBox(width: AppSpacing.md),
                 Expanded(
-                  child: ElevatedButton(
+                  child: PrimaryButton(
+                    label: 'TERIMA',
                     onPressed: _isSubmitting ? null : _accept,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.success,
-                      foregroundColor: Colors.white,
-                    ),
-                    child: _isSubmitting
-                        ? const SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-                          )
-                        : const Text('TERIMA'),
+                    isLoading: _isSubmitting,
                   ),
                 ),
               ],
@@ -259,13 +263,14 @@ class _ShiftResponseScreenState extends State<ShiftResponseScreen> {
   }
 
   Widget _buildRow(IconData icon, String label, String value) {
+    final theme = FTheme.of(context);
     return Row(
       children: [
-        Icon(icon, size: 18, color: AppColors.textSecondary),
+        Icon(icon, size: 18, color: theme.colors.mutedForeground),
         const SizedBox(width: AppSpacing.sm),
-        Text('$label: ', style: const TextStyle(color: AppColors.textSecondary)),
+        Text('$label: ', style: TextStyle(color: theme.colors.mutedForeground)),
         Expanded(
-          child: Text(value, style: const TextStyle(fontWeight: FontWeight.w600)),
+          child: Text(value, style: TextStyle(fontWeight: FontWeight.w600, color: theme.colors.foreground)),
         ),
       ],
     );

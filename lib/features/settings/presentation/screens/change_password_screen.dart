@@ -1,7 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import 'package:forui/forui.dart';
+
 import '../../../../core/core.dart';
+import '../../../../shared/widgets/buttons/primary_button.dart';
+import '../../../../shared/widgets/feedback/loading_indicator.dart';
+import '../../../../shared/widgets/icons/forui_icon_map.dart';
 import '../../../../shared/widgets/inputs/app_text_field.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 
@@ -104,8 +109,8 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                   color: AppColors.successBg,
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(
-                  Icons.check_circle,
+                child: Icon(
+                  IconMap.checkCircle,
                   color: AppColors.success,
                   size: 40,
                 ),
@@ -133,20 +138,12 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
           actions: [
             SizedBox(
               width: double.infinity,
-              child: ElevatedButton(
+              child: PrimaryButton(
+                label: 'OK',
                 onPressed: () {
                   Navigator.pop(context);
                   context.pop();
                 },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                child: const Text('OK'),
               ),
             ),
           ],
@@ -192,7 +189,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
               child: Row(
                 children: [
                   Icon(
-                    Icons.info_outline,
+                    IconMap.infoOutline,
                     color: AppColors.info,
                     size: 24,
                   ),
@@ -218,7 +215,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
               controller: _currentPasswordController,
               obscureText: _obscureCurrent,
               errorText: _currentPasswordError,
-              prefixIcon: const Icon(Icons.lock_outline, color: AppColors.gray400),
+              prefixIcon: Icon(IconMap.lock, color: AppColors.gray400),
               suffixIcon: IconButton(
                 icon: Icon(
                   _obscureCurrent ? Icons.visibility_off : Icons.visibility,
@@ -238,7 +235,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
               controller: _newPasswordController,
               obscureText: _obscureNew,
               errorText: _newPasswordError,
-              prefixIcon: const Icon(Icons.lock_outline, color: AppColors.gray400),
+              prefixIcon: Icon(IconMap.lock, color: AppColors.gray400),
               suffixIcon: IconButton(
                 icon: Icon(
                   _obscureNew ? Icons.visibility_off : Icons.visibility,
@@ -258,7 +255,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
               controller: _confirmPasswordController,
               obscureText: _obscureConfirm,
               errorText: _confirmPasswordError,
-              prefixIcon: const Icon(Icons.lock_outline, color: AppColors.gray400),
+              prefixIcon: Icon(IconMap.lock, color: AppColors.gray400),
               suffixIcon: IconButton(
                 icon: Icon(
                   _obscureConfirm ? Icons.visibility_off : Icons.visibility,
@@ -274,33 +271,10 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
             // Submit button
             SizedBox(
               width: double.infinity,
-              child: ElevatedButton(
+              child: PrimaryButton(
+                label: 'Simpan Password',
+                isLoading: isLoading,
                 onPressed: isLoading ? null : _validateAndSubmit,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary,
-                  foregroundColor: Colors.white,
-                  disabledBackgroundColor: AppColors.slate300,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                child: isLoading
-                    ? const SizedBox(
-                        width: 24,
-                        height: 24,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: Colors.white,
-                        ),
-                      )
-                    : const Text(
-                        'Simpan Password',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
               ),
             ),
           ],

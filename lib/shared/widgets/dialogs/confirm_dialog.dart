@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:forui/forui.dart';
+
 import '../../../../core/core.dart';
 
 /// Confirmation dialog helper
@@ -33,44 +35,24 @@ class ConfirmDialog extends StatelessWidget {
       title: Text(
         title,
         textAlign: TextAlign.center,
-        style: const TextStyle(
-          fontSize: 18,
-          fontWeight: FontWeight.w600,
-        ),
       ),
       content: Text(
         message,
         textAlign: TextAlign.center,
-        style: const TextStyle(
-          fontSize: 14,
-          color: AppColors.textSecondary,
-        ),
       ),
       actionsAlignment: MainAxisAlignment.spaceEvenly,
       actionsPadding: const EdgeInsets.fromLTRB(24, 0, 24, 16),
       actions: [
         if (showCancel) ...[
-          TextButton(
-            onPressed: onCancel ?? () => Navigator.pop(context),
-            child: Text(
-              cancelText,
-              style: const TextStyle(
-                color: AppColors.gray600,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
+          FButton(
+            onPress: onCancel ?? () => Navigator.pop(context),
+            variant: FButtonVariant.ghost,
+            child: Text(cancelText),
           ),
         ],
-        ElevatedButton(
-          onPressed: onConfirm ?? () => Navigator.pop(context, true),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: isDanger ? AppColors.danger : AppColors.primary,
-            foregroundColor: AppColors.white,
-            minimumSize: const Size(80, 40),
-            shape: RoundedRectangleBorder(
-              borderRadius: AppRadius.radiusMd,
-            ),
-          ),
+        FButton(
+          onPress: onConfirm ?? () => Navigator.pop(context, true),
+          variant: isDanger ? FButtonVariant.destructive : FButtonVariant.primary,
           child: Text(confirmText),
         ),
       ],
@@ -106,7 +88,7 @@ class LogoutDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const ConfirmDialog(
+    return ConfirmDialog(
       title: 'Konfirmasi Logout',
       message: 'Apakah Anda yakin ingin keluar dari aplikasi?',
       confirmText: 'Ya, Keluar',

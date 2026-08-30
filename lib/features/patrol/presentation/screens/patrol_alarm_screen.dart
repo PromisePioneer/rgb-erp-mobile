@@ -3,6 +3,8 @@ import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/core.dart';
+import '../../../../shared/widgets/buttons/primary_button.dart';
+import '../../../../shared/widgets/icons/forui_icon_map.dart';
 
 /// Alarm screen that triggers when patrol alarm goes off
 class PatrolAlarmScreen extends StatefulWidget {
@@ -156,7 +158,7 @@ class _PatrolAlarmScreenState extends State<PatrolAlarmScreen>
 
               // Action buttons
               _buildActionButton(
-                icon: Icons.qr_code_scanner,
+                icon: IconMap.qrCodeScanner,
                 label: 'MULAI PATROLI SEKARANG',
                 isPrimary: true,
                 onPressed: _startPatrol,
@@ -164,7 +166,7 @@ class _PatrolAlarmScreenState extends State<PatrolAlarmScreen>
               const SizedBox(height: 16),
 
               _buildActionButton(
-                icon: Icons.close,
+                icon: IconMap.close,
                 label: 'TUTUP ALARM',
                 isPrimary: false,
                 onPressed: _dismiss,
@@ -187,42 +189,20 @@ class _PatrolAlarmScreenState extends State<PatrolAlarmScreen>
     if (isPrimary) {
       return SizedBox(
         width: double.infinity,
-        child: ElevatedButton.icon(
+        child: PrimaryButton(
+          label: label,
+          icon: icon,
           onPressed: onPressed,
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.white,
-            foregroundColor: const Color(0xFFDC2626),
-            padding: const EdgeInsets.symmetric(vertical: 18),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(AppRadius.lg),
-            ),
-          ),
-          icon: Icon(icon, size: 24),
-          label: Text(
-            label,
-            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-          ),
         ),
       );
     }
 
     return SizedBox(
       width: double.infinity,
-      child: OutlinedButton.icon(
+      child: SecondaryButton(
+        label: label,
+        icon: icon,
         onPressed: onPressed,
-        style: OutlinedButton.styleFrom(
-          foregroundColor: Colors.white,
-          side: const BorderSide(color: Colors.white, width: 2),
-          padding: const EdgeInsets.symmetric(vertical: 18),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppRadius.lg),
-          ),
-        ),
-        icon: Icon(icon, size: 24),
-        label: Text(
-          label,
-          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-        ),
       ),
     );
   }

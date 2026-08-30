@@ -1,6 +1,11 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:forui/forui.dart';
+
 import '../../../../core/core.dart';
+import '../../../../shared/widgets/buttons/primary_button.dart';
+import '../../../../shared/widgets/feedback/loading_indicator.dart';
+import '../../../../shared/widgets/icons/forui_icon_map.dart';
 import '../../domain/models/backup_offer.dart';
 
 /// Dialog for backup offer (accept/reject)
@@ -92,7 +97,9 @@ class _BackupOfferDialogState extends State<BackupOfferDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = FTheme.of(context);
     final isExpired = _remainingSeconds <= 0;
+    final isLowTime = _remainingSeconds < 300;
 
     return AlertDialog(
       title: Row(
@@ -100,10 +107,10 @@ class _BackupOfferDialogState extends State<BackupOfferDialog> {
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: AppColors.primary.withAlpha(25),
+              color: theme.colors.muted,
               borderRadius: BorderRadius.circular(8),
             ),
-            child: const Icon(Icons.swap_horiz, color: AppColors.primary),
+            child: Icon(IconMap.swapHoriz, color: theme.colors.primary),
           ),
           const SizedBox(width: AppSpacing.sm),
           const Expanded(child: Text('Tawaran Backup Jaga')),
@@ -120,20 +127,16 @@ class _BackupOfferDialogState extends State<BackupOfferDialog> {
               vertical: AppSpacing.sm,
             ),
             decoration: BoxDecoration(
-              color: _remainingSeconds < 300 // Less than 5 minutes
-                  ? AppColors.dangerBg
-                  : AppColors.primaryBg,
+              color: isLowTime ? AppColors.dangerBg : AppColors.primaryBg,
               borderRadius: AppRadius.radiusMd,
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Icon(
-                  Icons.timer,
+                  IconMap.timer,
                   size: 20,
-                  color: _remainingSeconds < 300
-                      ? AppColors.danger
-                      : AppColors.primary,
+                  color: isLowTime ? AppColors.danger : theme.colors.primary,
                 ),
                 const SizedBox(width: AppSpacing.sm),
                 Text(
@@ -142,9 +145,7 @@ class _BackupOfferDialogState extends State<BackupOfferDialog> {
                       : 'Berakhir dalam: ${_formatTime(_remainingSeconds)}',
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
-                    color: _remainingSeconds < 300
-                        ? AppColors.danger
-                        : AppColors.primary,
+                    color: isLowTime ? AppColors.danger : theme.colors.primary,
                   ),
                 ),
               ],
@@ -162,16 +163,16 @@ class _BackupOfferDialogState extends State<BackupOfferDialog> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildInfoRow(Icons.calendar_today, 'Tanggal', widget.offer.date),
+                _buildInfoRow(IconMap.calendarToday, 'Tanggal', widget.offer.date),
                 const SizedBox(height: AppSpacing.sm),
                 if (widget.offer.areaName != null)
-                  _buildInfoRow(Icons.location_on, 'Area', widget.offer.areaName!),
+                  _buildInfoRow(IconMap.locationOn, 'Area', widget.offer.areaName!),
                 const SizedBox(height: AppSpacing.sm),
                 if (widget.offer.posName != null)
-                  _buildInfoRow(Icons.place, 'POS', widget.offer.posName!),
+                  _buildInfoRow(IconMap.place, 'POS', widget.offer.posName!),
                 const SizedBox(height: AppSpacing.sm),
                 if (widget.offer.shiftName != null)
-                  _buildInfoRow(Icons.access_time, 'Shift', widget.offer.shiftName!),
+                  _buildInfoRow(IconMap.accessTime, 'Shift', widget.offer.shiftName!),
               ],
             ),
           ),
@@ -185,11 +186,11 @@ class _BackupOfferDialogState extends State<BackupOfferDialog> {
               borderRadius: AppRadius.radiusMd,
               border: Border.all(color: AppColors.amber200),
             ),
-            child: const Row(
+            child: Row(
               children: [
-                Icon(Icons.info_outline, color: AppColors.amber600, size: 20),
-                SizedBox(width: AppSpacing.sm),
-                Expanded(
+                Icon(IconMap.infoOutline, color: AppColors.amber600, size: 20),
+                const SizedBox(width: AppSpacing.sm),
+                const Expanded(
                   child: Text(
                     'Menjadi backup jaga berarti Anda menggantikan petugas original.',
                     style: TextStyle(
@@ -205,31 +206,17 @@ class _BackupOfferDialogState extends State<BackupOfferDialog> {
       ),
       actions: [
         // Reject button
-        OutlinedButton(
+        SecondaryButton(
+          label: 'TOLAK',
           onPressed: (_isLoading || isExpired) ? null : _reject,
-          style: OutlinedButton.styleFrom(
-            foregroundColor: AppColors.textSecondary,
-            side: const BorderSide(color: AppColors.textSecondary),
-          ),
-          child: const Text('TOLAK'),
+          isDanger: true,
+          isLoading: _isLoading,
         ),
         // Accept button
-        ElevatedButton(
+        PrimaryButton(
+          label: 'TERIMA',
           onPressed: (_isLoading || isExpired) ? null : _accept,
-          style: ElevatedButton.styleFrom(
-            backgroundColor: AppColors.success,
-            foregroundColor: Colors.white,
-          ),
-          child: _isLoading
-              ? const SizedBox(
-                  width: 20,
-                  height: 20,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                  ),
-                )
-              : const Text('TERIMA'),
+          isLoading: _isLoading,
         ),
       ],
     );

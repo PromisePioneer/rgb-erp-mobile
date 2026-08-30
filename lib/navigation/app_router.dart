@@ -35,6 +35,11 @@ import '../features/violation_report/presentation/screens/violation_report_histo
 import '../features/violation_report/presentation/screens/violation_report_detail_screen.dart';
 import '../features/report/presentation/screens/report_list_screen.dart';
 import '../features/report/presentation/screens/report_form_screen.dart';
+import '../features/daily_task/presentation/screens/daily_task_list_screen.dart';
+import '../features/daily_task/presentation/screens/task_detail_screen.dart';
+import '../features/daily_task/presentation/screens/task_review_screen.dart';
+import '../features/daily_task/presentation/screens/task_assignment_list_screen.dart';
+import '../features/daily_task/presentation/screens/task_assignment_form_screen.dart';
 
 // Navigation imports
 import '../shared/widgets/navigation/app_bottom_nav.dart';
@@ -303,6 +308,53 @@ void initRouter(AuthNotifier authNotifier) {
         path: '/report/form',
         name: 'report-form',
         builder: (context, state) => const ReportFormScreen(),
+      ),
+
+      // Daily Task List Screen
+      GoRoute(
+        path: '/daily-task',
+        name: 'daily-task',
+        builder: (context, state) => const DailyTaskListScreen(),
+      ),
+
+      // Daily Task Detail Screen
+      GoRoute(
+        path: '/daily-task/:id',
+        name: 'daily-task-detail',
+        builder: (context, state) {
+          final id = int.parse(state.pathParameters['id']!);
+          return TaskDetailScreen(taskId: id);
+        },
+      ),
+
+      // Task Review Screen (Team Leader only - requires daily_task_assign privilege)
+      GoRoute(
+        path: '/daily-task/:id/review',
+        name: 'task-review',
+        builder: (context, state) {
+          final id = int.parse(state.pathParameters['id']!);
+          final taskData = state.extra as Map<String, dynamic>?;
+          if (taskData == null) {
+            return const Scaffold(
+              body: Center(child: Text('Data tugas tidak ditemukan')),
+            );
+          }
+          return TaskReviewScreen(taskId: id, taskData: taskData);
+        },
+      ),
+
+      // Task Assignment List Screen (Supervisor)
+      GoRoute(
+        path: '/daily-task-assignment/list',
+        name: 'task-assignment-list',
+        builder: (context, state) => const TaskAssignmentListScreen(),
+      ),
+
+      // Task Assignment Form Screen (Supervisor)
+      GoRoute(
+        path: '/daily-task-assignment/new',
+        name: 'task-assignment-new',
+        builder: (context, state) => const TaskAssignmentFormScreen(),
       ),
     ],
     errorBuilder: (context, state) => Scaffold(

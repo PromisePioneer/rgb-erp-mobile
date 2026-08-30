@@ -1,5 +1,10 @@
 import 'package:flutter/material.dart';
-import '../core/core.dart';
+import 'package:forui/forui.dart';
+
+import '../../../../core/core.dart';
+import '../../../../shared/widgets/buttons/primary_button.dart';
+import '../../../../shared/widgets/feedback/loading_indicator.dart';
+import '../../../../shared/widgets/icons/forui_icon_map.dart';
 
 /// Simple confirm dialog for shift reminder
 class ShiftConfirmDialog extends StatefulWidget {
@@ -29,6 +34,8 @@ class _ShiftConfirmDialogState extends State<ShiftConfirmDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = FTheme.of(context);
+
     return Material(
       color: Colors.black54,
       child: Center(
@@ -36,23 +43,24 @@ class _ShiftConfirmDialogState extends State<ShiftConfirmDialog> {
           margin: const EdgeInsets.all(32),
           padding: const EdgeInsets.all(24),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: theme.colors.background,
             borderRadius: BorderRadius.circular(16),
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(
-                Icons.schedule,
+              Icon(
+                IconMap.schedule,
                 size: 48,
-                color: AppColors.primary,
+                color: theme.colors.primary,
               ),
               const SizedBox(height: 16),
               Text(
                 widget.title,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
+                  color: theme.colors.foreground,
                 ),
                 textAlign: TextAlign.center,
               ),
@@ -65,11 +73,11 @@ class _ShiftConfirmDialogState extends State<ShiftConfirmDialog> {
                 ),
                 child: Column(
                   children: [
-                    _buildRow(Icons.location_on, 'Area', widget.areaName),
+                    _buildRow(IconMap.locationOn, 'Area', widget.areaName),
                     const SizedBox(height: 8),
-                    _buildRow(Icons.access_time, 'Shift', widget.shiftName),
+                    _buildRow(IconMap.accessTime, 'Shift', widget.shiftName),
                     const SizedBox(height: 8),
-                    _buildRow(Icons.schedule, 'Jam', widget.shiftTime),
+                    _buildRow(IconMap.schedule, 'Jam', widget.shiftTime),
                   ],
                 ),
               ),
@@ -81,11 +89,11 @@ class _ShiftConfirmDialogState extends State<ShiftConfirmDialog> {
                   borderRadius: BorderRadius.circular(8),
                   border: Border.all(color: AppColors.amber200),
                 ),
-                child: const Row(
+                child: Row(
                   children: [
-                    Icon(Icons.info_outline, color: AppColors.amber600, size: 20),
-                    SizedBox(width: 8),
-                    Expanded(
+                    Icon(IconMap.infoOutline, color: AppColors.amber600, size: 20),
+                    const SizedBox(width: 8),
+                    const Expanded(
                       child: Text(
                         'Jika ditolak, sistem akan cari backup.',
                         style: TextStyle(fontSize: 12, color: AppColors.amber800),
@@ -98,37 +106,23 @@ class _ShiftConfirmDialogState extends State<ShiftConfirmDialog> {
               Row(
                 children: [
                   Expanded(
-                    child: OutlinedButton(
+                    child: SecondaryButton(
+                      label: 'TOLAK',
                       onPressed: _isLoading ? null : () {
                         widget.onReject();
                       },
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: AppColors.danger,
-                        side: const BorderSide(color: AppColors.danger),
-                      ),
-                      child: const Text('TOLAK'),
+                      isDanger: true,
+                      isLoading: _isLoading,
                     ),
                   ),
                   const SizedBox(width: 16),
                   Expanded(
-                    child: ElevatedButton(
+                    child: PrimaryButton(
+                      label: 'TERIMA',
                       onPressed: _isLoading ? null : () {
                         widget.onAccept();
                       },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.success,
-                        foregroundColor: Colors.white,
-                      ),
-                      child: _isLoading
-                          ? const SizedBox(
-                              width: 20,
-                              height: 20,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                valueColor: AlwaysStoppedAnimation(Colors.white),
-                              ),
-                            )
-                          : const Text('TERIMA'),
+                      isLoading: _isLoading,
                     ),
                   ),
                 ],

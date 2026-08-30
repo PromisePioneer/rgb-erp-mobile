@@ -16,6 +16,8 @@ dependencies:
   cupertino_icons: ^1.0.8
   cached_network_image: ^3.3.1
   shimmer: ^3.0.0
+  forui: ^0.26.0
+  forui_lucide: ^0.26.1
 
   # State Management
   provider: ^6.1.2

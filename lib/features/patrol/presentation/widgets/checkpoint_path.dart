@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
-import '../../../../core/theme/app_colors.dart';
+import 'package:forui/forui.dart';
+
+import '../../../../shared/widgets/icons/forui_icon_map.dart';
 
 /// Node status for checkpoint path
 enum CheckpointNodeStatus {
@@ -37,11 +39,12 @@ class CheckpointPath extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = FTheme.of(context);
     return SizedBox(
       width: width,
       height: nodes.isEmpty ? 100 : (nodes.length * 80.0),
       child: CustomPaint(
-        painter: _CheckpointPathPainter(nodes: nodes),
+        painter: _CheckpointPathPainter(nodes: nodes, theme: theme),
         child: Stack(
           children: nodes.asMap().entries.map((entry) {
             final index = entry.key;
@@ -54,6 +57,7 @@ class CheckpointPath extends StatelessWidget {
   }
 
   Widget _buildNode(BuildContext context, CheckpointNode node, int index) {
+    final theme = FTheme.of(context);
     // Calculate position - zig-zag pattern
     final isLeft = index % 2 == 0;
     final xOffset = isLeft ? 20.0 : width - 70;
@@ -67,21 +71,21 @@ class CheckpointPath extends StatelessWidget {
 
     switch (node.status) {
       case CheckpointNodeStatus.completed:
-        nodeColor = AppColors.teal500;
-        textColor = Colors.white;
-        icon = Icons.check;
+        nodeColor = theme.colors.primary;
+        textColor = theme.colors.primaryForeground;
+        icon = IconMap.check;
         break;
       case CheckpointNodeStatus.active:
-        nodeColor = AppColors.primary;
-        textColor = Colors.white;
-        icon = Icons.navigation;
+        nodeColor = theme.colors.primary;
+        textColor = theme.colors.primaryForeground;
+        icon = IconMap.navigation;
         nodeSize = 58;
         fontSize = 18;
         break;
       case CheckpointNodeStatus.locked:
-        nodeColor = AppColors.slate300;
-        textColor = AppColors.slate500;
-        icon = Icons.lock;
+        nodeColor = theme.colors.muted;
+        textColor = theme.colors.mutedForeground;
+        icon = IconMap.lock;
         break;
     }
 
@@ -101,12 +105,12 @@ class CheckpointPath extends StatelessWidget {
                 color: nodeColor,
                 shape: BoxShape.circle,
                 border: node.status == CheckpointNodeStatus.active
-                    ? Border.all(color: AppColors.indigo200, width: 3)
+                    ? Border.all(color: theme.colors.secondary, width: 3)
                     : null,
                 boxShadow: node.status == CheckpointNodeStatus.active
                     ? [
                         BoxShadow(
-                          color: AppColors.primary.withAlpha(77),
+                          color: theme.colors.primary.withAlpha(77),
                           blurRadius: 12,
                           spreadRadius: 2,
                         ),
@@ -114,7 +118,7 @@ class CheckpointPath extends StatelessWidget {
                     : null,
               ),
               child: Center(
-                child: icon == Icons.navigation
+                child: icon == IconMap.navigation
                     ? Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
@@ -155,8 +159,8 @@ class CheckpointPath extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 10,
                   color: node.status == CheckpointNodeStatus.locked
-                      ? AppColors.slate400
-                      : AppColors.slate600,
+                      ? theme.colors.mutedForeground
+                      : theme.colors.foreground,
                   fontWeight: node.status == CheckpointNodeStatus.active
                       ? FontWeight.w600
                       : FontWeight.normal,
@@ -175,25 +179,26 @@ class CheckpointPath extends StatelessWidget {
 
 class _CheckpointPathPainter extends CustomPainter {
   final List<CheckpointNode> nodes;
+  final FThemeData theme;
 
-  _CheckpointPathPainter({required this.nodes});
+  _CheckpointPathPainter({required this.nodes, required this.theme});
 
   @override
   void paint(Canvas canvas, Size size) {
     if (nodes.length < 2) return;
 
     final completedPaint = Paint()
-      ..color = AppColors.teal500
+      ..color = theme.colors.primary
       ..strokeWidth = 3
       ..style = PaintingStyle.stroke;
 
     final lockedPaint = Paint()
-      ..color = AppColors.slate300
+      ..color = theme.colors.muted
       ..strokeWidth = 2
       ..style = PaintingStyle.stroke;
 
     final dashPaint = Paint()
-      ..color = AppColors.slate300
+      ..color = theme.colors.muted
       ..strokeWidth = 2
       ..style = PaintingStyle.stroke;
 

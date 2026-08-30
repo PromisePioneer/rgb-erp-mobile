@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:forui/forui.dart';
+
 import '../../../../core/core.dart';
 
 /// Primary button with loading state
@@ -23,40 +25,27 @@ class PrimaryButton extends StatelessWidget {
     return SizedBox(
       width: fullWidth ? double.infinity : null,
       height: AppSpacing.buttonHeight,
-      child: ElevatedButton(
-        onPressed: isLoading ? null : onPressed,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: AppColors.primary,
-          foregroundColor: AppColors.white,
-          disabledBackgroundColor: AppColors.gray200,
-          shape: RoundedRectangleBorder(
-            borderRadius: AppRadius.button,
-          ),
-        ),
+      child: FButton(
+        onPress: isLoading ? null : onPressed,
+        variant: FButtonVariant.primary,
+        mainAxisSize: fullWidth ? MainAxisSize.max : MainAxisSize.min,
         child: isLoading
             ? const SizedBox(
                 width: 24,
                 height: 24,
                 child: CircularProgressIndicator(
                   strokeWidth: 2,
-                  valueColor: AlwaysStoppedAnimation<Color>(AppColors.white),
                 ),
               )
             : Row(
-                mainAxisSize: fullWidth ? MainAxisSize.max : MainAxisSize.min,
+                mainAxisSize: MainAxisSize.min,
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   if (icon != null) ...[
                     Icon(icon, size: 20),
                     const SizedBox(width: AppSpacing.sm),
                   ],
-                  Text(
-                    label,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
+                  Text(label),
                 ],
               ),
       ),
@@ -85,44 +74,30 @@ class SecondaryButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = isDanger ? AppColors.danger : AppColors.primary;
-
     return SizedBox(
       width: fullWidth ? double.infinity : null,
       height: AppSpacing.buttonHeight,
-      child: OutlinedButton(
-        onPressed: isLoading ? null : onPressed,
-        style: OutlinedButton.styleFrom(
-          foregroundColor: color,
-          side: BorderSide(color: color),
-          shape: RoundedRectangleBorder(
-            borderRadius: AppRadius.button,
-          ),
-        ),
+      child: FButton(
+        onPress: isLoading ? null : onPressed,
+        variant: isDanger ? FButtonVariant.destructive : FButtonVariant.outline,
+        mainAxisSize: fullWidth ? MainAxisSize.max : MainAxisSize.min,
         child: isLoading
-            ? SizedBox(
+            ? const SizedBox(
                 width: 24,
                 height: 24,
                 child: CircularProgressIndicator(
                   strokeWidth: 2,
-                  valueColor: AlwaysStoppedAnimation<Color>(color),
                 ),
               )
             : Row(
-                mainAxisSize: fullWidth ? MainAxisSize.max : MainAxisSize.min,
+                mainAxisSize: MainAxisSize.min,
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   if (icon != null) ...[
                     Icon(icon, size: 20),
                     const SizedBox(width: AppSpacing.sm),
                   ],
-                  Text(
-                    label,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
+                  Text(label),
                 ],
               ),
       ),

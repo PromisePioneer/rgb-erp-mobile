@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:forui/forui.dart';
+
 import '../../../../core/core.dart';
 
 /// Custom text field with label and error state
@@ -51,100 +53,76 @@ class AppTextField extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         if (label != null) ...[
-          Text(
-            label!.toUpperCase(),
-            style: const TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w500,
-              color: AppColors.gray600,
-              letterSpacing: 1,
-            ),
-          ),
+          Text(label!.toUpperCase()),
           const SizedBox(height: AppSpacing.xs),
         ],
-        _buildTextField(),
+        _buildTextField(context),
         if (errorText != null) ...[
           const SizedBox(height: AppSpacing.xs),
-          Text(
-            errorText!,
-            style: const TextStyle(
-              fontSize: 12,
-              color: AppColors.danger,
-            ),
-          ),
+          Text(errorText!),
         ],
       ],
     );
   }
 
-  Widget _buildTextField() {
-    return TextFormField(
-      controller: controller,
-      initialValue: controller == null ? initialValue : null,
-      onChanged: onChanged,
+  Widget _buildTextField(BuildContext context) {
+    // Use FTextField password variant
+    if (obscureText || showVisibilityToggle) {
+      return FTextField.password(
+        control: FTextFieldControl.managed(
+          controller: controller,
+          initial: initialValue != null ? TextEditingValue(text: initialValue!) : null,
+          onChange: (value) => onChanged?.call(value.text),
+        ),
+        size: FTextFieldSizeVariant.md,
+        label: label != null ? Text(label!) : null,
+        hint: hint,
+        error: errorText != null ? Text(errorText!) : null,
+        onTap: onTap,
+        textInputAction: textInputAction ?? TextInputAction.done,
+        enabled: !readOnly,
+        maxLength: maxLength,
+        maxLines: maxLines,
+        autofocus: autofocus,
+      );
+    }
+
+    return FTextField(
+      control: FTextFieldControl.managed(
+        controller: controller,
+        initial: initialValue != null ? TextEditingValue(text: initialValue!) : null,
+        onChange: (value) => onChanged?.call(value.text),
+      ),
+      size: FTextFieldSizeVariant.md,
+      label: label != null ? Text(label!) : null,
+      hint: hint,
+      error: errorText != null ? Text(errorText!) : null,
+      prefixBuilder: prefixIcon != null
+          ? (context, style, variants) => Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  prefixIcon!,
+                  const SizedBox(width: 8),
+                ],
+              )
+          : null,
+      suffixBuilder: suffixIcon != null
+          ? (context, style, variants) => Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const SizedBox(width: 8),
+                  suffixIcon!,
+                ],
+              )
+          : null,
       onTap: onTap,
-      obscureText: obscureText,
+      textInputAction: textInputAction ?? TextInputAction.next,
       keyboardType: keyboardType,
-      textInputAction: textInputAction,
-      inputFormatters: inputFormatters,
-      readOnly: readOnly,
+      enabled: !readOnly,
       maxLength: maxLength,
       maxLines: maxLines,
       autofocus: autofocus,
-      style: const TextStyle(
-        fontSize: 16,
-        color: AppColors.textPrimary,
-      ),
-      decoration: InputDecoration(
-        hintText: hint,
-        hintStyle: const TextStyle(
-          color: AppColors.gray400,
-          fontSize: 16,
-        ),
-        prefixIcon: prefixIcon,
-        suffixIcon: _buildSuffixIcon(),
-        filled: true,
-        fillColor: errorText != null ? AppColors.dangerBg : AppColors.gray100,
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.inputPadding,
-          vertical: AppSpacing.md,
-        ),
-        border: OutlineInputBorder(
-          borderRadius: AppRadius.input,
-          borderSide: BorderSide.none,
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: AppRadius.input,
-          borderSide: BorderSide.none,
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: AppRadius.input,
-          borderSide: const BorderSide(color: AppColors.primary, width: 2),
-        ),
-        errorBorder: OutlineInputBorder(
-          borderRadius: AppRadius.input,
-          borderSide: const BorderSide(color: AppColors.danger),
-        ),
-        focusedErrorBorder: OutlineInputBorder(
-          borderRadius: AppRadius.input,
-          borderSide: const BorderSide(color: AppColors.danger, width: 2),
-        ),
-        counterText: '',
-      ),
     );
-  }
-
-  Widget? _buildSuffixIcon() {
-    if (showVisibilityToggle) {
-      return IconButton(
-        icon: Icon(
-          obscureText ? Icons.visibility_off : Icons.visibility,
-          color: AppColors.gray400,
-        ),
-        onPressed: null, // Handled by StatefulBuilder in parent
-      );
-    }
-    return suffixIcon;
   }
 }
 
@@ -173,7 +151,7 @@ class NikTextField extends StatelessWidget {
       onChanged: onChanged,
       keyboardType: TextInputType.text,
       errorText: errorText,
-      prefixIcon: const Icon(Icons.badge_outlined, color: AppColors.gray400),
+      prefixIcon: const Icon(Icons.badge_outlined),
     );
   }
 }
@@ -202,8 +180,6 @@ class PasswordTextField extends StatefulWidget {
 }
 
 class _PasswordTextFieldState extends State<PasswordTextField> {
-  bool _obscureText = true;
-
   @override
   Widget build(BuildContext context) {
     return AppTextField(
@@ -212,22 +188,12 @@ class _PasswordTextFieldState extends State<PasswordTextField> {
       controller: widget.controller,
       initialValue: widget.controller == null ? widget.initialValue : null,
       onChanged: widget.onChanged,
-      obscureText: _obscureText,
+      obscureText: true,
+      showVisibilityToggle: true,
       keyboardType: TextInputType.visiblePassword,
       textInputAction: widget.textInputAction,
       errorText: widget.errorText,
-      prefixIcon: const Icon(Icons.lock_outline, color: AppColors.gray400),
-      suffixIcon: IconButton(
-        icon: Icon(
-          _obscureText ? Icons.visibility_off : Icons.visibility,
-          color: AppColors.gray400,
-        ),
-        onPressed: () {
-          setState(() {
-            _obscureText = !_obscureText;
-          });
-        },
-      ),
+      prefixIcon: const Icon(Icons.lock_outline),
     );
   }
 }

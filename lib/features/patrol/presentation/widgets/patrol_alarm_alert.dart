@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+
 import '../../../../core/core.dart';
+import '../../../../shared/widgets/buttons/primary_button.dart';
+import '../../../../shared/widgets/icons/forui_icon_map.dart';
 
 /// Alarm alert overlay widget that shows on dashboard when patrol alarm is triggered
 class PatrolAlarmAlert extends StatefulWidget {
@@ -117,36 +120,22 @@ class _PatrolAlarmAlertState extends State<PatrolAlarmAlert>
               children: [
                 // Dismiss button
                 Expanded(
-                  child: OutlinedButton.icon(
+                  child: SecondaryButton(
+                    label: 'Tutup Alarm',
+                    icon: IconMap.close,
                     onPressed: widget.onDismiss,
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: Colors.white,
-                      side: const BorderSide(color: Colors.white),
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(AppRadius.md),
-                      ),
-                    ),
-                    icon: const Icon(Icons.close),
-                    label: const Text('Tutup Alarm'),
+                    fullWidth: false,
                   ),
                 ),
                 const SizedBox(width: AppSpacing.md),
 
                 // Go to patrol button
                 Expanded(
-                  child: ElevatedButton.icon(
+                  child: PrimaryButton(
+                    label: 'Mulai Patroli',
+                    icon: IconMap.directionsRun,
                     onPressed: widget.onTap,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.white,
-                      foregroundColor: const Color(0xFFDC2626),
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(AppRadius.md),
-                      ),
-                    ),
-                    icon: const Icon(Icons.directions_run),
-                    label: const Text('Mulai Patroli'),
+                    fullWidth: false,
                   ),
                 ),
               ],

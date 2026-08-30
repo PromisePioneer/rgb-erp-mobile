@@ -1,10 +1,14 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import 'package:forui/forui.dart';
 
 import '../../../../core/core.dart';
 import '../../../../core/services/notification_service.dart';
 import '../../../../shared/widgets/banners/banner_carousel.dart';
+import '../../../../shared/widgets/feedback/loading_indicator.dart';
+import '../../../../shared/widgets/icons/forui_icon_map.dart';
 import '../../../../shared/widgets/layout/top_gradient_background.dart';
 import '../../../../shared/utils/tutorial_keys.dart';
 import '../../../attendance/presentation/providers/attendance_provider.dart';
@@ -22,80 +26,18 @@ class _NotificationRebuildNotifier extends ChangeNotifier {
   }
 }
 
-// Data
-final _menuGrid = [
-  {
-    'label': 'Absen',
-    'icon': Icons.access_time,
-    'bg': AppColors.sky100,
-    'fg': AppColors.sky600,
-    'route': '/attendance',
-    'badge': null,
-  },
-  {
-    'label': 'Pendaftaran Wajah',
-    'icon': Icons.face,
-    'bg': AppColors.indigo100,
-    'fg': AppColors.indigo600,
-    'route': '/face-enrollment',
-    'badge': 'NEW',
-  },
-  {
-    'label': 'Jadwal',
-    'icon': Icons.calendar_today,
-    'bg': AppColors.amber100,
-    'fg': AppColors.amber600,
-    'route': '/schedule',
-    'badge': null,
-  },
-  {
-    'label': 'Cuti',
-    'icon': Icons.beach_access,
-    'bg': AppColors.emerald100,
-    'fg': AppColors.emerald600,
-    'route': '/leave',
-    'badge': null,
-  },
-  {
-    'label': 'Payroll',
-    'icon': Icons.account_balance_wallet,
-    'bg': AppColors.amber100,
-    'fg': AppColors.amber600,
-    'route': '/payroll',
-    'badge': null,
-  },
-  {
-    'label': 'Approval',
-    'icon': Icons.checklist,
-    'bg': AppColors.indigo100,
-    'fg': AppColors.indigo600,
-    'route': null,
-    'badge': null,
-  },
-  {
-    'label': 'Patroli',
-    'icon': Icons.security,
-    'bg': AppColors.teal100,
-    'fg': AppColors.teal600,
-    'route': null,
-    'badge': null,
-  },
-  {
-    'label': 'Laporan Patroli',
-    'icon': Icons.report_problem,
-    'bg': AppColors.rose100,
-    'fg': AppColors.rose600,
-    'route': '/violation-report',
-    'badge': null,
-  },
-  {
-    'label': 'Laporan Mutasi',
-    'icon': Icons.edit_note,
-    'bg': AppColors.violet100,
-    'fg': AppColors.violet600,
-    'route': '/report',
-    'badge': null,
-  },
+// Menu items with Forui icons
+final _menuItems = <MenuItemData>[
+  MenuItemData(label: 'Absen', icon: IconMap.accessTime, route: '/attendance'),
+  MenuItemData(label: 'Pendaftaran Wajah', icon: IconMap.face, route: '/face-enrollment', badge: 'NEW'),
+  MenuItemData(label: 'Jadwal', icon: IconMap.calendarToday, route: '/schedule'),
+  MenuItemData(label: 'Cuti', icon: IconMap.beachAccess, route: '/leave'),
+  MenuItemData(label: 'Payroll', icon: IconMap.accountBalanceWallet, route: '/payroll'),
+  MenuItemData(label: 'Approval', icon: IconMap.checklist),
+  MenuItemData(label: 'Patroli', icon: IconMap.security),
+  MenuItemData(label: 'Laporan Patroli', icon: IconMap.reportProblem, route: '/violation-report'),
+  MenuItemData(label: 'Laporan Mutasi', icon: IconMap.editNote, route: '/report'),
+  MenuItemData(label: 'Tugas Harian', icon: IconMap.task, route: '/daily-task'),
 ];
 
 final _patrolPoints = [
@@ -144,20 +86,61 @@ class _HRDashboardScreenState extends State<HRDashboardScreen> {
   }
 
   void _startPanicHold() {
+    print('PANIC: _startPanicHold called');
     setState(() {
       _panicHolding = true;
       _panicProgress = 0;
       _panicLocation = null;
       _panicError = null;
     });
-    _runPanicTimer();
+
+    // Get location in background (runs in parallel with animation)
+    _getLocationInBackground();
+
+    // Start progress animation immediately with Timer
+    const totalMs = 2000; // 2 seconds for panic hold
+    const intervalMs = 16; // ~60fps
+
+    int elapsed = 0;
+    _panicTimer?.cancel();
+    _panicTimer = Timer.periodic(const Duration(milliseconds: intervalMs), (timer) {
+      if (!_panicHolding) {
+        timer.cancel();
+        return;
+      }
+
+      elapsed += intervalMs;
+      final progress = (elapsed / totalMs * 100).clamp(0.0, 100.0);
+
+      if (mounted) {
+        setState(() {
+          _panicProgress = progress;
+        });
+      }
+
+      if (elapsed >= totalMs) {
+        timer.cancel();
+        if (_panicHolding && mounted) {
+          _panicHolding = false;
+          _showPanicTypeSheet();
+        }
+      }
+    });
   }
 
-  void _runPanicTimer() async {
-    // Get location in background while holding
-    _panicLocation = null;
-    _panicError = null;
+  Timer? _panicTimer;
 
+  void _cancelPanicHold() {
+    _panicTimer?.cancel();
+    setState(() {
+      _panicHolding = false;
+      _panicProgress = 0;
+      _panicLocation = null;
+      _panicError = null;
+    });
+  }
+
+  Future<void> _getLocationInBackground() async {
     try {
       final locationService = LocationService();
       _panicLocation = await locationService.getCurrentLocation();
@@ -166,34 +149,6 @@ class _HRDashboardScreenState extends State<HRDashboardScreen> {
     } catch (_) {
       _panicError = 'Gagal mendapatkan lokasi';
     }
-
-    // Continue progress animation even if location fails
-    const totalMs = 3000;
-    const intervalMs = 50;
-    int elapsed = 0;
-    while (_panicHolding && elapsed < totalMs) {
-      await Future.delayed(const Duration(milliseconds: intervalMs));
-      if (!_panicHolding) break;
-      elapsed += intervalMs;
-      if (mounted) {
-        setState(() {
-          _panicProgress = (elapsed / totalMs * 100).clamp(0, 100);
-        });
-      }
-    }
-    if (_panicHolding && _panicProgress >= 100) {
-      _panicHolding = false;
-      _showPanicTypeSheet();
-    }
-  }
-
-  void _cancelPanicHold() {
-    setState(() {
-      _panicHolding = false;
-      _panicProgress = 0;
-      _panicLocation = null;
-      _panicError = null;
-    });
   }
 
   Future<void> _onRefresh() async {
@@ -201,6 +156,7 @@ class _HRDashboardScreenState extends State<HRDashboardScreen> {
   }
 
   void _showPanicTypeSheet() {
+    print('PANIC: _showPanicTypeSheet called');
     // Show error if location failed
     if (_panicError != null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -306,12 +262,16 @@ class _HRDashboardScreenState extends State<HRDashboardScreen> {
   void _submitPanic(String type) async {
     if (_panicLocation == null) return;
 
+    print('PANIC: Submitting alert - type=$type, lat=${_panicLocation!.latitude}, lng=${_panicLocation!.longitude}');
+
     final notifier = context.read<PanicNotifier>();
     final success = await notifier.sendPanicAlert(
       type: type,
       latitude: _panicLocation!.latitude,
       longitude: _panicLocation!.longitude,
     );
+
+    print('PANIC: Result - success=$success, error=${notifier.state.sendError}');
 
     if (!mounted) return;
 
@@ -414,6 +374,7 @@ class _HRDashboardScreenState extends State<HRDashboardScreen> {
     final authNotifier = context.read<AuthNotifier>();
     final userName = authNotifier.state.user?.name ?? 'User';
     final userPosition = authNotifier.state.user?.position ?? '';
+    final theme = FTheme.of(context);
 
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -438,9 +399,9 @@ class _HRDashboardScreenState extends State<HRDashboardScreen> {
               const SizedBox(height: 2),
               Text(
                 userPosition,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 12,
-                  color: AppColors.primary,
+                  color: theme.colors.primary,
                   fontWeight: FontWeight.w500,
                 ),
               ),
@@ -466,6 +427,7 @@ class _HRDashboardScreenState extends State<HRDashboardScreen> {
     final hasCheckedOut = data?.hasCheckedOut ?? false;
     final checkInTime = data?.checkInTime;
     final nextAction = data?.nextAction ?? 'check_in';
+    final theme = FTheme.of(context);
 
     // Determine status
     String statusText;
@@ -492,9 +454,7 @@ class _HRDashboardScreenState extends State<HRDashboardScreen> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [AppColors.indigo600, AppColors.indigo500],
-        ),
+        color: theme.colors.primary,
         borderRadius: BorderRadius.circular(16),
       ),
       child: Row(
@@ -511,7 +471,7 @@ class _HRDashboardScreenState extends State<HRDashboardScreen> {
               Row(
                 children: [
                   Icon(
-                    hasCheckedIn ? Icons.check_circle : Icons.schedule,
+                    hasCheckedIn ? IconMap.checkCircle : IconMap.schedule,
                     color: Colors.white,
                     size: 16,
                   ),
@@ -559,11 +519,34 @@ class _HRDashboardScreenState extends State<HRDashboardScreen> {
   Widget _buildMenuGrid() {
     // Use watch to rebuild when auth state changes (e.g., hasFaceEnrollment updated)
     final user = context.watch<AuthNotifier>().state.user;
+    final theme = FTheme.of(context);
 
     // Filter menu items based on user privileges
-    final filteredMenuGrid = user != null
-        ? filterMenuByPrivileges(_menuGrid, user)
-        : _menuGrid;
+    List<Map<String, dynamic>> filteredMenuItems;
+    if (user != null) {
+      final filtered = filterMenuByPrivileges(_menuItems, user);
+      filteredMenuItems = filtered.map((item) {
+        return {
+          'label': item.label,
+          'icon': item.icon,
+          'bg': theme.colors.muted,
+          'fg': theme.colors.primary,
+          'route': item.route,
+          'badge': item.badge,
+        };
+      }).toList();
+    } else {
+      filteredMenuItems = _menuItems.map((item) {
+        return {
+          'label': item.label,
+          'icon': item.icon,
+          'bg': theme.colors.muted,
+          'fg': theme.colors.primary,
+          'route': item.route,
+          'badge': item.badge,
+        };
+      }).toList();
+    }
 
     return Container(
       key: TutorialKeys.menuGridKey,
@@ -579,12 +562,12 @@ class _HRDashboardScreenState extends State<HRDashboardScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
+              Text(
                 'Menu Layanan',
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
-                  color: AppColors.slate800,
+                  color: theme.colors.foreground,
                 ),
               ),
               InkWell(
@@ -595,17 +578,17 @@ class _HRDashboardScreenState extends State<HRDashboardScreen> {
                     horizontal: 8,
                     vertical: 4,
                   ),
-                  child: const Row(
+                  child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.tune, size: 18, color: AppColors.slate500),
-                      SizedBox(width: 4),
+                      Icon(IconMap.tune, size: 18, color: theme.colors.mutedForeground),
+                      const SizedBox(width: 4),
                       Text(
                         'Edit',
                         style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w500,
-                          color: AppColors.slate600,
+                          color: theme.colors.mutedForeground,
                         ),
                       ),
                     ],
@@ -615,7 +598,7 @@ class _HRDashboardScreenState extends State<HRDashboardScreen> {
             ],
           ),
           const SizedBox(height: 12),
-          MenuGridCarousel(menuItems: filteredMenuGrid, itemsPerPage: 8),
+          MenuGridCarousel(menuItems: filteredMenuItems, itemsPerPage: 8),
         ],
       ),
     );
@@ -629,8 +612,15 @@ class _HRDashboardScreenState extends State<HRDashboardScreen> {
         offset: const Offset(0, -8),
         child: GestureDetector(
           key: TutorialKeys.panicButtonKey,
-          onLongPressStart: (_) => _startPanicHold(),
-          onLongPressEnd: (_) => _cancelPanicHold(),
+          behavior: HitTestBehavior.opaque,
+          onLongPressStart: (_) {
+            print('PANIC: onLongPressStart triggered');
+            _startPanicHold();
+          },
+          onLongPressEnd: (_) {
+            print('PANIC: onLongPressEnd triggered');
+            _cancelPanicHold();
+          },
           child: Stack(
             alignment: Alignment.center,
             children: [
@@ -661,7 +651,7 @@ class _HRDashboardScreenState extends State<HRDashboardScreen> {
                     ),
                   ],
                 ),
-                child: const Icon(Icons.warning, color: Colors.white, size: 28),
+                child: Icon(IconMap.warning, color: Colors.white, size: 28),
               ),
             ],
           ),
@@ -723,8 +713,8 @@ class _HRDashboardScreenState extends State<HRDashboardScreen> {
                               color: AppColors.slate100,
                               borderRadius: BorderRadius.circular(16),
                             ),
-                            child: const Icon(
-                              Icons.close,
+                            child: Icon(
+                              IconMap.close,
                               size: 18,
                               color: AppColors.slate500,
                             ),
@@ -748,8 +738,8 @@ class _HRDashboardScreenState extends State<HRDashboardScreen> {
                               color: AppColors.teal600,
                               borderRadius: BorderRadius.circular(22),
                             ),
-                            child: const Icon(
-                              Icons.qr_code_scanner,
+                            child: Icon(
+                              IconMap.qrCodeScanner,
                               color: Colors.white,
                             ),
                           ),
@@ -801,7 +791,7 @@ class _HRDashboardScreenState extends State<HRDashboardScreen> {
                                 borderRadius: BorderRadius.circular(20),
                               ),
                               child: Icon(
-                                Icons.location_on,
+                                IconMap.locationOn,
                                 size: 20,
                                 color: p['done'] as bool
                                     ? AppColors.emerald600
@@ -834,8 +824,8 @@ class _HRDashboardScreenState extends State<HRDashboardScreen> {
                               ),
                             ),
                             if (p['done'] as bool)
-                              const Icon(
-                                Icons.check_circle,
+                              Icon(
+                                IconMap.checkCircle,
                                 color: AppColors.emerald500,
                                 size: 24,
                               )
@@ -896,8 +886,8 @@ class _NotificationButton extends StatelessWidget {
           child: Stack(
             alignment: Alignment.center,
             children: [
-              const Icon(
-                Icons.notifications_outlined,
+              Icon(
+                IconMap.notifications,
                 color: AppColors.slate600,
                 size: 22,
               ),
@@ -998,7 +988,7 @@ class _NotificationButton extends StatelessWidget {
                               child: Column(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
-                                  Icon(Icons.notifications_none, size: 64, color: AppColors.slate300),
+                                  Icon(IconMap.notifications, size: 64, color: AppColors.slate300),
                                   const SizedBox(height: 16),
                                   Text(
                                     'Belum ada notifikasi',
@@ -1052,6 +1042,7 @@ class _NotificationItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = FTheme.of(context);
     return ListTile(
       onTap: onTap,
       leading: Container(
@@ -1094,8 +1085,8 @@ class _NotificationItem extends StatelessWidget {
           ? Container(
               width: 8,
               height: 8,
-              decoration: const BoxDecoration(
-                color: AppColors.primary,
+              decoration: BoxDecoration(
+                color: theme.colors.primary,
                 shape: BoxShape.circle,
               ),
             )
@@ -1106,11 +1097,11 @@ class _NotificationItem extends StatelessWidget {
   IconData _getIcon(String? type) {
     switch (type) {
       case 'patrol_alarm':
-        return Icons.security;
+        return IconMap.security;
       case 'shift_reminder':
-        return Icons.access_time;
+        return IconMap.accessTime;
       default:
-        return Icons.notifications;
+        return IconMap.notifications;
     }
   }
 
