@@ -286,7 +286,8 @@ class DailyTaskRepository {
   }
 
   /// POST /daily-task/assign - Assign task using mobile API
-  Future<bool> mobileAssignTask({
+  /// Returns the created assignment data
+  Future<Map<String, dynamic>?> mobileAssignTask({
     required int employeeId,
     int? itemId,
     int? areaId,
@@ -296,7 +297,7 @@ class DailyTaskRepository {
     String? assignedDate,
   }) async {
     try {
-      await api.mobileAssignTask(
+      final response = await api.mobileAssignTask(
         employeeId: employeeId,
         itemId: itemId,
         areaId: areaId,
@@ -305,7 +306,8 @@ class DailyTaskRepository {
         notes: notes,
         assignedDate: assignedDate,
       );
-      return true;
+      // Return the created assignment data from response
+      return response['data'] as Map<String, dynamic>?;
     } on ApiException {
       rethrow;
     } catch (e) {

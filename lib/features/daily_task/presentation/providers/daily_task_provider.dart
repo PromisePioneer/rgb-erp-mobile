@@ -346,7 +346,7 @@ class DailyTaskNotifier extends ChangeNotifier {
     }
   }
 
-  Future<bool> mobileAssignTask({
+  Future<Map<String, dynamic>?> mobileAssignTask({
     required int employeeId,
     int? itemId,
     int? areaId,
@@ -360,7 +360,7 @@ class DailyTaskNotifier extends ChangeNotifier {
     notifyListeners();
 
     try {
-      await _repository.mobileAssignTask(
+      final result = await _repository.mobileAssignTask(
         employeeId: employeeId,
         itemId: itemId,
         areaId: areaId,
@@ -369,14 +369,19 @@ class DailyTaskNotifier extends ChangeNotifier {
         notes: notes,
         assignedDate: assignedDate,
       );
+      // Add the new assignment to the list if returned
+      if (result != null) {
+        _assignments.insert(0, result);
+        notifyListeners();
+      }
       _isSubmitting = false;
       notifyListeners();
-      return true;
+      return result;
     } catch (e) {
       _isSubmitting = false;
       _error = e.toString();
       notifyListeners();
-      return false;
+      return null;
     }
   }
 

@@ -77,7 +77,7 @@ class _TaskAssignmentFormScreenState extends State<TaskAssignmentFormScreen> {
     final assignedDate = DateFormat('yyyy-MM-dd').format(_selectedDate);
 
     final notifier = context.read<DailyTaskNotifier>();
-    final success = await notifier.mobileAssignTask(
+    final result = await notifier.mobileAssignTask(
       employeeId: _selectedEmployeeId!,
       itemId: _selectedItemId,
       targetMinutes: targetMinutes,
@@ -87,7 +87,7 @@ class _TaskAssignmentFormScreenState extends State<TaskAssignmentFormScreen> {
 
     if (!mounted) return;
 
-    if (success) {
+    if (result != null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Tugas berhasil ditugaskan'),
