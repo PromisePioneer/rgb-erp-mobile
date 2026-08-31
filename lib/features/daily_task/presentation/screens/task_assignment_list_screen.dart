@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/core.dart';
 import '../../../../shared/widgets/feedback/loading_indicator.dart';
 import '../providers/daily_task_provider.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
 
 /// Screen for supervisors to view and manage daily task assignments
 class TaskAssignmentListScreen extends StatefulWidget {
@@ -15,15 +16,25 @@ class TaskAssignmentListScreen extends StatefulWidget {
 }
 
 class _TaskAssignmentListScreenState extends State<TaskAssignmentListScreen> {
+  bool _canAssignTask = false;
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _loadData();
+      _checkPrivilegesAndLoadData();
     });
   }
 
-  void _loadData() {
+  void _checkPrivilegesAndLoadData() {
+    final authNotifier = context.read<AuthNotifier>();
+    final user = authNotifier.state.user;
+    final canAssign = user?.hasPrivilege('daily_task_assign') ?? false;
+
+    setState(() {
+      _canAssignTask = canAssign;
+    });
+
     context.read<DailyTaskNotifier>().loadAssignments();
   }
 
@@ -108,11 +119,12 @@ class _TaskAssignmentListScreenState extends State<TaskAssignmentListScreen> {
         foregroundColor: AppColors.slate800,
         elevation: 0,
         actions: [
-          IconButton(
-            icon: const Icon(Icons.add),
-            onPressed: () => context.push('/daily-task-assignment/new'),
-            tooltip: 'Tambah Tugas',
-          ),
+          if (_canAssignTask)
+            IconButton(
+              icon: const Icon(Icons.add),
+              onPressed: () => context.push('/daily-task-assignment/new'),
+              tooltip: 'Tambah Tugas',
+            ),
         ],
       ),
       body: error != null && assignments.isEmpty
@@ -125,7 +137,7 @@ class _TaskAssignmentListScreenState extends State<TaskAssignmentListScreen> {
                   Text(error, textAlign: TextAlign.center),
                   const SizedBox(height: 16),
                   ElevatedButton(
-                    onPressed: _loadData,
+                    onPressed: _checkPrivilegesAndLoadData,
                     child: const Text('Coba Lagi'),
                   ),
                 ],
@@ -152,16 +164,17 @@ class _TaskAssignmentListScreenState extends State<TaskAssignmentListScreen> {
                             ),
                           ),
                           const SizedBox(height: 8),
-                          ElevatedButton.icon(
-                            onPressed: () => context.push('/daily-task-assignment/new'),
-                            icon: const Icon(Icons.add),
-                            label: const Text('Tambah Tugas'),
-                          ),
+                          if (_canAssignTask)
+                            ElevatedButton.icon(
+                              onPressed: () => context.push('/daily-task-assignment/new'),
+                              icon: const Icon(Icons.add),
+                              label: const Text('Tambah Tugas'),
+                            ),
                         ],
                       ),
                     )
                   : RefreshIndicator(
-                      onRefresh: () async => _loadData(),
+                      onRefresh: () async => _checkPrivilegesAndLoadData(),
                       child: ListView.builder(
                         padding: const EdgeInsets.all(16),
                         itemCount: assignments.length,
