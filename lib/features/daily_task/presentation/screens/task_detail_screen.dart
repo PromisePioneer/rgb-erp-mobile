@@ -103,6 +103,96 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
     });
   }
 
+  void _showFullScreenPhoto(String imageUrl, String type) {
+    showDialog(
+      context: context,
+      barrierColor: Colors.black87,
+      builder: (ctx) => Scaffold(
+        backgroundColor: Colors.black,
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          iconTheme: const IconThemeData(color: Colors.white),
+          title: Text(
+            type.toUpperCase(),
+            style: const TextStyle(color: Colors.white),
+          ),
+        ),
+        body: GestureDetector(
+          onTap: () => Navigator.pop(ctx),
+          behavior: HitTestBehavior.translucent,
+          child: Center(
+            child: InteractiveViewer(
+              minScale: 0.5,
+              maxScale: 4.0,
+              child: Image.network(
+                imageUrl,
+                fit: BoxFit.contain,
+                loadingBuilder: (context, child, loadingProgress) {
+                  if (loadingProgress == null) return child;
+                  return const Center(
+                    child: CircularProgressIndicator(color: Colors.white),
+                  );
+                },
+                errorBuilder: (context, error, stackTrace) {
+                  return const Center(
+                    child: Icon(
+                      Icons.broken_image,
+                      color: Colors.white54,
+                      size: 64,
+                    ),
+                  );
+                },
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showLocalFullScreenPhoto(String filePath) {
+    showDialog(
+      context: context,
+      barrierColor: Colors.black87,
+      builder: (ctx) => Scaffold(
+        backgroundColor: Colors.black,
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          iconTheme: const IconThemeData(color: Colors.white),
+          title: const Text(
+            'FOTO',
+            style: TextStyle(color: Colors.white),
+          ),
+        ),
+        body: GestureDetector(
+          onTap: () => Navigator.pop(ctx),
+          behavior: HitTestBehavior.translucent,
+          child: Center(
+            child: InteractiveViewer(
+              minScale: 0.5,
+              maxScale: 4.0,
+              child: Image.file(
+                File(filePath),
+                fit: BoxFit.contain,
+                errorBuilder: (context, error, stackTrace) {
+                  return const Center(
+                    child: Icon(
+                      Icons.broken_image,
+                      color: Colors.white54,
+                      size: 64,
+                    ),
+                  );
+                },
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   Future<void> _handleStartTask() async {
     if (_beforePhotoPaths.isEmpty) {
       _showErrorDialog('Foto Sebelum', 'Silakan ambil foto sebelum bekerja.');
@@ -471,17 +561,20 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
                         return Stack(
                           fit: StackFit.expand,
                           children: [
-                            ClipRRect(
-                              borderRadius: AppRadius.radiusSm,
-                              child: Image.file(
-                                File(photoPaths[index]),
-                                fit: BoxFit.cover,
-                                errorBuilder: (c, e, s) => Container(
-                                  color: theme.colors.muted,
-                                  child: Icon(
-                                    IconMap.brokenImage,
-                                    size: 32,
-                                    color: theme.colors.mutedForeground,
+                            GestureDetector(
+                              onTap: () => _showLocalFullScreenPhoto(photoPaths[index]),
+                              child: ClipRRect(
+                                borderRadius: AppRadius.radiusSm,
+                                child: Image.file(
+                                  File(photoPaths[index]),
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (c, e, s) => Container(
+                                    color: theme.colors.muted,
+                                    child: Icon(
+                                      IconMap.brokenImage,
+                                      size: 32,
+                                      color: theme.colors.mutedForeground,
+                                    ),
                                   ),
                                 ),
                               ),
@@ -1018,28 +1111,34 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
                   child: Column(
                     children: [
                       Expanded(
-                        child: ClipRRect(
-                          borderRadius: AppRadius.radiusSm,
-                          child: Image.network(
-                            photo.url,
-                            fit: BoxFit.cover,
-                            width: double.infinity,
-                            errorBuilder: (c, e, s) => Container(
-                              color: theme.colors.muted,
-                              child: Icon(
-                                IconMap.brokenImage,
-                                color: theme.colors.mutedForeground,
+                        child: GestureDetector(
+                          onTap: () => _showFullScreenPhoto(photo.url, photo.type),
+                          child: Hero(
+                            tag: 'photo_${photo.id}',
+                            child: ClipRRect(
+                              borderRadius: AppRadius.radiusSm,
+                              child: Image.network(
+                                photo.url,
+                                fit: BoxFit.cover,
+                                width: double.infinity,
+                                errorBuilder: (c, e, s) => Container(
+                                  color: theme.colors.muted,
+                                  child: Icon(
+                                    IconMap.brokenImage,
+                                    color: theme.colors.mutedForeground,
+                                  ),
+                                ),
+                                loadingBuilder: (c, child, loadingProgress) {
+                                  if (loadingProgress == null) return child;
+                                  return Container(
+                                    color: theme.colors.muted,
+                                    child: const Center(
+                                      child: LoadingIndicator(size: 24),
+                                    ),
+                                  );
+                                },
                               ),
                             ),
-                            loadingBuilder: (c, child, loadingProgress) {
-                              if (loadingProgress == null) return child;
-                              return Container(
-                                color: theme.colors.muted,
-                                child: const Center(
-                                  child: LoadingIndicator(size: 24),
-                                ),
-                              );
-                            },
                           ),
                         ),
                       ),
