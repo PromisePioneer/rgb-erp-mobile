@@ -597,44 +597,118 @@ class _TaskReviewScreenState extends State<TaskReviewScreen> {
             itemCount: photos.length,
             itemBuilder: (ctx, i) {
               final photo = photos[i];
-              return Container(
-                width: 120,
-                margin: EdgeInsets.only(
-                  right: i < photos.length - 1 ? AppSpacing.sm : 0,
-                ),
-                child: Column(
-                  children: [
-                    Expanded(
-                      child: ClipRRect(
-                        borderRadius: AppRadius.radiusSm,
-                        child: Image.network(
-                          photo['url'] ?? '',
-                          fit: BoxFit.cover,
-                          errorBuilder: (c, e, s) => Container(
-                            color: theme.colors.muted,
-                            child: Icon(
-                              IconMap.brokenImage,
-                              color: theme.colors.mutedForeground,
+              final photoUrl = photo['url']?.toString() ?? '';
+              final photoType = photo['type']?.toString() ?? 'photo';
+              return GestureDetector(
+                onTap: () => _showFullScreenPhoto(photoUrl, photoType),
+                child: Container(
+                  width: 120,
+                  margin: EdgeInsets.only(
+                    right: i < photos.length - 1 ? AppSpacing.sm : 0,
+                  ),
+                  child: Column(
+                    children: [
+                      Expanded(
+                        child: Stack(
+                          fit: StackFit.expand,
+                          children: [
+                            ClipRRect(
+                              borderRadius: AppRadius.radiusSm,
+                              child: Image.network(
+                                photoUrl,
+                                fit: BoxFit.cover,
+                                errorBuilder: (c, e, s) => Container(
+                                  color: theme.colors.muted,
+                                  child: Icon(
+                                    IconMap.brokenImage,
+                                    color: theme.colors.mutedForeground,
+                                  ),
+                                ),
+                              ),
                             ),
-                          ),
+                            Positioned(
+                              bottom: 4,
+                              right: 4,
+                              child: Container(
+                                padding: const EdgeInsets.all(4),
+                                decoration: BoxDecoration(
+                                  color: Colors.black54,
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                                child: const Icon(
+                                  Icons.zoom_in,
+                                  color: Colors.white,
+                                  size: 14,
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      (photo['type'] ?? 'photo').toString().toUpperCase(),
-                      style: TextStyle(
-                        fontSize: 11,
-                        color: theme.colors.mutedForeground,
+                      const SizedBox(height: 4),
+                      Text(
+                        photoType.toUpperCase(),
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: theme.colors.mutedForeground,
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               );
             },
           ),
         ),
       ],
+    );
+  }
+
+  void _showFullScreenPhoto(String imageUrl, String type) {
+    showDialog(
+      context: context,
+      barrierColor: Colors.black87,
+      builder: (ctx) => Scaffold(
+        backgroundColor: Colors.black,
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          iconTheme: const IconThemeData(color: Colors.white),
+          title: Text(
+            type.toUpperCase(),
+            style: const TextStyle(color: Colors.white),
+          ),
+        ),
+        body: GestureDetector(
+          onTap: () => Navigator.pop(ctx),
+          behavior: HitTestBehavior.translucent,
+          child: Center(
+            child: InteractiveViewer(
+              minScale: 0.5,
+              maxScale: 4.0,
+              child: Image.network(
+                imageUrl,
+                fit: BoxFit.contain,
+                loadingBuilder: (context, child, loadingProgress) {
+                  if (loadingProgress == null) return child;
+                  return const Center(
+                    child: CircularProgressIndicator(color: Colors.white),
+                  );
+                },
+                errorBuilder: (context, error, stackTrace) {
+                  return const Center(
+                    child: Icon(
+                      Icons.broken_image,
+                      color: Colors.white54,
+                      size: 64,
+                    ),
+                  );
+                },
+              ),
+            ),
+          ),
+        ),
+      ),
     );
   }
 
