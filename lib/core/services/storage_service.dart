@@ -149,4 +149,47 @@ class StorageService {
     final user = await authUser;
     return token != null && token.isNotEmpty && user != null && user.isNotEmpty;
   }
+
+  // ====================
+  // Client Auth Storage
+  // ====================
+
+  // Client Auth Token
+  Future<String?> get clientAuthToken async {
+    return _storage.read(key: AppConstants.keyClientAuthToken);
+  }
+
+  Future<void> setClientAuthToken(String token) async {
+    await _storage.write(key: AppConstants.keyClientAuthToken, value: token);
+  }
+
+  Future<void> removeClientAuthToken() async {
+    await _storage.delete(key: AppConstants.keyClientAuthToken);
+  }
+
+  // Client Auth User
+  Future<String?> get clientAuthUser async {
+    return _storage.read(key: AppConstants.keyClientAuthUser);
+  }
+
+  Future<void> setClientAuthUser(String userJson) async {
+    await _storage.write(key: AppConstants.keyClientAuthUser, value: userJson);
+  }
+
+  Future<void> removeClientAuthUser() async {
+    await _storage.delete(key: AppConstants.keyClientAuthUser);
+  }
+
+  // Clear Client Auth Data
+  Future<void> clearClientAuthData() async {
+    await removeClientAuthToken();
+    await removeClientAuthUser();
+  }
+
+  // Check if has valid client session
+  Future<bool> hasValidClientSession() async {
+    final token = await clientAuthToken;
+    final user = await clientAuthUser;
+    return token != null && token.isNotEmpty && user != null && user.isNotEmpty;
+  }
 }

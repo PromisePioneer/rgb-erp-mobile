@@ -36,6 +36,8 @@ dependencies:
 
   # Location
   geolocator: ^11.0.0
+  flutter_map: ^6.1.0
+  latlong2: ^0.9.0
   # Note: geocoding removed - causes compileSdk issues with android-33
   # Add geocoding later when plugin is updated
 

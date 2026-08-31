@@ -10,6 +10,12 @@ import '../shared/utils/tutorial_keys.dart';
 // Features imports
 import '../features/auth/presentation/providers/auth_provider.dart';
 import '../features/auth/presentation/screens/login_screen.dart';
+import '../features/client/presentation/screens/client_dashboard_screen.dart';
+import '../features/client/presentation/screens/client_attendance_screen.dart';
+import '../features/client/presentation/screens/client_reports_screen.dart';
+import '../features/client/presentation/screens/client_employee_list_screen.dart';
+import '../features/client/presentation/screens/client_area_list_screen.dart';
+import '../features/client/presentation/screens/client_schedule_screen.dart';
 import '../features/hr_dashboard/presentation/screens/hr_dashboard_screen.dart';
 import '../features/hr_dashboard/presentation/screens/edit_menu_screen.dart';
 import '../features/leave/presentation/screens/leave_form_screen.dart';
@@ -21,7 +27,6 @@ import '../features/attendance/presentation/screens/shift_response_screen.dart';
 import '../features/attendance/presentation/screens/backup_offer_screen.dart';
 import '../features/face_enrollment/presentation/screens/face_enrollment_status_screen.dart';
 import '../features/face_enrollment/presentation/screens/face_enrollment_capture_screen.dart';
-import '../features/attendance/presentation/screens/attendance_capture_screen.dart';
 import '../features/patrol/presentation/screens/patrol_home_screen.dart';
 import '../features/patrol/presentation/screens/patrol_scanner_screen.dart';
 import '../features/patrol/presentation/screens/patrol_alarm_screen.dart';
@@ -76,7 +81,9 @@ void initRouter(AuthNotifier authNotifier) {
       }
 
       if (isLoggedIn && isOnLogin) {
-        return '/dashboard';
+        // Auto-detect destination based on user type
+        final isClient = authNotifier.state.isClient;
+        return isClient ? '/client/dashboard' : '/dashboard';
       }
 
       return null;
@@ -199,6 +206,63 @@ void initRouter(AuthNotifier authNotifier) {
       ),
 
       // Immersive/Modal routes (outside shell, full-screen without bottom nav)
+
+      // Client Dashboard
+      GoRoute(
+        path: '/client/dashboard',
+        name: 'client-dashboard',
+        builder: (context, state) => const ClientDashboardScreen(),
+      ),
+
+      // Client Employee List
+      GoRoute(
+        path: '/client/employees',
+        name: 'client-employees',
+        builder: (context, state) => const ClientEmployeeListScreen(),
+      ),
+
+      // Client Area List
+      GoRoute(
+        path: '/client/areas',
+        name: 'client-areas',
+        builder: (context, state) => const ClientAreaListScreen(),
+      ),
+
+      // Client Attendance
+      GoRoute(
+        path: '/client/attendance',
+        name: 'client-attendance',
+        builder: (context, state) => const ClientAttendanceScreen(),
+      ),
+
+      // Client Daily Tasks
+      GoRoute(
+        path: '/client/tasks',
+        name: 'client-tasks',
+        builder: (context, state) => const ClientReportsScreen(reportType: 'tasks'),
+      ),
+
+      // Client Patrol Reports
+      GoRoute(
+        path: '/client/patrol',
+        name: 'client-patrol',
+        builder: (context, state) => const ClientReportsScreen(reportType: 'patrol'),
+      ),
+
+      // Client Field Reports
+      GoRoute(
+        path: '/client/field-reports',
+        name: 'client-field-reports',
+        builder: (context, state) => const ClientReportsScreen(reportType: 'field'),
+      ),
+
+      // Client Schedule
+      GoRoute(
+        path: '/client/schedules',
+        name: 'client-schedules',
+        builder: (context, state) => const ClientScheduleScreen(),
+      ),
+
       GoRoute(
         path: '/attendance/capture',
         name: 'attendance-capture',
@@ -731,9 +795,16 @@ class _SplashScreenState extends State<SplashScreen> {
     if (!mounted) return;
 
     final authNotifier = context.read<AuthNotifier>();
-    final destination = authNotifier.state.isAuthenticated
-        ? '/dashboard'
-        : '/login';
+    final isAuthenticated = authNotifier.state.isAuthenticated;
+    final isClient = authNotifier.state.isClient;
+
+    String destination;
+    if (isAuthenticated) {
+      // Auto-detect destination based on user type
+      destination = isClient ? '/client/dashboard' : '/dashboard';
+    } else {
+      destination = '/login';
+    }
 
     Timer(const Duration(milliseconds: 100), () {
       if (mounted) {

@@ -128,4 +128,20 @@ class ApiEndpoints {
   static const String dailyTaskMobileAssignEmployees = '/daily-task/assign/employees';
   static const String dailyTaskMyAssignments = '/daily-task/assignments/my';
   static const String dailyTaskReviewCriteria = '/daily-task/review-criteria';
+
+  // ====================
+  // Client API Endpoints (Mobile App for Clients)
+  // ====================
+  static const String clientDashboard = '/client/dashboard';
+  static const String clientEmployees = '/client/employees';
+  static const String clientAreas = '/client/areas';
+  static const String clientAttendanceToday = '/client/attendance/today';
+  static const String clientAttendance = '/client/attendance';
+  static const String clientDailyTasks = '/client/daily-tasks';
+  static const String clientPatrolReports = '/client/patrol-reports';
+  static const String clientFieldReports = '/client/field-reports';
+  static const String clientProfile = '/client/profile';
+  static const String clientChangePassword = '/client/password';
+  static const String clientScheduleDates = '/client/schedules/dates';
+  static const String clientScheduleEmployees = '/client/schedules/employees';
 }

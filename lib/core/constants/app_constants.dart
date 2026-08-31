@@ -18,6 +18,10 @@ class AppConstants {
   static const String keyBiometricCode = 'biometric_code';
   static const String keyLocale = 'locale';
 
+  // Client Auth Storage Keys
+  static const String keyClientAuthToken = 'client_auth_token';
+  static const String keyClientAuthUser = 'client_auth_user';
+
   // Attendance Storage Keys
   static const String keyAttendanceStatus = 'attendance_status';
   static const String keyAttendanceRecords = 'attendance_records';

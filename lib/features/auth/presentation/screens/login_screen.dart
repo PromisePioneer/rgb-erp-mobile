@@ -9,7 +9,7 @@ import '../../../../shared/widgets/buttons/primary_button.dart';
 import '../providers/auth_provider.dart';
 import '../widgets/biometric_section.dart';
 
-/// Main login screen
+/// Main login screen - auto-detects employee vs client login
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
@@ -25,7 +25,7 @@ class _LoginScreenState extends State<LoginScreen> {
   String? _nikError;
   String? _passwordError;
   bool _showNikInput = false;
-  bool _isEditingNik = false; // User explicitly chose to edit NIK
+  bool _isEditingNik = false;
 
   @override
   void dispose() {
@@ -80,14 +80,19 @@ class _LoginScreenState extends State<LoginScreen> {
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
+          SnackBar(
             content: Text('Login berhasil! Masuk dashboard...'),
             backgroundColor: AppColors.success,
             duration: Duration(seconds: 1),
           ),
         );
-        Future.delayed(const Duration(milliseconds: 500), () {
-          context.go('/dashboard');
+
+        // Auto-detect user type and redirect accordingly
+        final isClient = authNotifier.state.isClient;
+        final destination = isClient ? '/client/dashboard' : '/dashboard';
+
+        Future.delayed(Duration(milliseconds: 500), () {
+          context.go(destination);
         });
       }
     } on ApiException catch (e) {
@@ -108,7 +113,6 @@ class _LoginScreenState extends State<LoginScreen> {
         );
       }
     } finally {
-      // Reset editing state after login attempt
       if (mounted) {
         setState(() {
           _isEditingNik = false;
@@ -125,6 +129,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
       if (mounted) {
         print('NAVIGATING TO DASHBOARD (BIOMETRIC)');
+        // Biometric is only for employees
         context.go('/dashboard');
       }
     } on ApiException catch (e) {
@@ -215,7 +220,6 @@ class _LoginScreenState extends State<LoginScreen> {
                     if (!_showNikInput && authState.savedNik != null && !_isEditingNik) ...[
                       GestureDetector(
                         onTap: () {
-                          // Populate controller with saved NIK before showing input
                           _nikController.text = authState.savedNik!;
                           setState(() {
                             _showNikInput = true;
@@ -267,7 +271,6 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                       ),
                     ] else ...[
-                      // NIK input - use TextField always for paste support
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -276,15 +279,14 @@ class _LoginScreenState extends State<LoginScreen> {
                             onChanged: (value) {
                               setState(() {
                                 _nikError = null;
-                                // Enable editing mode on any input (including paste)
                                 if (!_isEditingNik && value.isNotEmpty) {
                                   _isEditingNik = true;
                                 }
                               });
                             },
                             decoration: InputDecoration(
-                              labelText: 'NIK',
-                              hintText: 'Masukkan NIK Anda',
+                              labelText: 'NIK / Email',
+                              hintText: 'Masukkan NIK atau Email',
                               prefixIcon: const Icon(Icons.badge_outlined, color: AppColors.gray400),
                               filled: true,
                               fillColor: _nikError != null ? AppColors.dangerBg : AppColors.gray100,
@@ -327,13 +329,11 @@ class _LoginScreenState extends State<LoginScreen> {
                       builder: (context) {
                         final authNotifier = context.watch<AuthNotifier>();
                         final isLoading = authNotifier.state.isLoading;
-                        print('LOGIN_BUILD: isLoading=$isLoading, savedNik=${authNotifier.state.savedNik}, _isEditingNik=$_isEditingNik');
                         return PrimaryButton(
                           label: 'Masuk',
                           isLoading: isLoading,
                           fullWidth: true,
                           onPressed: () {
-                            print('LOGIN_BUTTON: tapped, _isEditingNik=$_isEditingNik');
                             _handlePasswordLogin();
                           },
                         );
@@ -356,6 +356,8 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                       ),
                     ),
+
+                    const SizedBox(height: AppSpacing.lg),
 
                     // Biometric section
                     BiometricSection(

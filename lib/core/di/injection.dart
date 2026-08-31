@@ -23,7 +23,7 @@ class AuthApi {
       final response = await _dio.post(
         ApiEndpoints.login,
         data: {
-          'code': code,
+          'email': code, // Backend expects 'email' field, can be NIK or email
           'password': password,
           if (fcmToken != null) 'fcm_token': fcmToken,
         },
@@ -1053,6 +1053,196 @@ class DailyTaskApi {
         data: {
           'scores': scores,
           if (notes != null) 'notes': notes,
+        },
+      );
+      return response.data as Map<String, dynamic>;
+    } on DioException catch (e) {
+      throw ApiException.fromDioException(e);
+    }
+  }
+}
+
+/// Client API for mobile app - authenticated as Client
+class ClientApi {
+  final Dio _dio;
+
+  ClientApi(this._dio);
+
+  /// GET /client/dashboard - Get client dashboard overview
+  Future<Map<String, dynamic>> getDashboard() async {
+    try {
+      final response = await _dio.get(ApiEndpoints.clientDashboard);
+      return response.data as Map<String, dynamic>;
+    } on DioException catch (e) {
+      throw ApiException.fromDioException(e);
+    }
+  }
+
+  /// GET /client/employees - Get employees placed at this client
+  Future<Map<String, dynamic>> getEmployees() async {
+    try {
+      final response = await _dio.get(ApiEndpoints.clientEmployees);
+      return response.data as Map<String, dynamic>;
+    } on DioException catch (e) {
+      throw ApiException.fromDioException(e);
+    }
+  }
+
+  /// GET /client/areas - Get areas for this client
+  Future<Map<String, dynamic>> getAreas() async {
+    try {
+      final response = await _dio.get(ApiEndpoints.clientAreas);
+      return response.data as Map<String, dynamic>;
+    } on DioException catch (e) {
+      throw ApiException.fromDioException(e);
+    }
+  }
+
+  /// GET /client/attendance/today - Get today's attendance
+  Future<Map<String, dynamic>> getTodayAttendance() async {
+    try {
+      final response = await _dio.get(ApiEndpoints.clientAttendanceToday);
+      return response.data as Map<String, dynamic>;
+    } on DioException catch (e) {
+      throw ApiException.fromDioException(e);
+    }
+  }
+
+  /// GET /client/attendance - Get attendance history
+  Future<Map<String, dynamic>> getAttendanceHistory({
+    String? fromDate,
+    String? toDate,
+    int? employeeId,
+  }) async {
+    try {
+      final response = await _dio.get(
+        ApiEndpoints.clientAttendance,
+        queryParameters: {
+          if (fromDate != null) 'from_date': fromDate,
+          if (toDate != null) 'to_date': toDate,
+          if (employeeId != null) 'employee_id': employeeId,
+        },
+      );
+      return response.data as Map<String, dynamic>;
+    } on DioException catch (e) {
+      throw ApiException.fromDioException(e);
+    }
+  }
+
+  /// GET /client/daily-tasks - Get daily task reports
+  Future<Map<String, dynamic>> getDailyTasks({
+    String? fromDate,
+    String? toDate,
+  }) async {
+    try {
+      final response = await _dio.get(
+        ApiEndpoints.clientDailyTasks,
+        queryParameters: {
+          if (fromDate != null) 'from_date': fromDate,
+          if (toDate != null) 'to_date': toDate,
+        },
+      );
+      return response.data as Map<String, dynamic>;
+    } on DioException catch (e) {
+      throw ApiException.fromDioException(e);
+    }
+  }
+
+  /// GET /client/patrol-reports - Get patrol reports
+  Future<Map<String, dynamic>> getPatrolReports({
+    String? fromDate,
+    String? toDate,
+  }) async {
+    try {
+      final response = await _dio.get(
+        ApiEndpoints.clientPatrolReports,
+        queryParameters: {
+          if (fromDate != null) 'from_date': fromDate,
+          if (toDate != null) 'to_date': toDate,
+        },
+      );
+      return response.data as Map<String, dynamic>;
+    } on DioException catch (e) {
+      throw ApiException.fromDioException(e);
+    }
+  }
+
+  /// GET /client/field-reports - Get field reports
+  Future<Map<String, dynamic>> getFieldReports({
+    String? fromDate,
+    String? toDate,
+  }) async {
+    try {
+      final response = await _dio.get(
+        ApiEndpoints.clientFieldReports,
+        queryParameters: {
+          if (fromDate != null) 'from_date': fromDate,
+          if (toDate != null) 'to_date': toDate,
+        },
+      );
+      return response.data as Map<String, dynamic>;
+    } on DioException catch (e) {
+      throw ApiException.fromDioException(e);
+    }
+  }
+
+  /// GET /client/profile - Get client profile
+  Future<Map<String, dynamic>> getProfile() async {
+    try {
+      final response = await _dio.get(ApiEndpoints.clientProfile);
+      return response.data as Map<String, dynamic>;
+    } on DioException catch (e) {
+      throw ApiException.fromDioException(e);
+    }
+  }
+
+  /// PUT /client/password - Change client password
+  Future<void> changePassword({
+    required String currentPassword,
+    required String newPassword,
+  }) async {
+    try {
+      await _dio.put(
+        ApiEndpoints.clientChangePassword,
+        data: {
+          'current_password': currentPassword,
+          'new_password': newPassword,
+          'new_password_confirmation': newPassword,
+        },
+      );
+    } on DioException catch (e) {
+      throw ApiException.fromDioException(e);
+    }
+  }
+
+  /// GET /client/schedules/dates - Get schedule dates for calendar
+  Future<Map<String, dynamic>> getScheduleDates({
+    required int year,
+    required int month,
+  }) async {
+    try {
+      final response = await _dio.get(
+        ApiEndpoints.clientScheduleDates,
+        queryParameters: {
+          'year': year,
+          'month': month,
+        },
+      );
+      return response.data as Map<String, dynamic>;
+    } on DioException catch (e) {
+      throw ApiException.fromDioException(e);
+    }
+  }
+
+  /// GET /client/schedules/employees - Get employees scheduled on a date
+  Future<Map<String, dynamic>> getScheduleEmployees({
+    required String date,
+  }) async {
+    try {
+      final response = await _dio.get(
+        ApiEndpoints.clientScheduleEmployees,
+        queryParameters: {
+          'date': date,
         },
       );
       return response.data as Map<String, dynamic>;

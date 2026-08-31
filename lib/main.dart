@@ -23,6 +23,10 @@ import 'features/violation_report/presentation/providers/violation_report_provid
 import 'features/report/presentation/providers/report_provider.dart';
 import 'features/daily_task/data/repositories/daily_task_repository.dart';
 import 'features/daily_task/presentation/providers/daily_task_provider.dart';
+import 'features/client/presentation/providers/client_dashboard_provider.dart';
+import 'features/client/presentation/providers/client_attendance_provider.dart';
+import 'features/client/presentation/providers/client_reports_provider.dart';
+import 'features/client/presentation/providers/client_schedule_provider.dart';
 import 'navigation/app_router.dart';
 
 /// Global notification service instance
@@ -175,6 +179,34 @@ void main() async {
         ChangeNotifierProvider<DailyTaskNotifier>(
           create: (_) => DailyTaskNotifier(
             createDailyTaskRepository(dio),
+          ),
+        ),
+
+        // Client Dashboard Provider (lazy loaded)
+        ChangeNotifierProvider<ClientDashboardNotifier>(
+          create: (_) => ClientDashboardNotifier(
+            ClientApi(dio),
+          ),
+        ),
+
+        // Client Attendance Provider (lazy loaded)
+        ChangeNotifierProvider<ClientAttendanceNotifier>(
+          create: (_) => ClientAttendanceNotifier(
+            ClientApi(dio),
+          ),
+        ),
+
+        // Client Reports Provider (lazy loaded)
+        ChangeNotifierProvider<ClientReportsNotifier>(
+          create: (_) => ClientReportsNotifier(
+            ClientApi(dio),
+          ),
+        ),
+
+        // Client Schedule Provider (lazy loaded)
+        ChangeNotifierProvider<ClientScheduleNotifier>(
+          create: (_) => ClientScheduleNotifier(
+            ClientApi(dio),
           ),
         ),
       ],

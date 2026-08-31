@@ -18,6 +18,9 @@ class AuthRepository {
         _storage = storage,
         _biometric = biometric;
 
+  /// Expose storage for external access (e.g., client auth check)
+  StorageService get storage => _storage;
+
   /// Login with credentials
   Future<LoginResponse> login(LoginCredentials credentials) async {
     final response = await _api.login(
@@ -28,12 +31,15 @@ class AuthRepository {
 
     final loginResponse = LoginResponse.fromJson(response);
 
-    // Persist auth data
-    await _persistAuth(
-      user: loginResponse.user,
-      token: loginResponse.accessToken,
-      code: credentials.code,
-    );
+    // Persist auth data based on user type
+    if (loginResponse.user != null) {
+      await _persistAuth(
+        user: loginResponse.user!,
+        token: loginResponse.accessToken,
+        code: credentials.code,
+        userType: loginResponse.userType,
+      );
+    }
 
     return loginResponse;
   }
@@ -70,12 +76,15 @@ class AuthRepository {
 
     final loginResponse = LoginResponse.fromJson(response);
 
-    // Persist new auth data
-    await _persistAuth(
-      user: loginResponse.user,
-      token: loginResponse.accessToken,
-      code: savedNik,
-    );
+    // Persist new auth data (biometric only for employees)
+    if (loginResponse.user != null) {
+      await _persistAuth(
+        user: loginResponse.user!,
+        token: loginResponse.accessToken,
+        code: savedNik,
+        userType: 'employee',
+      );
+    }
 
     return loginResponse;
   }
@@ -86,8 +95,9 @@ class AuthRepository {
       // Try to notify server (but ignore errors)
       await _api.logout();
     } finally {
-      // Always clear local data
+      // Always clear local data (both employee and client)
       await _storage.clearAuthData();
+      await _storage.clearClientAuthData();
     }
   }
 
@@ -162,9 +172,22 @@ class AuthRepository {
     required User user,
     required String token,
     required String code,
+    String userType = 'employee',
   }) async {
-    await _storage.setAuthToken(token);
-    await _storage.setAuthUser(jsonEncode(user.toJson()));
-    await _storage.setSavedNik(code);
+    if (userType == 'client') {
+      // Store as client auth
+      await _storage.setClientAuthToken(token);
+      await _storage.setClientAuthUser(jsonEncode({
+        'id': user.id,
+        'name': user.name,
+        'email': user.email,
+        'company_name': null,
+      }));
+    } else {
+      // Store as employee auth
+      await _storage.setAuthToken(token);
+      await _storage.setAuthUser(jsonEncode(user.toJson()));
+      await _storage.setSavedNik(code);
+    }
   }
 }

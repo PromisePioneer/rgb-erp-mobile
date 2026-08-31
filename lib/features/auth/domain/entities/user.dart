@@ -3,7 +3,7 @@ import 'package:equatable/equatable.dart';
 /// User entity from API
 class User extends Equatable {
   final int id;
-  final String code;
+  final String? code; // nullable - clients don't have code
   final String name;
   final String? email;
   final String? username;
@@ -21,7 +21,7 @@ class User extends Equatable {
 
   const User({
     required this.id,
-    required this.code,
+    this.code, // nullable - only employees have code
     required this.name,
     this.email,
     this.username,
@@ -56,7 +56,7 @@ class User extends Equatable {
   factory User.fromJson(Map<String, dynamic> json) {
     return User(
       id: json['id'] as int,
-      code: json['code'] as String,
+      code: json['code'] as String?, // nullable - only employees have code
       name: json['name'] as String,
       email: json['email'] as String?,
       username: json['username'] as String?,

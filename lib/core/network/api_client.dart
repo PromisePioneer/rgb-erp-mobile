@@ -19,7 +19,16 @@ class AuthInterceptor extends Interceptor {
     }
 
     // Add auth token if available
-    final token = await _storage.authToken;
+    // Check if this is a client API request
+    final isClientRequest = options.path.startsWith('/client');
+
+    String? token;
+    if (isClientRequest) {
+      token = await _storage.clientAuthToken;
+    } else {
+      token = await _storage.authToken;
+    }
+
     if (token != null && token.isNotEmpty) {
       options.headers['Authorization'] = 'Bearer $token';
     }
@@ -33,10 +42,16 @@ class AuthInterceptor extends Interceptor {
 
   @override
   void onError(DioException err, ErrorInterceptorHandler handler) async {
-    // Handle 401 Unauthorized - clear auth and redirect to login
+    // Handle 401 Unauthorized
     if (err.response?.statusCode == 401) {
-      await _storage.clearAuthData();
-      // The navigation logic should be handled by the app
+      final path = err.requestOptions.path;
+      final isClientRequest = path.startsWith('/client');
+
+      if (isClientRequest) {
+        await _storage.clearClientAuthData();
+      } else {
+        await _storage.clearAuthData();
+      }
     }
 
     return handler.next(err);

@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:dio/dio.dart';
 import '../../../../core/core.dart';
@@ -32,6 +33,7 @@ class AuthState extends ChangeNotifier {
   final bool biometricAvailable;
   final String? savedNik;
   final String? biometryType;
+  final String userType; // 'employee' or 'client'
 
   AuthState({
     this.user,
@@ -43,6 +45,7 @@ class AuthState extends ChangeNotifier {
     this.biometricAvailable = false,
     this.savedNik,
     this.biometryType,
+    this.userType = 'employee',
   });
 
   AuthState copyWith({
@@ -55,6 +58,7 @@ class AuthState extends ChangeNotifier {
     bool? biometricAvailable,
     String? savedNik,
     String? biometryType,
+    String? userType,
     bool clearError = false,
     bool clearUser = false,
   }) {
@@ -68,8 +72,12 @@ class AuthState extends ChangeNotifier {
       biometricAvailable: biometricAvailable ?? this.biometricAvailable,
       savedNik: savedNik ?? this.savedNik,
       biometryType: biometryType ?? this.biometryType,
+      userType: userType ?? this.userType,
     );
   }
+
+  bool get isClient => userType == 'client';
+  bool get isEmployee => userType == 'employee';
 }
 
 // ====================
@@ -99,7 +107,53 @@ class AuthNotifier extends ChangeNotifier {
       // Check if biometric is enabled
       final biometricEnabled = await _repository.isBiometricEnabled();
 
-      // Try to restore user from storage
+      // Check for client auth first (client takes priority if both exist)
+      final storage = _repository.storage;
+      final hasClientSession = await storage.hasValidClientSession();
+
+      if (hasClientSession) {
+        // Restore client session
+        final clientUserJson = await storage.clientAuthUser;
+        final clientToken = await storage.clientAuthToken;
+
+        if (clientUserJson != null) {
+          final clientData = jsonDecode(clientUserJson) as Map<String, dynamic>;
+          final user = User.fromJson({
+            'id': clientData['id'],
+            'code': null,
+            'name': clientData['name'],
+            'email': clientData['email'],
+            'username': null,
+            'nik': null,
+            'department': null,
+            'position': 'Client',
+            'photo': null,
+            'division': null,
+            'siteId': null,
+            'siteName': null,
+            'areaId': null,
+            'areaName': null,
+            'privileges': <String>[],
+            'hasFaceEnrollment': false,
+          });
+
+          _state = AuthState(
+            user: user,
+            token: clientToken,
+            isAuthenticated: true,
+            isLoading: false,
+            biometricEnabled: biometricEnabled,
+            biometricAvailable: biometricInfo.available,
+            savedNik: null, // Clients don't use saved NIK
+            biometryType: biometricInfo.biometryType,
+            userType: 'client',
+          );
+          notifyListeners();
+          return;
+        }
+      }
+
+      // Try to restore employee user from storage
       final user = await _repository.hydrate();
 
       if (user != null) {
@@ -112,6 +166,7 @@ class AuthNotifier extends ChangeNotifier {
           biometricAvailable: biometricInfo.available,
           savedNik: savedNik,
           biometryType: biometricInfo.biometryType,
+          userType: 'employee',
         );
 
         // Register FCM token after restoring session
@@ -135,7 +190,7 @@ class AuthNotifier extends ChangeNotifier {
   }
 
   /// Login with NIK and password
-  Future<User> login({
+  Future<User?> login({
     required String code,
     required String password,
     String? fcmToken,
@@ -153,7 +208,7 @@ class AuthNotifier extends ChangeNotifier {
 
       print('AUTH_PROVIDER: Calling repository.login()');
       final response = await _repository.login(credentials);
-      print('AUTH_PROVIDER: Repository login succeeded');
+      print('AUTH_PROVIDER: Repository login succeeded, userType=${response.userType}');
 
       _state = _state.copyWith(
         user: response.user,
@@ -161,14 +216,17 @@ class AuthNotifier extends ChangeNotifier {
         isAuthenticated: true,
         isLoading: false,
         savedNik: code,
+        userType: response.userType,
       );
-      print('AUTH_PROVIDER: State updated, isAuthenticated=true');
+      print('AUTH_PROVIDER: State updated, isAuthenticated=true, userType=${response.userType}');
       notifyListeners();
 
-      // Register FCM token after successful login
-      await _registerFcmToken();
+      // Register FCM token after successful login (only for employees)
+      if (response.isEmployee) {
+        await _registerFcmToken();
+      }
 
-      return response.user;
+      return response.user!;
     } on ApiException catch (e) {
       print('AUTH_PROVIDER: ApiException - ${e.message}');
       _state = _state.copyWith(
@@ -206,7 +264,7 @@ class AuthNotifier extends ChangeNotifier {
       // Register FCM token after successful biometric login
       await _registerFcmToken();
 
-      return response.user;
+      return response.user!;
     } on ApiException catch (e) {
       _state = _state.copyWith(
         isLoading: false,
