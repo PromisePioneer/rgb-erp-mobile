@@ -821,10 +821,44 @@ class _DailyTaskCard extends StatelessWidget {
                   ],
                 ),
               ],
+
+              // Show review rating if task is reviewed
+              if (task.status == 'reviewed' && task.reviews != null && task.reviews!.isNotEmpty) ...[
+                const SizedBox(height: AppSpacing.sm),
+                _buildReviewStars(task.reviews!.first, theme),
+              ],
             ],
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildReviewStars(DailyTaskReview review, FThemeData theme) {
+    final avg = review.averageScore ?? 0;
+    return Row(
+      children: [
+        Icon(IconMap.star, size: 16, color: AppColors.warning),
+        const SizedBox(width: 4),
+        Text(
+          avg.toStringAsFixed(1),
+          style: TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+            color: AppColors.warning,
+          ),
+        ),
+        const SizedBox(width: 4),
+        ...List.generate(5, (i) {
+          if (i < avg.floor()) {
+            return Icon(IconMap.star, size: 14, color: AppColors.warning);
+          } else if (i < avg) {
+            return Icon(IconMap.star, size: 14, color: AppColors.warning.withAlpha(128));
+          } else {
+            return Icon(IconMap.star, size: 14, color: theme.colors.mutedForeground);
+          }
+        }),
+      ],
     );
   }
 }

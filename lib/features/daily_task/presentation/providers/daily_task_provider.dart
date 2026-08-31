@@ -422,11 +422,27 @@ class DailyTaskNotifier extends ChangeNotifier {
     notifyListeners();
 
     try {
-      await _repository.submitReview(
+      final response = await _repository.submitReview(
         taskId: taskId,
         scores: scores,
         notes: notes,
       );
+
+      // Update the assignment in the list to reflect reviewed status
+      final reviewData = response['data'] as Map<String, dynamic>?;
+      _assignments = _assignments.map((a) {
+        // Find the assignment with this taskId
+        final assignmentId = a['id'];
+        if (assignmentId == taskId) {
+          return {
+            ...a,
+            'status': 'reviewed',
+            'review': reviewData,
+          };
+        }
+        return a;
+      }).toList();
+
       _isSubmitting = false;
       notifyListeners();
       return true;
