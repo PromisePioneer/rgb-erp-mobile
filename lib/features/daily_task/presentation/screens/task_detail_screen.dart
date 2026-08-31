@@ -430,6 +430,24 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
                     _buildInProgressInfo(task, theme),
                     const SizedBox(height: AppSpacing.md),
 
+                    // Show "before" photo if exists
+                    if (task.photos.any((p) => p.type == 'before')) ...[
+                      _buildPhotoPreviewSection(
+                        label: 'Foto Sebelum',
+                        photos: task.photos.where((p) => p.type == 'before').toList(),
+                        theme: theme,
+                      ),
+                      const SizedBox(height: AppSpacing.md),
+                    ],
+
+                    // Show tools/chemicals/ppes used during start
+                    if ((task.tools?.isNotEmpty ?? false) ||
+                        (task.chemicals?.isNotEmpty ?? false) ||
+                        (task.ppes?.isNotEmpty ?? false)) ...[
+                      _buildUsedItemsPreview(task, theme),
+                      const SizedBox(height: AppSpacing.md),
+                    ],
+
                     _buildPhotoSection(
                       label: 'Foto Sesudah',
                       photoPaths: _afterPhotoPaths,
@@ -1076,6 +1094,153 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
             ),
           ],
         ],
+      ),
+    );
+  }
+
+  /// Build photo preview section for network photos (in progress view)
+  Widget _buildPhotoPreviewSection({
+    required String label,
+    required List<DailyTaskPhoto> photos,
+    required FThemeData theme,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label.toUpperCase(),
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w500,
+            color: theme.colors.mutedForeground,
+            letterSpacing: 1,
+          ),
+        ),
+        const SizedBox(height: AppSpacing.sm),
+        SizedBox(
+          height: 100,
+          child: ListView.builder(
+            scrollDirection: Axis.horizontal,
+            itemCount: photos.length,
+            itemBuilder: (ctx, i) {
+              final photo = photos[i];
+              return GestureDetector(
+                onTap: () => _showFullScreenPhoto(photo.url, photo.type),
+                child: Container(
+                  width: 100,
+                  margin: EdgeInsets.only(
+                    right: i < photos.length - 1 ? AppSpacing.sm : 0,
+                  ),
+                  child: ClipRRect(
+                    borderRadius: AppRadius.radiusSm,
+                    child: Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        Image.network(
+                          photo.url,
+                          fit: BoxFit.cover,
+                          errorBuilder: (c, e, s) => Container(
+                            color: theme.colors.muted,
+                            child: Icon(
+                              IconMap.brokenImage,
+                              color: theme.colors.mutedForeground,
+                            ),
+                          ),
+                          loadingBuilder: (c, child, loadingProgress) {
+                            if (loadingProgress == null) return child;
+                            return Container(
+                              color: theme.colors.muted,
+                              child: const Center(
+                                child: LoadingIndicator(size: 24),
+                              ),
+                            );
+                          },
+                        ),
+                        Positioned(
+                          bottom: 4,
+                          right: 4,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 6,
+                              vertical: 2,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.black54,
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: const Icon(
+                              Icons.zoom_in,
+                              color: Colors.white,
+                              size: 14,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// Build used items preview (tools, chemicals, ppes) for in progress view
+  Widget _buildUsedItemsPreview(DailyTask task, FThemeData theme) {
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: theme.colors.card,
+        borderRadius: AppRadius.radiusMd,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'ALAT YANG DIGUNAKAN',
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+              color: theme.colors.mutedForeground,
+              letterSpacing: 1,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          Wrap(
+            spacing: AppSpacing.xs,
+            runSpacing: AppSpacing.xs,
+            children: [
+              // Tools
+              ...?task.tools?.map((t) => _buildUsedItemChip(t.name, theme)),
+              // Chemicals
+              ...?task.chemicals?.map((c) => _buildUsedItemChip(c.name, theme)),
+              // PPEs
+              ...?task.ppes?.map((p) => _buildUsedItemChip(p.name, theme)),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildUsedItemChip(String name, FThemeData theme) {
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.sm,
+        vertical: AppSpacing.xs,
+      ),
+      decoration: BoxDecoration(
+        color: theme.colors.muted,
+        borderRadius: AppRadius.radiusSm,
+      ),
+      child: Text(
+        name,
+        style: TextStyle(
+          fontSize: 12,
+          color: theme.colors.foreground,
+        ),
       ),
     );
   }
