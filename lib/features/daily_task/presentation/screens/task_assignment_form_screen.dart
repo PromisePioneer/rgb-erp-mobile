@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../core/core.dart';
+import '../../domain/models/daily_task.dart';
 import '../providers/daily_task_provider.dart';
 
 /// Form screen for creating a new daily task assignment
@@ -21,6 +22,11 @@ class _TaskAssignmentFormScreenState extends State<TaskAssignmentFormScreen> {
   final _notesController = TextEditingController();
   DateTime _selectedDate = DateTime.now();
 
+  // Tools, Chemicals, PPE selection
+  final Set<int> _selectedToolIds = {};
+  final Set<int> _selectedChemicalIds = {};
+  final Set<int> _selectedPpeIds = {};
+
   Future<void> _selectDate() async {
     final picked = await showDatePicker(
       context: context,
@@ -36,11 +42,12 @@ class _TaskAssignmentFormScreenState extends State<TaskAssignmentFormScreen> {
   @override
   void initState() {
     super.initState();
-    // Load employees and items on mount - use mobile API
+    // Load employees, items, and master data on mount
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final notifier = context.read<DailyTaskNotifier>();
       notifier.loadMobileAssignEmployees();
       notifier.loadItems();
+      notifier.loadMasterData();
     });
   }
 
@@ -83,6 +90,9 @@ class _TaskAssignmentFormScreenState extends State<TaskAssignmentFormScreen> {
       targetMinutes: targetMinutes,
       notes: notes,
       assignedDate: assignedDate,
+      toolIds: _selectedToolIds.isEmpty ? null : _selectedToolIds.toList(),
+      chemicalIds: _selectedChemicalIds.isEmpty ? null : _selectedChemicalIds.toList(),
+      ppeIds: _selectedPpeIds.isEmpty ? null : _selectedPpeIds.toList(),
     );
 
     if (!mounted) return;
@@ -103,6 +113,74 @@ class _TaskAssignmentFormScreenState extends State<TaskAssignmentFormScreen> {
         ),
       );
     }
+  }
+
+  Widget _buildSelectionSection({
+    required String title,
+    required List items,
+    required Set<int> selectedIds,
+    required bool enabled,
+    bool isLoading = false,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: const TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+              color: AppColors.slate700,
+            ),
+          ),
+          const SizedBox(height: 12),
+          if (isLoading)
+            const Center(child: CircularProgressIndicator(strokeWidth: 2))
+          else if (items.isEmpty)
+            const Text(
+              'Tidak ada data',
+              style: TextStyle(color: AppColors.slate500, fontSize: 13),
+            )
+          else
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: items.map((item) {
+                final id = item.id as int;
+                final name = item.name as String;
+                final isSelected = selectedIds.contains(id);
+                return FilterChip(
+                  label: Text(name),
+                  selected: isSelected,
+                  onSelected: enabled
+                      ? (selected) {
+                          setState(() {
+                            if (selected) {
+                              selectedIds.add(id);
+                            } else {
+                              selectedIds.remove(id);
+                            }
+                          });
+                        }
+                      : null,
+                  selectedColor: AppColors.primary.withAlpha(51),
+                  checkmarkColor: AppColors.primary,
+                  labelStyle: TextStyle(
+                    color: isSelected ? AppColors.primary : AppColors.slate700,
+                    fontSize: 13,
+                  ),
+                );
+              }).toList(),
+            ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -264,6 +342,36 @@ class _TaskAssignmentFormScreenState extends State<TaskAssignmentFormScreen> {
                 border: InputBorder.none,
               ),
             ),
+          ),
+          const SizedBox(height: 16),
+
+          // Tools selection
+          _buildSelectionSection(
+            title: 'Alat yang Digunakan',
+            items: notifier.tools,
+            selectedIds: _selectedToolIds,
+            enabled: !isSubmitting,
+            isLoading: notifier.isLoadingMasterData && notifier.tools.isEmpty,
+          ),
+          const SizedBox(height: 16),
+
+          // Chemicals selection
+          _buildSelectionSection(
+            title: 'Chemical yang Digunakan',
+            items: notifier.chemicals,
+            selectedIds: _selectedChemicalIds,
+            enabled: !isSubmitting,
+            isLoading: notifier.isLoadingMasterData && notifier.chemicals.isEmpty,
+          ),
+          const SizedBox(height: 16),
+
+          // PPE selection
+          _buildSelectionSection(
+            title: 'Alat Pelindung Diri',
+            items: notifier.ppes,
+            selectedIds: _selectedPpeIds,
+            enabled: !isSubmitting,
+            isLoading: notifier.isLoadingMasterData && notifier.ppes.isEmpty,
           ),
           const SizedBox(height: 24),
 

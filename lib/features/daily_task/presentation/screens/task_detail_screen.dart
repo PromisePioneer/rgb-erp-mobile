@@ -28,9 +28,6 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
 
   // Form state for start - multiple photos
   final List<String> _beforePhotoPaths = [];
-  final Set<int> _selectedTools = {};
-  final Set<int> _selectedChemicals = {};
-  final Set<int> _selectedPpes = {};
 
   // Form state for finish - multiple photos
   final List<String> _afterPhotoPaths = [];
@@ -46,12 +43,8 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
 
   void _loadData() async {
     final notifier = context.read<DailyTaskNotifier>();
-    // Run both requests in parallel - they update separate state fields now
-    // so there's no race condition
-    await Future.wait([
-      notifier.loadTaskDetail(widget.taskId),
-      notifier.loadMasterData(),
-    ]);
+    // Load task detail - tools/chemicals/ppes sudah dari API
+    notifier.loadTaskDetail(widget.taskId);
   }
 
   @override
@@ -200,12 +193,10 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
     }
 
     final notifier = context.read<DailyTaskNotifier>();
+    // Tools/Chemicals/PPE sudah di-set oleh TL saat assign, employee cukup upload foto saja
     final success = await notifier.startTask(
       taskId: widget.taskId,
       photos: _beforePhotoPaths,
-      toolIds: _selectedTools.toList(),
-      chemicalIds: _selectedChemicals.toList(),
-      ppeIds: _selectedPpes.toList(),
     );
 
     if (!mounted) return;
@@ -346,7 +337,8 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
 
                   // Form based on status
                   if (task.canStart) ...[
-                    // Start form
+                    // Start form - employee cukup upload foto saja
+                    // Tools/Chemicals/PPE sudah di-set oleh TL saat assign
                     _buildPhotoSection(
                       label: 'Foto Sebelum',
                       photoPaths: _beforePhotoPaths,
@@ -356,68 +348,13 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
                     ),
                     const SizedBox(height: AppSpacing.md),
 
-                    // Tools selection
-                    _buildChoiceChipSection(
-                      label: 'Alat yang Digunakan',
-                      items: notifier.tools,
-                      selectedIds: _selectedTools,
-                      theme: theme,
-                      isLoading: notifier.isLoadingMasterData && !notifier.masterDataWasLoaded,
-                      errorMessage: notifier.masterDataError,
-                      onRetry: () => notifier.retryLoadMasterData(),
-                      onToggle: (id) {
-                        setState(() {
-                          if (_selectedTools.contains(id)) {
-                            _selectedTools.remove(id);
-                          } else {
-                            _selectedTools.add(id);
-                          }
-                        });
-                      },
-                    ),
-                    const SizedBox(height: AppSpacing.md),
-
-                    // Chemicals selection
-                    _buildChoiceChipSection(
-                      label: 'Chemical yang Digunakan',
-                      items: notifier.chemicals,
-                      selectedIds: _selectedChemicals,
-                      theme: theme,
-                      isLoading: notifier.isLoadingMasterData && !notifier.masterDataWasLoaded,
-                      errorMessage: notifier.masterDataError,
-                      onRetry: () => notifier.retryLoadMasterData(),
-                      onToggle: (id) {
-                        setState(() {
-                          if (_selectedChemicals.contains(id)) {
-                            _selectedChemicals.remove(id);
-                          } else {
-                            _selectedChemicals.add(id);
-                          }
-                        });
-                      },
-                    ),
-                    const SizedBox(height: AppSpacing.md),
-
-                    // PPE selection
-                    _buildChoiceChipSection(
-                      label: 'Alat Pelindung Diri',
-                      items: notifier.ppes,
-                      selectedIds: _selectedPpes,
-                      theme: theme,
-                      isLoading: notifier.isLoadingMasterData && !notifier.masterDataWasLoaded,
-                      errorMessage: notifier.masterDataError,
-                      onRetry: () => notifier.retryLoadMasterData(),
-                      onToggle: (id) {
-                        setState(() {
-                          if (_selectedPpes.contains(id)) {
-                            _selectedPpes.remove(id);
-                          } else {
-                            _selectedPpes.add(id);
-                          }
-                        });
-                      },
-                    ),
-                    const SizedBox(height: AppSpacing.md),
+                    // Show assigned tools/chemicals/ppes (read-only info)
+                    if ((task.tools?.isNotEmpty ?? false) ||
+                        (task.chemicals?.isNotEmpty ?? false) ||
+                        (task.ppes?.isNotEmpty ?? false)) ...[
+                      _buildAssignedItemsInfo(task, theme),
+                      const SizedBox(height: AppSpacing.md),
+                    ],
 
                     PrimaryButton(
                       label: 'Mulai Kerjakan',
@@ -966,29 +903,61 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: AppSpacing.sm,
-                  vertical: AppSpacing.xs,
-                ),
-                decoration: BoxDecoration(
-                  color: _getStatusColor(task, theme).withAlpha(26),
-                  borderRadius: AppRadius.radiusSm,
-                ),
-                child: Text(
-                  task.statusLabel,
+          // Status badge
+          Container(
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.sm,
+              vertical: AppSpacing.xs,
+            ),
+            decoration: BoxDecoration(
+              color: _getStatusColor(task, theme).withAlpha(26),
+              borderRadius: AppRadius.radiusSm,
+            ),
+            child: Text(
+              task.statusLabel,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
+                color: _getStatusColor(task, theme),
+              ),
+            ),
+          ),
+          const SizedBox(height: AppSpacing.sm),
+
+          // Assigned info - lebih rapat
+          if (task.assignedBy != null && task.assignedBy!.isNotEmpty) ...[
+            Row(
+              children: [
+                Icon(IconMap.person, size: 14, color: theme.colors.mutedForeground),
+                const SizedBox(width: 4),
+                Text(
+                  task.assignedBy!,
                   style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w500,
-                    color: _getStatusColor(task, theme),
+                    fontSize: 13,
+                    color: theme.colors.mutedForeground,
                   ),
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: AppSpacing.md),
+              ],
+            ),
+          ],
+          if (task.assignedDate != null) ...[
+            const SizedBox(height: 2),
+            Row(
+              children: [
+                Icon(IconMap.calendarToday, size: 14, color: theme.colors.mutedForeground),
+                const SizedBox(width: 4),
+                Text(
+                  _formatDate(task.assignedDate!),
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: theme.colors.mutedForeground,
+                  ),
+                ),
+              ],
+            ),
+          ],
+          const SizedBox(height: AppSpacing.sm),
+
           Text(
             task.itemName,
             style: TextStyle(
@@ -1008,7 +977,7 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
             ),
           ],
           if (task.areaName != null) ...[
-            const SizedBox(height: AppSpacing.md),
+            const SizedBox(height: AppSpacing.sm),
             Row(
               children: [
                 Icon(IconMap.locationOn,
@@ -1022,6 +991,33 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
                   ),
                 ),
               ],
+            ),
+          ],
+          if (task.notes != null && task.notes!.isNotEmpty) ...[
+            const SizedBox(height: AppSpacing.sm),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(AppSpacing.sm),
+              decoration: BoxDecoration(
+                color: theme.colors.muted,
+                borderRadius: AppRadius.radiusSm,
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(IconMap.editNote, size: 14, color: theme.colors.mutedForeground),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      task.notes!,
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: theme.colors.mutedForeground,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ],
           if (task.targetMinutes != null) ...[
@@ -1187,7 +1183,134 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
     );
   }
 
-  /// Build used items preview (tools, chemicals, ppes) for in progress view
+  /// Build assigned items info (tools, chemicals, ppes) for "assigned" status view
+  /// Read-only display of items set by TL during assignment - separated by category
+  Widget _buildAssignedItemsInfo(DailyTask task, FThemeData theme) {
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: AppColors.primary.withAlpha(13),
+        borderRadius: AppRadius.radiusMd,
+        border: Border.all(color: AppColors.primary.withAlpha(51)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(IconMap.flaskConical, size: 16, color: AppColors.primary),
+              const SizedBox(width: 6),
+              Text(
+                'Alat & Bahan dari TL',
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.primary,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.sm),
+
+          // Tools section
+          if (task.tools?.isNotEmpty ?? false) ...[
+            Row(
+              children: [
+                Icon(IconMap.build, size: 14, color: theme.colors.mutedForeground),
+                const SizedBox(width: 4),
+                Text(
+                  'Alat:',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                    color: theme.colors.mutedForeground,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 4),
+            Wrap(
+              spacing: AppSpacing.xs,
+              runSpacing: AppSpacing.xs,
+              children: task.tools!.map((t) => _buildAssignedItemChip(t.name, theme)).toList(),
+            ),
+            const SizedBox(height: AppSpacing.sm),
+          ],
+
+          // Chemicals section
+          if (task.chemicals?.isNotEmpty ?? false) ...[
+            Row(
+              children: [
+                Icon(IconMap.flaskConical, size: 14, color: theme.colors.mutedForeground),
+                const SizedBox(width: 4),
+                Text(
+                  'Chemical:',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                    color: theme.colors.mutedForeground,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 4),
+            Wrap(
+              spacing: AppSpacing.xs,
+              runSpacing: AppSpacing.xs,
+              children: task.chemicals!.map((c) => _buildAssignedItemChip(c.name, theme)).toList(),
+            ),
+            const SizedBox(height: AppSpacing.sm),
+          ],
+
+          // PPEs section
+          if (task.ppes?.isNotEmpty ?? false) ...[
+            Row(
+              children: [
+                Icon(IconMap.shieldCheck, size: 14, color: theme.colors.mutedForeground),
+                const SizedBox(width: 4),
+                Text(
+                  'Alat Pelindung Diri:',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                    color: theme.colors.mutedForeground,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 4),
+            Wrap(
+              spacing: AppSpacing.xs,
+              runSpacing: AppSpacing.xs,
+              children: task.ppes!.map((p) => _buildAssignedItemChip(p.name, theme)).toList(),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAssignedItemChip(String name, FThemeData theme) {
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.sm,
+        vertical: AppSpacing.xs,
+      ),
+      decoration: BoxDecoration(
+        color: AppColors.primary.withAlpha(26),
+        borderRadius: AppRadius.radiusSm,
+      ),
+      child: Text(
+        name,
+        style: TextStyle(
+          fontSize: 12,
+          color: AppColors.primary,
+        ),
+      ),
+    );
+  }
+
+  /// Build used items preview (tools, chemicals, ppes) for in progress view - separated by category
   Widget _buildUsedItemsPreview(DailyTask task, FThemeData theme) {
     return Container(
       padding: const EdgeInsets.all(AppSpacing.md),
@@ -1208,18 +1331,93 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
             ),
           ),
           const SizedBox(height: AppSpacing.sm),
-          Wrap(
-            spacing: AppSpacing.xs,
-            runSpacing: AppSpacing.xs,
-            children: [
-              // Tools
-              ...?task.tools?.map((t) => _buildUsedItemChip(t.name, theme)),
-              // Chemicals
-              ...?task.chemicals?.map((c) => _buildUsedItemChip(c.name, theme)),
-              // PPEs
-              ...?task.ppes?.map((p) => _buildUsedItemChip(p.name, theme)),
-            ],
-          ),
+
+          // Tools section
+          if (task.tools?.isNotEmpty ?? false) ...[
+            Row(
+              children: [
+                Icon(IconMap.build, size: 14, color: theme.colors.mutedForeground),
+                const SizedBox(width: 4),
+                Text(
+                  'Alat:',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                    color: theme.colors.mutedForeground,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 4),
+            Wrap(
+              spacing: AppSpacing.xs,
+              runSpacing: AppSpacing.xs,
+              children: task.tools!.map((t) => _buildUsedItemChip(t.name, theme)).toList(),
+            ),
+            const SizedBox(height: AppSpacing.sm),
+          ],
+
+          // Chemicals section
+          if (task.chemicals?.isNotEmpty ?? false) ...[
+            Row(
+              children: [
+                Icon(IconMap.flaskConical, size: 14, color: theme.colors.mutedForeground),
+                const SizedBox(width: 4),
+                Text(
+                  'Chemical:',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                    color: theme.colors.mutedForeground,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 4),
+            Wrap(
+              spacing: AppSpacing.xs,
+              runSpacing: AppSpacing.xs,
+              children: task.chemicals!.map((c) => _buildUsedItemChip(c.name, theme)).toList(),
+            ),
+            const SizedBox(height: AppSpacing.sm),
+          ],
+
+          // PPEs section
+          if (task.ppes?.isNotEmpty ?? false) ...[
+            Row(
+              children: [
+                Icon(IconMap.shieldCheck, size: 14, color: theme.colors.mutedForeground),
+                const SizedBox(width: 4),
+                Text(
+                  'Alat Pelindung Diri:',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                    color: theme.colors.mutedForeground,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 4),
+            Wrap(
+              spacing: AppSpacing.xs,
+              runSpacing: AppSpacing.xs,
+              children: task.ppes!.map((p) => _buildUsedItemChip(p.name, theme)).toList(),
+            ),
+          ],
+
+          // Show message if no items
+          if ((task.tools?.isEmpty ?? true) &&
+              (task.chemicals?.isEmpty ?? true) &&
+              (task.ppes?.isEmpty ?? true)) ...[
+            Text(
+              'Tidak ada alat yang digunakan',
+              style: TextStyle(
+                fontSize: 13,
+                color: theme.colors.mutedForeground,
+              ),
+            ),
+          ],
         ],
       ),
     );
@@ -1594,6 +1792,11 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
       default:
         return theme.colors.mutedForeground;
     }
+  }
+
+  String _formatDate(DateTime date) {
+    final months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agt', 'Sep', 'Okt', 'Nov', 'Des'];
+    return '${date.day} ${months[date.month - 1]} ${date.year}';
   }
 
   String _formatDateTime(DateTime dt) {

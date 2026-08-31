@@ -130,17 +130,12 @@ class DailyTaskRepository {
   Future<DailyTask> startTask({
     required int taskId,
     required List<String> photos,
-    List<int>? toolIds,
-    List<int>? chemicalIds,
-    List<int>? ppeIds,
+    // Tools/Chemicals/PPE sudah di-set oleh TL saat assign
   }) async {
     try {
       final response = await api.startTask(
         taskId: taskId,
         photos: photos,
-        toolIds: toolIds,
-        chemicalIds: chemicalIds,
-        ppeIds: ppeIds,
       );
       final data = response['data'];
       if (data == null) {
@@ -295,6 +290,9 @@ class DailyTaskRepository {
     String? targetNote,
     String? notes,
     String? assignedDate,
+    List<int>? toolIds,
+    List<int>? chemicalIds,
+    List<int>? ppeIds,
   }) async {
     try {
       final response = await api.mobileAssignTask(
@@ -305,6 +303,9 @@ class DailyTaskRepository {
         targetNote: targetNote,
         notes: notes,
         assignedDate: assignedDate,
+        toolIds: toolIds,
+        chemicalIds: chemicalIds,
+        ppeIds: ppeIds,
       );
       // Return the created assignment data from response
       return response['data'] as Map<String, dynamic>?;

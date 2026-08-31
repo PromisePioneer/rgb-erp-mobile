@@ -161,9 +161,7 @@ class DailyTaskNotifier extends ChangeNotifier {
   Future<bool> startTask({
     required int taskId,
     required List<String> photos,
-    List<int>? toolIds,
-    List<int>? chemicalIds,
-    List<int>? ppeIds,
+    // Tools/Chemicals/PPE sudah di-set oleh TL saat assign
   }) async {
     _isSubmitting = true;
     _error = null;
@@ -173,9 +171,6 @@ class DailyTaskNotifier extends ChangeNotifier {
       final task = await _repository.startTask(
         taskId: taskId,
         photos: photos,
-        toolIds: toolIds,
-        chemicalIds: chemicalIds,
-        ppeIds: ppeIds,
       );
 
       _todayTasks = _todayTasks.map((t) => t.id == taskId ? task : t).toList();
@@ -355,6 +350,9 @@ class DailyTaskNotifier extends ChangeNotifier {
     String? targetNote,
     String? notes,
     String? assignedDate,
+    List<int>? toolIds,
+    List<int>? chemicalIds,
+    List<int>? ppeIds,
   }) async {
     _isSubmitting = true;
     _error = null;
@@ -369,6 +367,9 @@ class DailyTaskNotifier extends ChangeNotifier {
         targetNote: targetNote,
         notes: notes,
         assignedDate: assignedDate,
+        toolIds: toolIds,
+        chemicalIds: chemicalIds,
+        ppeIds: ppeIds,
       );
       // Add the new assignment to the list if returned
       if (result != null) {

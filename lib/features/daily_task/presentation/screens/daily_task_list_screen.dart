@@ -363,6 +363,10 @@ class _AssignedTaskCard extends StatelessWidget {
     final assignedDate = assignment['assigned_date'] ?? assignment['date'];
     final targetMinutes = assignment['target_minutes'];
     final notes = assignment['notes'];
+    final durationMinutes = assignment['duration_minutes'];
+    final photos = assignment['photos'] as List<dynamic>? ?? [];
+    final beforePhotos = photos.where((p) => p['type'] == 'before').toList();
+    final afterPhotos = photos.where((p) => p['type'] == 'after').toList();
 
     Color statusColor;
     String statusLabel;
@@ -471,23 +475,6 @@ class _AssignedTaskCard extends StatelessWidget {
                   ),
                 ],
               ),
-              const SizedBox(height: AppSpacing.sm),
-              Row(
-                children: [
-                  Icon(IconMap.person, size: 16, color: theme.colors.primary),
-                  const SizedBox(width: 4),
-                  Expanded(
-                    child: Text(
-                      employeeName,
-                      style: TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w600,
-                        color: theme.colors.foreground,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
               const SizedBox(height: AppSpacing.xs),
               Text(
                 itemName,
@@ -536,6 +523,18 @@ class _AssignedTaskCard extends StatelessWidget {
                       ),
                     ),
                   ],
+                  if (durationMinutes != null) ...[
+                    const SizedBox(width: AppSpacing.md),
+                    Icon(IconMap.accessTime, size: 16, color: theme.colors.mutedForeground),
+                    const SizedBox(width: 4),
+                    Text(
+                      '$durationMinutes menit',
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: theme.colors.mutedForeground,
+                      ),
+                    ),
+                  ],
                 ],
               ),
               if (notes != null && notes.toString().isNotEmpty) ...[
@@ -564,7 +563,149 @@ class _AssignedTaskCard extends StatelessWidget {
                   ),
                 ),
               ],
+
+              // Photos section - all photos in one row, side by side
+              if (photos.isNotEmpty) ...[
+                const SizedBox(height: AppSpacing.md),
+                _buildPhotosSection(context, theme, beforePhotos, afterPhotos),
+              ],
             ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPhotosSection(
+    BuildContext context,
+    FThemeData theme,
+    List<dynamic> beforePhotos,
+    List<dynamic> afterPhotos,
+  ) {
+    // Combine all photos with type indicator
+    final allPhotos = <Map<String, dynamic>>[];
+    for (final p in beforePhotos) {
+      allPhotos.add({'url': p['url'], 'type': 'before'});
+    }
+    for (final p in afterPhotos) {
+      allPhotos.add({'url': p['url'], 'type': 'after'});
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'FOTO',
+          style: TextStyle(
+            fontSize: 11,
+            fontWeight: FontWeight.w500,
+            color: theme.colors.mutedForeground,
+            letterSpacing: 0.5,
+          ),
+        ),
+        const SizedBox(height: AppSpacing.xs),
+        SizedBox(
+          height: 80,
+          child: ListView.builder(
+            scrollDirection: Axis.horizontal,
+            itemCount: allPhotos.length,
+            itemBuilder: (ctx, i) {
+              final photo = allPhotos[i];
+              final isBefore = photo['type'] == 'before';
+              return Padding(
+                padding: EdgeInsets.only(
+                  right: i < allPhotos.length - 1 ? AppSpacing.xs : 0,
+                ),
+                child: Stack(
+                  children: [
+                    GestureDetector(
+                      onTap: () => _showFullScreenPhoto(context, photo['url'] as String),
+                      child: Container(
+                        width: 80,
+                        height: 80,
+                        child: ClipRRect(
+                          borderRadius: AppRadius.radiusSm,
+                          child: Image.network(
+                            photo['url'] as String,
+                            fit: BoxFit.cover,
+                            errorBuilder: (c, e, s) => Container(
+                              color: theme.colors.muted,
+                              child: Icon(
+                                IconMap.brokenImage,
+                                color: theme.colors.mutedForeground,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    // Badge indicator
+                    Positioned(
+                      bottom: 4,
+                      left: 4,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: isBefore ? AppColors.warning : AppColors.success,
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Text(
+                          isBefore ? 'SEBELUM' : 'SESUDAH',
+                          style: const TextStyle(
+                            fontSize: 8,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+  void _showFullScreenPhoto(BuildContext context, String imageUrl) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (ctx) => Scaffold(
+          backgroundColor: Colors.black,
+          appBar: AppBar(
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+            iconTheme: const IconThemeData(color: Colors.white),
+          ),
+          body: GestureDetector(
+            onTap: () => Navigator.pop(ctx),
+            child: Center(
+              child: InteractiveViewer(
+                minScale: 0.5,
+                maxScale: 4.0,
+                child: Image.network(
+                  imageUrl,
+                  fit: BoxFit.contain,
+                  loadingBuilder: (context, child, loadingProgress) {
+                    if (loadingProgress == null) return child;
+                    return const Center(
+                      child: CircularProgressIndicator(color: Colors.white),
+                    );
+                  },
+                  errorBuilder: (context, error, stackTrace) {
+                    return const Center(
+                      child: Icon(
+                        Icons.broken_image,
+                        color: Colors.white54,
+                        size: 64,
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ),
           ),
         ),
       ),

@@ -830,12 +830,10 @@ class DailyTaskApi {
  }
 
  /// POST /daily-task/{id}/start - Start a task
+ /// Tools/Chemicals/PPE sudah di-set oleh TL saat assign
  Future<Map<String, dynamic>> startTask({
  required int taskId,
  required List<String> photos,
- List<int>? toolIds,
- List<int>? chemicalIds,
- List<int>? ppeIds,
  }) async {
  try {
  final formData = FormData();
@@ -852,27 +850,6 @@ class DailyTaskApi {
  base64,
  ));
  }
- }
- }
-
- // Add tool IDs
- if (toolIds != null && toolIds.isNotEmpty) {
- for (int i = 0; i < toolIds.length; i++) {
- formData.fields.add(MapEntry('tool_ids[$i]', toolIds[i].toString()));
- }
- }
-
- // Add chemical IDs
- if (chemicalIds != null && chemicalIds.isNotEmpty) {
- for (int i = 0; i < chemicalIds.length; i++) {
- formData.fields.add(MapEntry('chemical_ids[$i]', chemicalIds[i].toString()));
- }
- }
-
- // Add PPE IDs
- if (ppeIds != null && ppeIds.isNotEmpty) {
- for (int i = 0; i < ppeIds.length; i++) {
- formData.fields.add(MapEntry('ppe_ids[$i]', ppeIds[i].toString()));
  }
  }
 
@@ -1018,6 +995,9 @@ class DailyTaskApi {
     String? targetNote,
     String? notes,
     String? assignedDate,
+    List<int>? toolIds,
+    List<int>? chemicalIds,
+    List<int>? ppeIds,
   }) async {
     try {
       final response = await _dio.post(
@@ -1030,6 +1010,9 @@ class DailyTaskApi {
           if (targetNote != null) 'target_note': targetNote,
           if (notes != null) 'notes': notes,
           if (assignedDate != null) 'assigned_date': assignedDate,
+          if (toolIds != null && toolIds.isNotEmpty) 'tool_ids': toolIds,
+          if (chemicalIds != null && chemicalIds.isNotEmpty) 'chemical_ids': chemicalIds,
+          if (ppeIds != null && ppeIds.isNotEmpty) 'ppe_ids': ppeIds,
         },
       );
       return response.data as Map<String, dynamic>;
