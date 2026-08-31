@@ -770,6 +770,64 @@ class _DailyTaskCard extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                 ),
               ],
+              if (task.notes != null && task.notes!.isNotEmpty) ...[
+                const SizedBox(height: AppSpacing.sm),
+                Container(
+                  padding: const EdgeInsets.all(AppSpacing.sm),
+                  decoration: BoxDecoration(
+                    color: theme.colors.muted,
+                    borderRadius: AppRadius.radiusSm,
+                  ),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Icon(IconMap.editNote, size: 14, color: theme.colors.mutedForeground),
+                      const SizedBox(width: 4),
+                      Expanded(
+                        child: Text(
+                          task.notes!,
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: theme.colors.mutedForeground,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+              if (task.assignedBy != null && task.assignedBy!.isNotEmpty) ...[
+                const SizedBox(height: AppSpacing.sm),
+                Row(
+                  children: [
+                    Icon(IconMap.person, size: 14, color: theme.colors.mutedForeground),
+                    const SizedBox(width: 4),
+                    Text(
+                      'Ditugaskan oleh: ${task.assignedBy}',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: theme.colors.mutedForeground,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+              if (task.assignedDate != null) ...[
+                const SizedBox(height: AppSpacing.sm),
+                Row(
+                  children: [
+                    Icon(IconMap.calendarToday, size: 14, color: theme.colors.mutedForeground),
+                    const SizedBox(width: 4),
+                    Text(
+                      _formatDate(task.assignedDate!),
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: theme.colors.mutedForeground,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
               if (task.areaName != null) ...[
                 const SizedBox(height: AppSpacing.sm),
                 Row(
@@ -832,6 +890,11 @@ class _DailyTaskCard extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  String _formatDate(DateTime date) {
+    final months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agt', 'Sep', 'Okt', 'Nov', 'Des'];
+    return '${date.day} ${months[date.month - 1]} ${date.year}';
   }
 
   Widget _buildReviewStars(DailyTaskReview review, FThemeData theme) {

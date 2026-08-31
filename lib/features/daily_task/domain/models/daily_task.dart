@@ -17,6 +17,7 @@ class DailyTask {
   final int? durationMinutes;
   final String? notes;
   final String? assignedBy;
+  final DateTime? assignedDate;
 
   DailyTask({
     required this.id,
@@ -36,6 +37,7 @@ class DailyTask {
     this.durationMinutes,
     this.notes,
     this.assignedBy,
+    this.assignedDate,
   });
 
   factory DailyTask.fromJson(Map<String, dynamic> json) {
@@ -72,6 +74,9 @@ class DailyTask {
       durationMinutes: json['duration_minutes'] as int?,
       notes: json['notes'] as String?,
       assignedBy: json['assigned_by'] as String?,
+      assignedDate: json['assigned_date'] != null
+          ? DateTime.tryParse(json['assigned_date'] as String)
+          : null,
     );
   }
 
