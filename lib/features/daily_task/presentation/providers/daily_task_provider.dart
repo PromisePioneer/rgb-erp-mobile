@@ -112,7 +112,6 @@ class DailyTaskNotifier extends ChangeNotifier {
   Future<void> loadMasterData() async {
     _isLoadingMasterData = true;
     _masterDataError = null;
-    _masterDataLoaded = true;
     notifyListeners();
 
     try {
@@ -125,7 +124,9 @@ class DailyTaskNotifier extends ChangeNotifier {
       _tools = results[0] as List<DailyTaskTool>;
       _chemicals = results[1] as List<DailyTaskChemical>;
       _ppes = results[2] as List<DailyTaskPpe>;
+
       _isLoadingMasterData = false;
+      _masterDataLoaded = true;
       notifyListeners();
     } catch (e) {
       _isLoadingMasterData = false;
