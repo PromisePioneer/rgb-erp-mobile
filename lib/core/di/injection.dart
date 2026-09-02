@@ -333,7 +333,7 @@ class PatrolApi {
 
   PatrolApi(this._dio);
 
-  /// POST /patrol/scan - Scan a checkpoint QR code
+  /// POST /patrol/scan - Scan a checkpoint QR code (OTP validated on mobile)
   Future<Map<String, dynamic>> scan({
     required String qrCode,
     required double latitude,
@@ -341,7 +341,6 @@ class PatrolApi {
     String? deviceId,
     bool? isMockLocation,
     String? scannedAtLocal,
-    String? otpCode,
   }) async {
     try {
       final response = await _dio.post(
@@ -353,7 +352,6 @@ class PatrolApi {
           if (deviceId != null) 'device_id': deviceId,
           if (isMockLocation != null) 'is_mock_location': isMockLocation,
           if (scannedAtLocal != null) 'scanned_at_local': scannedAtLocal,
-          if (otpCode != null) 'otp_code': otpCode,
         },
       );
       return response.data as Map<String, dynamic>;
@@ -366,6 +364,16 @@ class PatrolApi {
   Future<Map<String, dynamic>> getTodayStatus() async {
     try {
       final response = await _dio.get(ApiEndpoints.patrolTodayStatus);
+      return response.data as Map<String, dynamic>;
+    } on DioException catch (e) {
+      throw ApiException.fromDioException(e);
+    }
+  }
+
+  /// GET /patrol/otp - Get current employee OTP code
+  Future<Map<String, dynamic>> getOtp() async {
+    try {
+      final response = await _dio.get(ApiEndpoints.patrolOtp);
       return response.data as Map<String, dynamic>;
     } on DioException catch (e) {
       throw ApiException.fromDioException(e);
@@ -777,13 +785,30 @@ class DailyTaskApi {
  }
 
  /// GET /daily-task/items - Get available task items
- /// Optional: pass q parameter for search
- Future<Map<String, dynamic>> getItems({String? query}) async {
+ /// Optional: pass q parameter for search, position_ids[] for filtering by positions
+ Future<Map<String, dynamic>> getItems({String? query, List<int>? positionIds}) async {
   try {
+   final queryParams = <String, dynamic>{};
+   if (query != null && query.isNotEmpty) {
+    queryParams['q'] = query;
+   }
+   if (positionIds != null && positionIds.isNotEmpty) {
+    queryParams['position_ids'] = positionIds;
+   }
    final response = await _dio.get(
     ApiEndpoints.dailyTaskItems,
-    queryParameters: query != null && query.isNotEmpty ? {'q': query} : null,
+    queryParameters: queryParams.isNotEmpty ? queryParams : null,
    );
+   return response.data as Map<String, dynamic>;
+  } on DioException catch (e) {
+   throw ApiException.fromDioException(e);
+  }
+ }
+
+ /// GET /daily-task/positions - Get available positions for daily task items
+ Future<Map<String, dynamic>> getPositions() async {
+  try {
+   final response = await _dio.get(ApiEndpoints.dailyTaskPositions);
    return response.data as Map<String, dynamic>;
   } on DioException catch (e) {
    throw ApiException.fromDioException(e);
@@ -832,6 +857,20 @@ class DailyTaskApi {
   }
  }
 
+ /// GET /daily-task/machines - Get available machines
+ /// Optional: pass q parameter for search
+ Future<Map<String, dynamic>> getMachines({String? query}) async {
+  try {
+   final response = await _dio.get(
+    ApiEndpoints.dailyTaskMachines,
+    queryParameters: query != null && query.isNotEmpty ? {'q': query} : null,
+   );
+   return response.data as Map<String, dynamic>;
+  } on DioException catch (e) {
+   throw ApiException.fromDioException(e);
+  }
+ }
+
  /// GET /daily-task/history - Get task history
  Future<Map<String, dynamic>> getHistory({int page = 1, int perPage = 15}) async {
  try {
@@ -846,12 +885,13 @@ class DailyTaskApi {
  }
 
  /// POST /daily-task/{id}/start - Start a task
- /// Include initial conditions for tools, ppes, and chemicals
+ /// Include initial conditions for tools, ppes, machines, and chemicals
  Future<Map<String, dynamic>> startTask({
  required int taskId,
  required List<String> photos,
  List<Map<String, String>>? toolConditions,
  List<Map<String, String>>? ppeConditions,
+ List<Map<String, String>>? machineConditions,
  List<Map<String, String>>? chemicalConditions,
  }) async {
  try {
@@ -900,6 +940,20 @@ class DailyTaskApi {
  }
  }
 
+ // Add machine conditions
+ if (machineConditions != null && machineConditions.isNotEmpty) {
+ for (int i = 0; i < machineConditions.length; i++) {
+ formData.fields.add(MapEntry(
+ 'machine_conditions[$i][product_id]',
+ machineConditions[i]['product_id']!,
+ ));
+ formData.fields.add(MapEntry(
+ 'machine_conditions[$i][condition]',
+ machineConditions[i]['condition']!,
+ ));
+ }
+ }
+
  // Add chemical conditions
  if (chemicalConditions != null && chemicalConditions.isNotEmpty) {
  for (int i = 0; i < chemicalConditions.length; i++) {
@@ -928,13 +982,14 @@ class DailyTaskApi {
  }
 
   /// POST /daily-task/{id}/finish - Finish a task
-  /// Include final conditions for tools, ppes, and chemicals
+  /// Include final conditions for tools, ppes, machines, and chemicals
   Future<Map<String, dynamic>> finishTask({
     required int taskId,
     required List<String> photos,
     String? notes,
     List<Map<String, String>>? toolConditions,
     List<Map<String, String>>? ppeConditions,
+    List<Map<String, String>>? machineConditions,
     List<Map<String, String>>? chemicalConditions,
   }) async {
     try {
@@ -984,6 +1039,20 @@ class DailyTaskApi {
           formData.fields.add(MapEntry(
             'ppe_conditions[$i][condition]',
             ppeConditions[i]['condition']!,
+          ));
+        }
+      }
+
+      // Add machine conditions
+      if (machineConditions != null && machineConditions.isNotEmpty) {
+        for (int i = 0; i < machineConditions.length; i++) {
+          formData.fields.add(MapEntry(
+            'machine_conditions[$i][product_id]',
+            machineConditions[i]['product_id']!,
+          ));
+          formData.fields.add(MapEntry(
+            'machine_conditions[$i][condition]',
+            machineConditions[i]['condition']!,
           ));
         }
       }
@@ -1152,6 +1221,7 @@ class DailyTaskApi {
     List<int>? toolIds,
     List<int>? chemicalIds,
     List<int>? ppeIds,
+    List<int>? machineIds,
   }) async {
     try {
       final response = await _dio.post(
@@ -1167,6 +1237,7 @@ class DailyTaskApi {
           if (toolIds != null && toolIds.isNotEmpty) 'tool_ids': toolIds,
           if (chemicalIds != null && chemicalIds.isNotEmpty) 'chemical_ids': chemicalIds,
           if (ppeIds != null && ppeIds.isNotEmpty) 'ppe_ids': ppeIds,
+          if (machineIds != null && machineIds.isNotEmpty) 'machine_ids': machineIds,
         },
       );
       return response.data as Map<String, dynamic>;

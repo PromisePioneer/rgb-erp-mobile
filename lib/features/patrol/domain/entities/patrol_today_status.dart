@@ -5,6 +5,7 @@ class PatrolTodayStatus extends Equatable {
   final bool hasSchedule;
   final ScheduleInfo? schedule;
   final StatsInfo? stats;
+  final PatrolSettings? settings;
   final CurrentProgressInfo? currentProgress;
   final List<PatrolSession> sessions;
 
@@ -12,6 +13,7 @@ class PatrolTodayStatus extends Equatable {
     required this.hasSchedule,
     this.schedule,
     this.stats,
+    this.settings,
     this.currentProgress,
     this.sessions = const [],
   });
@@ -24,6 +26,9 @@ class PatrolTodayStatus extends Equatable {
           : null,
       stats: json['stats'] != null
           ? StatsInfo.fromJson(json['stats'] as Map<String, dynamic>)
+          : null,
+      settings: json['settings'] != null
+          ? PatrolSettings.fromJson(json['settings'] as Map<String, dynamic>)
           : null,
       currentProgress: json['current_progress'] != null
           ? CurrentProgressInfo.fromJson(json['current_progress'] as Map<String, dynamic>)
@@ -39,15 +44,45 @@ class PatrolTodayStatus extends Equatable {
   int get completedRounds => stats?.completedRounds ?? 0;
   int get inProgressRounds => stats?.inProgressRounds ?? 0;
   int get nextExpectedSequence => currentProgress?.nextExpectedSequence ?? 1;
+  bool get isTotpEnabled => settings?.totpEnabled ?? false;
 
   @override
   List<Object?> get props => [
         hasSchedule,
         schedule,
         stats,
+        settings,
         currentProgress,
         sessions,
       ];
+}
+
+/// Patrol settings from backend
+class PatrolSettings extends Equatable {
+  final bool totpEnabled;
+  final int radiusMeters;
+  final int minGapSeconds;
+
+  const PatrolSettings({
+    this.totpEnabled = false,
+    this.radiusMeters = 150,
+    this.minGapSeconds = 30,
+  });
+
+  factory PatrolSettings.fromJson(Map<String, dynamic> json) {
+    return PatrolSettings(
+      totpEnabled: json['totp_enabled'] == true || json['totp_enabled'] == 'true',
+      radiusMeters: json['radius_meters'] is int
+          ? json['radius_meters']
+          : int.tryParse(json['radius_meters']?.toString() ?? '150') ?? 150,
+      minGapSeconds: json['min_gap_seconds'] is int
+          ? json['min_gap_seconds']
+          : int.tryParse(json['min_gap_seconds']?.toString() ?? '30') ?? 30,
+    );
+  }
+
+  @override
+  List<Object?> get props => [totpEnabled, radiusMeters, minGapSeconds];
 }
 
 class ScheduleInfo extends Equatable {

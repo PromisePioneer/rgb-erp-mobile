@@ -18,7 +18,7 @@ class PatrolRepository {
     }
   }
 
-  /// Scan a checkpoint QR code
+  /// Scan a checkpoint QR code (OTP validated on mobile)
   Future<PatrolScanResult> scan({
     required String qrCode,
     required double latitude,
@@ -26,7 +26,6 @@ class PatrolRepository {
     String? deviceId,
     bool? isMockLocation,
     String? scannedAtLocal,
-    String? otpCode,
   }) async {
     try {
       final response = await _api.scan(
@@ -36,9 +35,18 @@ class PatrolRepository {
         deviceId: deviceId,
         isMockLocation: isMockLocation,
         scannedAtLocal: scannedAtLocal,
-        otpCode: otpCode,
       );
       return PatrolScanResult.fromJson(response);
+    } on DioException catch (e) {
+      throw ApiException.fromDioException(e);
+    }
+  }
+
+  /// Get current employee OTP code for patrol validation
+  Future<PatrolOtpResponse> getOtp() async {
+    try {
+      final response = await _api.getOtp();
+      return PatrolOtpResponse.fromJson(response);
     } on DioException catch (e) {
       throw ApiException.fromDioException(e);
     }

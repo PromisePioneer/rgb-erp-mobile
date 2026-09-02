@@ -14,6 +14,8 @@ class DailyTaskNotifier extends ChangeNotifier {
   List<DailyTaskTool> _tools = [];
   List<DailyTaskChemical> _chemicals = [];
   List<DailyTaskPpe> _ppes = [];
+  List<DailyTaskMachine> _machines = [];
+  List<DailyTaskPosition> _positions = [];
 
   // Supervisor assignment state
   List<Map<String, dynamic>> _assignments = [];
@@ -41,6 +43,8 @@ class DailyTaskNotifier extends ChangeNotifier {
   List<DailyTaskTool> get tools => _tools;
   List<DailyTaskChemical> get chemicals => _chemicals;
   List<DailyTaskPpe> get ppes => _ppes;
+  List<DailyTaskMachine> get machines => _machines;
+  List<DailyTaskPosition> get positions => _positions;
 
   // Getters - Assignments
   List<Map<String, dynamic>> get assignments => _assignments;
@@ -122,11 +126,13 @@ class DailyTaskNotifier extends ChangeNotifier {
         _repository.getTools(),
         _repository.getChemicals(),
         _repository.getPpes(),
+        _repository.getMachines(),
       ]);
 
       _tools = results[0] as List<DailyTaskTool>;
       _chemicals = results[1] as List<DailyTaskChemical>;
       _ppes = results[2] as List<DailyTaskPpe>;
+      _machines = results[3] as List<DailyTaskMachine>;
 
       _isLoadingMasterData = false;
       _masterDataLoaded = true;
@@ -213,12 +219,39 @@ class DailyTaskNotifier extends ChangeNotifier {
     }
   }
 
-  /// Search items by name (for async select)
-  Future<List<DailyTaskMasterItem>> searchItems(String query) async {
+  /// Search machines by name (for async select) and cache results
+  Future<List<DailyTaskMachine>> searchMachines(String query) async {
     try {
-      return await _repository.getItems(query: query.isEmpty ? null : query);
+      final machines = await _repository.getMachines(query: query.isEmpty ? null : query);
+      // Cache machines for later lookup (avoid duplicates)
+      for (final machine in machines) {
+        if (!_machines.any((m) => m.id == machine.id)) {
+          _machines.add(machine);
+        }
+      }
+      return machines;
     } catch (e) {
       return [];
+    }
+  }
+
+  /// Search items by name (for async select)
+  /// Optional: filter by positionIds
+  Future<List<DailyTaskMasterItem>> searchItems(String query, {List<int>? positionIds}) async {
+    try {
+      return await _repository.getItems(query: query.isEmpty ? null : query, positionIds: positionIds);
+    } catch (e) {
+      return [];
+    }
+  }
+
+  /// Load positions for daily task assignment
+  Future<void> loadPositions() async {
+    try {
+      _positions = await _repository.getPositions();
+      notifyListeners();
+    } catch (e) {
+      // Silently fail, positions are optional
     }
   }
 
@@ -236,6 +269,7 @@ class DailyTaskNotifier extends ChangeNotifier {
     required List<String> photos,
     List<Map<String, String>>? toolConditions,
     List<Map<String, String>>? ppeConditions,
+    List<Map<String, String>>? machineConditions,
     List<Map<String, String>>? chemicalConditions,
   }) async {
     _isSubmitting = true;
@@ -248,6 +282,7 @@ class DailyTaskNotifier extends ChangeNotifier {
         photos: photos,
         toolConditions: toolConditions,
         ppeConditions: ppeConditions,
+        machineConditions: machineConditions,
         chemicalConditions: chemicalConditions,
       );
 
@@ -270,6 +305,7 @@ class DailyTaskNotifier extends ChangeNotifier {
     String? notes,
     List<Map<String, String>>? toolConditions,
     List<Map<String, String>>? ppeConditions,
+    List<Map<String, String>>? machineConditions,
     List<Map<String, String>>? chemicalConditions,
   }) async {
     _isSubmitting = true;
@@ -283,6 +319,7 @@ class DailyTaskNotifier extends ChangeNotifier {
         notes: notes,
         toolConditions: toolConditions,
         ppeConditions: ppeConditions,
+        machineConditions: machineConditions,
         chemicalConditions: chemicalConditions,
       );
 
@@ -498,6 +535,7 @@ class DailyTaskNotifier extends ChangeNotifier {
     List<int>? toolIds,
     List<int>? chemicalIds,
     List<int>? ppeIds,
+    List<int>? machineIds,
   }) async {
     _isSubmitting = true;
     _error = null;
@@ -515,6 +553,7 @@ class DailyTaskNotifier extends ChangeNotifier {
         toolIds: toolIds,
         chemicalIds: chemicalIds,
         ppeIds: ppeIds,
+        machineIds: machineIds,
       );
       // Add the new assignment to the list if returned
       if (result != null) {

@@ -30,6 +30,10 @@ class PatrolState extends ChangeNotifier {
   final bool showAlarmAlert;
   final String? alarmMessage;
 
+  // OTP state
+  final PatrolOtpResponse? otpResponse;
+  final bool isOtpExpired;
+
   PatrolState({
     this.todayStatus,
     this.isLoading = false,
@@ -40,6 +44,8 @@ class PatrolState extends ChangeNotifier {
     this.countdownSeconds = 0,
     this.showAlarmAlert = false,
     this.alarmMessage,
+    this.otpResponse,
+    this.isOtpExpired = false,
   });
 
   bool get hasSchedule => todayStatus?.hasSchedule ?? false;
@@ -64,6 +70,11 @@ class PatrolState extends ChangeNotifier {
     return todayStatus?.currentProgress?.minutesUntilDue ?? 0;
   }
 
+  /// Get OTP countdown seconds
+  int get otpCountdownSeconds {
+    return otpResponse?.secondsUntilExpiry ?? 0;
+  }
+
   PatrolState copyWith({
     PatrolTodayStatus? todayStatus,
     bool? isLoading,
@@ -74,10 +85,13 @@ class PatrolState extends ChangeNotifier {
     int? countdownSeconds,
     bool? showAlarmAlert,
     String? alarmMessage,
+    PatrolOtpResponse? otpResponse,
+    bool? isOtpExpired,
     bool clearError = false,
     bool clearLastScanResult = false,
     bool clearTodayStatus = false,
     bool clearAlarm = false,
+    bool clearOtp = false,
   }) {
     return PatrolState(
       todayStatus: clearTodayStatus ? null : (todayStatus ?? this.todayStatus),
@@ -89,6 +103,8 @@ class PatrolState extends ChangeNotifier {
       countdownSeconds: countdownSeconds ?? this.countdownSeconds,
       showAlarmAlert: clearAlarm ? false : (showAlarmAlert ?? this.showAlarmAlert),
       alarmMessage: clearAlarm ? null : (alarmMessage ?? this.alarmMessage),
+      otpResponse: clearOtp ? null : (otpResponse ?? this.otpResponse),
+      isOtpExpired: isOtpExpired ?? this.isOtpExpired,
     );
   }
 }
@@ -274,7 +290,21 @@ class PatrolNotifier extends ChangeNotifier {
     });
   }
 
-  /// Perform a scan - parse QR, get location, generate TOTP if needed, then scan
+  /// Fetch current OTP from server
+  Future<void> fetchOtp() async {
+    try {
+      final otp = await _repository.getOtp();
+      _state = _state.copyWith(
+        otpResponse: otp,
+        isOtpExpired: otp.isExpired,
+      );
+      notifyListeners();
+    } catch (e) {
+      debugPrint('PATROL: Failed to fetch OTP: $e');
+    }
+  }
+
+  /// Perform a scan - validate OTP, get location, then scan
   Future<PatrolScanResult?> performScan(String qrContent) async {
     if (_state.isScanning) return null;
 
@@ -285,11 +315,36 @@ class PatrolNotifier extends ChangeNotifier {
       // Parse QR content (supports both old format and new JSON format)
       final qrResult = QRScanResult.fromQRContent(qrContent);
 
-      // Generate TOTP if QR contains secret_key
-      String? otpCode;
+      // Check if checkpoint has secret_key for OTP validation
       if (qrResult.hasSecretKey) {
-        otpCode = _generateTOTP(qrResult.secretKey!);
-        debugPrint('PATROL: Generated TOTP for checkpoint ${qrResult.code}');
+        // Fetch employee's OTP from server
+        await fetchOtp();
+        final otp = _state.otpResponse;
+
+        if (otp == null || !otp.hasOtp || otp.isExpired) {
+          _state = _state.copyWith(
+            isScanning: false,
+            error: 'Kode OTP belum tersedia atau sudah kadaluarsa. Tunggu beberapa detik dan coba lagi.',
+          );
+          notifyListeners();
+          return null;
+        }
+
+        // Generate TOTP from checkpoint secret_key
+        final generatedOtp = _generateTOTP(qrResult.secretKey!);
+        debugPrint('PATROL: Generated TOTP: $generatedOtp, Server OTP: ${otp.otpCode}');
+
+        // Compare generated OTP with server OTP
+        if (generatedOtp != otp.otpCode) {
+          _state = _state.copyWith(
+            isScanning: false,
+            error: 'Kode OTP tidak valid. Pastikan waktu perangkat Anda sudah sinkron.',
+          );
+          notifyListeners();
+          return null;
+        }
+
+        debugPrint('PATROL: OTP validated successfully!');
       }
 
       // Get current location
@@ -313,15 +368,13 @@ class PatrolNotifier extends ChangeNotifier {
         return null;
       }
 
-      // location is non-null here - use ! assertion
-      // Perform scan
+      // Perform scan (OTP already validated on mobile)
       final result = await _repository.scan(
         qrCode: qrResult.code,
         latitude: location.latitude,
         longitude: location.longitude,
         isMockLocation: isMockLocation,
         scannedAtLocal: DateTime.now().toIso8601String(),
-        otpCode: otpCode,
       );
 
       _state = _state.copyWith(

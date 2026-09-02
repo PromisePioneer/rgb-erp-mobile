@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -20,10 +21,14 @@ class PatrolHomeScreen extends StatefulWidget {
   State<PatrolHomeScreen> createState() => _PatrolHomeScreenState();
 }
 
-class _PatrolHomeScreenState extends State<PatrolHomeScreen> {
+class _PatrolHomeScreenState extends State<PatrolHomeScreen> with WidgetsBindingObserver {
+  Timer? _otpTimer;
+
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
+
     final notifier = context.read<PatrolNotifier>();
 
     // Set navigation callback for alarm
@@ -34,6 +39,21 @@ class _PatrolHomeScreenState extends State<PatrolHomeScreen> {
     };
 
     notifier.loadTodayStatus();
+    notifier.fetchOtp();
+
+    // Periodic OTP fetch every 5 seconds
+    _otpTimer = Timer.periodic(const Duration(seconds: 5), (_) {
+      if (mounted) {
+        notifier.fetchOtp();
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _otpTimer?.cancel();
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
   }
 
   Future<void> _handleScan() async {
@@ -347,6 +367,9 @@ class _PatrolHomeScreenState extends State<PatrolHomeScreen> {
             _buildScheduleCard(status),
             const SizedBox(height: AppSpacing.lg),
 
+            // TOTP countdown card
+            _buildTotpCountdownCard(notifier),
+
             // Progress info
             _buildProgressInfo(status),
             const SizedBox(height: AppSpacing.lg),
@@ -526,6 +549,96 @@ class _PatrolHomeScreenState extends State<PatrolHomeScreen> {
 
   String _formatTime(DateTime time) {
     return '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}';
+  }
+
+  /// TOTP countdown card - shown when checkpoint has secret_key
+  Widget _buildTotpCountdownCard(PatrolNotifier notifier) {
+    final theme = FTheme.of(context);
+    final secondsLeft = notifier.state.otpResponse?.secondsUntilExpiry ?? 0;
+    final isExpired = secondsLeft <= 0;
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: AppSpacing.lg),
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: isExpired
+            ? theme.colors.destructive.withAlpha(26)
+            : theme.colors.secondary.withAlpha(26),
+        borderRadius: AppRadius.radiusMd,
+        border: Border.all(
+          color: isExpired
+              ? theme.colors.destructive.withAlpha(77)
+              : theme.colors.secondary.withAlpha(77),
+          width: 1,
+        ),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              color: isExpired ? theme.colors.destructive : theme.colors.secondary,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(
+              IconMap.lock,
+              color: isExpired
+                  ? theme.colors.destructiveForeground
+                  : theme.colors.secondaryForeground,
+              size: 20,
+            ),
+          ),
+          const SizedBox(width: AppSpacing.md),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  isExpired ? 'OTP Kadaluarsa' : 'OTP Active',
+                  style: TextStyle(
+                    fontWeight: FontWeight.w600,
+                    color: isExpired
+                        ? theme.colors.destructive
+                        : theme.colors.secondary,
+                    fontSize: 14,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  isExpired
+                      ? 'Kode OTP baru dalam ${-secondsLeft}s'
+                      : 'Kode berubah dalam ${secondsLeft}s',
+                  style: TextStyle(
+                    color: isExpired
+                        ? theme.colors.destructiveForeground
+                        : theme.colors.secondaryForeground,
+                    fontSize: 12,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          // Countdown indicator
+          if (!isExpired)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                color: theme.colors.secondary,
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Text(
+                '${secondsLeft}s',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: theme.colors.secondaryForeground,
+                  fontSize: 16,
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
   }
 
   Widget _buildScheduleCard(PatrolTodayStatus status) {

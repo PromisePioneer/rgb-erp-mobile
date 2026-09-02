@@ -35,13 +35,15 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
   final _notesController = TextEditingController();
 
   // Condition tracking state
-  // For tools and PPEs: excellent, good, fair, poor, replace
+  // For tools, PPEs, and Machines: excellent, good, fair, poor, replace
   // For chemicals: full, half, low
   Map<int, String> _initialToolConditions = {};
   Map<int, String> _initialPpeConditions = {};
+  Map<int, String> _initialMachineConditions = {};
   Map<int, String> _initialChemicalConditions = {};
   Map<int, String> _finalToolConditions = {};
   Map<int, String> _finalPpeConditions = {};
+  Map<int, String> _finalMachineConditions = {};
   Map<int, String> _finalChemicalConditions = {};
 
   @override

@@ -13,6 +13,7 @@ class DailyTask {
   final List<DailyTaskTool>? tools;
   final List<DailyTaskChemical>? chemicals;
   final List<DailyTaskPpe>? ppes;
+  final List<DailyTaskMachine>? machines;
   final List<DailyTaskReview>? reviews;
   final int? durationMinutes;
   final String? notes;
@@ -35,6 +36,7 @@ class DailyTask {
     this.tools,
     this.chemicals,
     this.ppes,
+    this.machines,
     this.reviews,
     this.durationMinutes,
     this.notes,
@@ -71,6 +73,9 @@ class DailyTask {
           .toList(),
       ppes: (json['ppes'] as List<dynamic>?)
           ?.map((p) => DailyTaskPpe.fromJson(p as Map<String, dynamic>))
+          .toList(),
+      machines: (json['machines'] as List<dynamic>?)
+          ?.map((m) => DailyTaskMachine.fromJson(m as Map<String, dynamic>))
           .toList(),
       reviews: (json['reviews'] as List<dynamic>?)
           ?.map((r) => DailyTaskReview.fromJson(r as Map<String, dynamic>))
@@ -252,15 +257,42 @@ class DailyTaskReviewScore {
   }
 }
 
+class DailyTaskMachine {
+  final int id;
+  final String name;
+  final String? initialCondition;
+  final String? finalCondition;
+
+  DailyTaskMachine({
+    required this.id,
+    required this.name,
+    this.initialCondition,
+    this.finalCondition,
+  });
+
+  factory DailyTaskMachine.fromJson(Map<String, dynamic> json) {
+    return DailyTaskMachine(
+      id: int.tryParse(json['id']?.toString() ?? '') ?? 0,
+      name: json['name'] as String? ?? '',
+      initialCondition: json['initial_condition'] as String?,
+      finalCondition: json['final_condition'] as String?,
+    );
+  }
+}
+
 class DailyTaskMasterItem {
   final int id;
   final String name;
   final String? description;
+  final int? positionId;
+  final String? positionName;
 
   DailyTaskMasterItem({
     required this.id,
     required this.name,
     this.description,
+    this.positionId,
+    this.positionName,
   });
 
   factory DailyTaskMasterItem.fromJson(Map<String, dynamic> json) {
@@ -268,6 +300,25 @@ class DailyTaskMasterItem {
       id: int.tryParse(json['id']?.toString() ?? '') ?? 0,
       name: json['name'] as String? ?? '',
       description: json['description'] as String?,
+      positionId: json['position_id'] as int?,
+      positionName: json['position_name'] as String?,
+    );
+  }
+}
+
+class DailyTaskPosition {
+  final int id;
+  final String name;
+
+  DailyTaskPosition({
+    required this.id,
+    required this.name,
+  });
+
+  factory DailyTaskPosition.fromJson(Map<String, dynamic> json) {
+    return DailyTaskPosition(
+      id: int.tryParse(json['id']?.toString() ?? '') ?? 0,
+      name: json['name'] as String? ?? '',
     );
   }
 }

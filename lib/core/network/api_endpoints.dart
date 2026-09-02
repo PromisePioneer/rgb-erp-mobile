@@ -44,6 +44,7 @@ class ApiEndpoints {
   // ====================
   static const String patrolScan = '/patrol/scan';
   static const String patrolTodayStatus = '/patrol/status';
+  static const String patrolOtp = '/patrol/otp';
 
   // ====================
   // Panic Alert Endpoints
@@ -110,9 +111,11 @@ class ApiEndpoints {
   static const String dailyTaskToday = '/daily-task/today';
   static const String dailyTask = '/daily-task';
   static const String dailyTaskItems = '/daily-task/items';
+  static const String dailyTaskPositions = '/daily-task/positions';
   static const String dailyTaskTools = '/daily-task/tools';
   static const String dailyTaskChemicals = '/daily-task/chemicals';
   static const String dailyTaskPpes = '/daily-task/ppes';
+  static const String dailyTaskMachines = '/daily-task/machines';
   static const String dailyTaskHistory = '/daily-task/history';
 
   // ====================

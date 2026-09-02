@@ -141,6 +141,8 @@ class _TaskAssignmentFormScreenState extends State<TaskAssignmentFormScreen> {
   int? _editTaskId;
 
   // Form data
+  final Set<int> _selectedPositionIds = {};
+  String? _selectedPositionName;
   final Set<int> _selectedEmployeeIds = {};
   final Set<String> _selectedEmployeeNames = {};
   int? _selectedItemId;
@@ -149,13 +151,15 @@ class _TaskAssignmentFormScreenState extends State<TaskAssignmentFormScreen> {
   final _notesController = TextEditingController();
   DateTime _selectedDate = DateTime.now();
 
-  // Tools, Chemicals, PPE selection
+  // Tools, Chemicals, PPE, Machine selection
   final Set<int> _selectedToolIds = {};
   final Set<String> _selectedToolNames = {};
   final Set<int> _selectedChemicalIds = {};
   final Set<String> _selectedChemicalNames = {};
   final Set<int> _selectedPpeIds = {};
   final Set<String> _selectedPpeNames = {};
+  final Set<int> _selectedMachineIds = {};
+  final Set<String> _selectedMachineNames = {};
 
   final List<String> _stepLabels = ['Info', 'Detail', 'Peralatan', 'Konfirmasi'];
 
@@ -184,6 +188,7 @@ class _TaskAssignmentFormScreenState extends State<TaskAssignmentFormScreen> {
 
     // Load master data
     notifier.loadMobileAssignEmployees();
+    notifier.loadPositions(); // Load positions first
     notifier.loadItems();
     notifier.loadMasterData();
 
@@ -304,15 +309,17 @@ class _TaskAssignmentFormScreenState extends State<TaskAssignmentFormScreen> {
   bool _canProceed() {
     switch (_currentStep) {
       case 0:
-        // Step 1: Jenis tugas dan minimal 1 karyawan wajib
-        return _selectedEmployeeIds.isNotEmpty && _selectedItemId != null;
+        // Step 1: Posisi dan jenis tugas wajib, minimal 1 karyawan wajib
+        return _selectedPositionIds.isNotEmpty &&
+               _selectedEmployeeIds.isNotEmpty &&
+               _selectedItemId != null;
       case 1:
         // Step 2: Target durasi dan catatan wajib
         final hasTargetMinutes = _targetMinutesController.text.trim().isNotEmpty;
         final hasNotes = _notesController.text.trim().isNotEmpty;
         return hasTargetMinutes && hasNotes;
       case 2:
-        // Step 3: Alat, Chemical, dan APD wajib
+        // Step 3: Alat, Chemical, dan APD wajib (Mesin optional)
         return _selectedToolIds.isNotEmpty &&
                _selectedChemicalIds.isNotEmpty &&
                _selectedPpeIds.isNotEmpty;
@@ -334,7 +341,7 @@ class _TaskAssignmentFormScreenState extends State<TaskAssignmentFormScreen> {
       String message;
       switch (_currentStep) {
         case 0:
-          message = 'Pilih jenis tugas dan minimal 1 karyawan';
+          message = 'Pilih posisi, jenis tugas, dan minimal 1 karyawan';
           break;
         case 1:
           message = 'Target durasi dan catatan wajib diisi';
@@ -413,6 +420,7 @@ class _TaskAssignmentFormScreenState extends State<TaskAssignmentFormScreen> {
         toolIds: _selectedToolIds.isEmpty ? null : _selectedToolIds.toList(),
         chemicalIds: _selectedChemicalIds.isEmpty ? null : _selectedChemicalIds.toList(),
         ppeIds: _selectedPpeIds.isEmpty ? null : _selectedPpeIds.toList(),
+        machineIds: _selectedMachineIds.isEmpty ? null : _selectedMachineIds.toList(),
       );
 
       if (!mounted) return;
@@ -497,26 +505,44 @@ class _TaskAssignmentFormScreenState extends State<TaskAssignmentFormScreen> {
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       children: [
-        // Jenis Tugas - AsyncSelectField
+        // Posisi - AsyncSelectField (Single-select) - Select first to filter items
         FormFieldCard(
           child: AsyncSelectField(
-            label: 'JENIS TUGAS',
-            placeholder: 'Pilih Jenis Tugas',
+            label: 'POSISI',
+            placeholder: 'Pilih posisi untuk filter tugas',
             loadOptions: (query) async {
-              final items = await notifier.searchItems(query);
-              return items
-                  .map((item) => AsyncSelectOption(id: item.id, name: item.name))
+              // Filter positions by query if needed
+              final positions = notifier.positions;
+              if (query.isEmpty) return positions.map((p) => AsyncSelectOption(id: p.id, name: p.name)).toList();
+              return positions
+                  .where((p) => p.name.toLowerCase().contains(query.toLowerCase()))
+                  .map((p) => AsyncSelectOption(id: p.id, name: p.name))
                   .toList();
             },
-            selectedIds: _selectedItemId != null ? {_selectedItemId!} : {},
-            initialOptions: initialItemOptions.isNotEmpty ? initialItemOptions : null,
+            selectedIds: _selectedPositionIds,
+            initialOptions: _selectedPositionIds.isNotEmpty
+                ? _selectedPositionIds.map((id) {
+                    return AsyncSelectOption(id: id, name: _selectedPositionName ?? 'Memuat...');
+                  }).toList()
+                : null,
             onSelectionChanged: (ids) {
               setState(() {
-                _selectedItemId = ids.isNotEmpty ? ids.first : null;
-                if (_selectedItemId != null) {
-                  final item = notifier.items.firstWhere((i) => i.id == _selectedItemId);
-                  _selectedItemName = item.name;
+                _selectedPositionIds.clear();
+                if (ids.isNotEmpty) {
+                  final positionId = ids.first;
+                  _selectedPositionIds.add(positionId);
+                  // Store position name
+                  final pos = notifier.positions.firstWhere(
+                    (p) => p.id == positionId,
+                    orElse: () => DailyTaskPosition(id: positionId, name: 'Unknown'),
+                  );
+                  _selectedPositionName = pos.name;
+                } else {
+                  _selectedPositionName = null;
                 }
+                // Clear item selection when position changes
+                _selectedItemId = null;
+                _selectedItemName = null;
               });
             },
             multiSelect: false,
@@ -558,6 +584,39 @@ class _TaskAssignmentFormScreenState extends State<TaskAssignmentFormScreen> {
             },
             multiSelect: true,
             disabled: isSubmitting,
+          ),
+        ),
+        const SizedBox(height: 16),
+
+        // Jenis Tugas - AsyncSelectField
+        FormFieldCard(
+          child: AsyncSelectField(
+            label: 'JENIS TUGAS',
+            placeholder: _selectedPositionIds.isEmpty
+                ? 'Pilih posisi terlebih dahulu'
+                : 'Pilih Jenis Tugas',
+            loadOptions: (query) async {
+              final positionIds = _selectedPositionIds.isNotEmpty
+                  ? _selectedPositionIds.toList()
+                  : null;
+              final items = await notifier.searchItems(query, positionIds: positionIds);
+              return items
+                  .map((item) => AsyncSelectOption(id: item.id, name: item.name))
+                  .toList();
+            },
+            selectedIds: _selectedItemId != null ? {_selectedItemId!} : {},
+            initialOptions: initialItemOptions.isNotEmpty ? initialItemOptions : null,
+            onSelectionChanged: (ids) {
+              setState(() {
+                _selectedItemId = ids.isNotEmpty ? ids.first : null;
+                if (_selectedItemId != null) {
+                  final item = notifier.items.firstWhere((i) => i.id == _selectedItemId);
+                  _selectedItemName = item.name;
+                }
+              });
+            },
+            multiSelect: false,
+            disabled: isSubmitting || _selectedPositionIds.isEmpty,
           ),
         ),
         const SizedBox(height: 16),
@@ -800,6 +859,38 @@ class _TaskAssignmentFormScreenState extends State<TaskAssignmentFormScreen> {
             disabled: isSubmitting,
           ),
         ),
+        const SizedBox(height: 16),
+
+        // Mesin - AsyncSelectField (Optional)
+        FormFieldCard(
+          child: AsyncSelectField(
+            label: 'MESIN (OPSIONAL)',
+            placeholder: 'Ketik untuk mencari mesin...',
+            loadOptions: (query) async {
+              final machines = await notifier.searchMachines(query);
+              return machines
+                  .map((m) => AsyncSelectOption(id: m.id, name: m.name))
+                  .toList();
+            },
+            selectedIds: _selectedMachineIds,
+            onSelectionChanged: (ids) {
+              setState(() {
+                _selectedMachineIds.clear();
+                _selectedMachineNames.clear();
+                _selectedMachineIds.addAll(ids);
+                // Store machine names
+                for (final id in ids) {
+                  final machine = notifier.machines.firstWhere(
+                    (m) => m.id == id,
+                    orElse: () => DailyTaskMachine(id: id, name: 'Unknown'),
+                  );
+                  _selectedMachineNames.add(machine.name);
+                }
+              });
+            },
+            disabled: isSubmitting,
+          ),
+        ),
       ],
     );
   }
@@ -829,6 +920,8 @@ class _TaskAssignmentFormScreenState extends State<TaskAssignmentFormScreen> {
                 ],
               ),
               const Divider(height: 24),
+              _buildKonfirmasiRow('Posisi', _selectedPositionName ?? '-'),
+              const SizedBox(height: 8),
               _buildKonfirmasiRow('Jenis Tugas', _selectedItemName ?? '-'),
               const SizedBox(height: 8),
               _buildKonfirmasiRow('Jumlah Karyawan', '${_selectedEmployeeIds.length} orang'),
@@ -984,6 +1077,37 @@ class _TaskAssignmentFormScreenState extends State<TaskAssignmentFormScreen> {
                   spacing: 6,
                   runSpacing: 6,
                   children: _selectedPpeNames.map((name) {
+                    return Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: AppColors.slate100,
+                        borderRadius: BorderRadius.circular(4),
+                        border: Border.all(color: AppColors.slate300),
+                      ),
+                      child: Text(
+                        name,
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: AppColors.slate700,
+                        ),
+                      ),
+                    );
+                  }).toList(),
+                ),
+              ],
+
+              // Mesin (Optional)
+              if (_selectedMachineNames.isNotEmpty) ...[
+                const SizedBox(height: 12),
+                const Text(
+                  'Mesin:',
+                  style: TextStyle(fontSize: 12, color: AppColors.slate500),
+                ),
+                const SizedBox(height: 4),
+                Wrap(
+                  spacing: 6,
+                  runSpacing: 6,
+                  children: _selectedMachineNames.map((name) {
                     return Container(
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(

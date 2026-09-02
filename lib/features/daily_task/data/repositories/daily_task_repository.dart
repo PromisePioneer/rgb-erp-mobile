@@ -46,9 +46,9 @@ class DailyTaskRepository {
     }
   }
 
-  Future<List<DailyTaskMasterItem>> getItems({String? query}) async {
+  Future<List<DailyTaskMasterItem>> getItems({String? query, List<int>? positionIds}) async {
     try {
-      final response = await api.getItems(query: query);
+      final response = await api.getItems(query: query, positionIds: positionIds);
       final data = response['data'];
       if (data == null) return [];
       final list = data is List ? data : [];
@@ -58,6 +58,23 @@ class DailyTaskRepository {
     } catch (e) {
       throw ApiException(
         message: 'Gagal memuat daftar item: $e',
+        statusCode: 500,
+      );
+    }
+  }
+
+  Future<List<DailyTaskPosition>> getPositions() async {
+    try {
+      final response = await api.getPositions();
+      final data = response['data'];
+      if (data == null) return [];
+      final list = data is List ? data : [];
+      return list.map((json) => DailyTaskPosition.fromJson(_toMap(json))).toList();
+    } on ApiException {
+      rethrow;
+    } catch (e) {
+      throw ApiException(
+        message: 'Gagal memuat daftar posisi: $e',
         statusCode: 500,
       );
     }
@@ -114,6 +131,23 @@ class DailyTaskRepository {
     }
   }
 
+  Future<List<DailyTaskMachine>> getMachines({String? query}) async {
+    try {
+      final response = await api.getMachines(query: query);
+      final data = response['data'];
+      if (data == null) return [];
+      final list = data is List ? data : [];
+      return list.map((json) => DailyTaskMachine.fromJson(_toMap(json))).toList();
+    } on ApiException {
+      rethrow;
+    } catch (e) {
+      throw ApiException(
+        message: 'Gagal memuat daftar mesin: $e',
+        statusCode: 500,
+      );
+    }
+  }
+
   Future<Map<String, dynamic>> getHistory({int page = 1, int perPage = 15}) async {
     try {
       return await api.getHistory(page: page, perPage: perPage);
@@ -132,6 +166,7 @@ class DailyTaskRepository {
     required List<String> photos,
     List<Map<String, String>>? toolConditions,
     List<Map<String, String>>? ppeConditions,
+    List<Map<String, String>>? machineConditions,
     List<Map<String, String>>? chemicalConditions,
   }) async {
     try {
@@ -140,6 +175,7 @@ class DailyTaskRepository {
         photos: photos,
         toolConditions: toolConditions,
         ppeConditions: ppeConditions,
+        machineConditions: machineConditions,
         chemicalConditions: chemicalConditions,
       );
       final data = response['data'];
@@ -163,6 +199,7 @@ class DailyTaskRepository {
     String? notes,
     List<Map<String, String>>? toolConditions,
     List<Map<String, String>>? ppeConditions,
+    List<Map<String, String>>? machineConditions,
     List<Map<String, String>>? chemicalConditions,
   }) async {
     try {
@@ -172,6 +209,7 @@ class DailyTaskRepository {
         notes: notes,
         toolConditions: toolConditions,
         ppeConditions: ppeConditions,
+        machineConditions: machineConditions,
         chemicalConditions: chemicalConditions,
       );
       final data = response['data'];
@@ -354,6 +392,7 @@ class DailyTaskRepository {
     List<int>? toolIds,
     List<int>? chemicalIds,
     List<int>? ppeIds,
+    List<int>? machineIds,
   }) async {
     try {
       final response = await api.mobileAssignTask(
@@ -367,6 +406,7 @@ class DailyTaskRepository {
         toolIds: toolIds,
         chemicalIds: chemicalIds,
         ppeIds: ppeIds,
+        machineIds: machineIds,
       );
       // Return the created assignment data from response
       return response['data'] as Map<String, dynamic>?;

@@ -37,7 +37,7 @@ class AppColors {
 
   // RGB Brand Colors
   static const Color rgbPrimary = Color(0xFF2563EB); // Blue - RGB Security
-  static const Color rbmPrimary = Color(0xFF059669); // Emerald - RBM Cleaning
+  static const Color rbmPrimary = Color(0xFF059669); // Emerald - RBM Crew
 
   // Status Text Colors
   static const Color textPrimary = gray900;

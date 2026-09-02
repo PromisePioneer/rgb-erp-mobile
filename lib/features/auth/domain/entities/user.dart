@@ -11,7 +11,7 @@ class User extends Equatable {
   final String? department;
   final String? position;
   final String? photo;
-  final String? division; // RGB (Satpam) or RBM (Cleaning)
+  final String? division; // RGB (Satpam) or RBM (Crew)
   final String? siteId;
   final String? siteName;
   final String? areaId;
@@ -41,8 +41,8 @@ class User extends Equatable {
   /// Check if user is RGB (Satpam/Security)
   bool get isRgb => division?.toLowerCase() == 'rgb' || department?.toLowerCase() == 'satpam';
 
-  /// Check if user is RBM (Non-Satpam/Cleaning)
-  bool get isRbm => division?.toLowerCase() == 'rbm' || department?.toLowerCase() == 'cleaning';
+  /// Check if user is RBM (Non-Satpam/Crew)
+  bool get isRbm => division?.toLowerCase() == 'rbm' || department?.toLowerCase() == 'crew';
 
   /// Check if user is Super Admin
   bool get isSuperAdmin => position?.toLowerCase() == 'super admin';
