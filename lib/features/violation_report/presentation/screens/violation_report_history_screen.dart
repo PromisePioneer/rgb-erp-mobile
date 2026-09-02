@@ -8,7 +8,6 @@ import '../../../../shared/widgets/buttons/primary_button.dart';
 import '../../../../shared/widgets/feedback/loading_indicator.dart';
 import '../../../../shared/widgets/layout/top_gradient_background.dart';
 import '../../../../shared/widgets/icons/forui_icon_map.dart';
-import '../../../../shared/widgets/navigation/app_bottom_nav.dart';
 import '../../domain/domain.dart';
 import '../providers/violation_report_provider.dart';
 
@@ -133,34 +132,16 @@ class _ViolationReportHistoryScreenState extends State<ViolationReportHistoryScr
             );
           },
         ),
-        floatingActionButton: FloatingActionButton(
-          onPressed: () => context.push('/violation-report/form'),
-          backgroundColor: theme.colors.primary,
-          child: Icon(IconMap.add, color: theme.colors.primaryForeground),
-        ),
-        bottomNavigationBar: AppBottomNavBar(
-          currentIndex: 0, // Default to home
-          onTap: (index) => _onNavTap(context, index),
+        floatingActionButton: Padding(
+          padding: EdgeInsets.only(bottom: MediaQuery.of(context).padding.bottom),
+          child: FloatingActionButton(
+            onPressed: () => context.push('/violation-report/form'),
+            backgroundColor: theme.colors.primary,
+            child: Icon(IconMap.add, color: theme.colors.primaryForeground),
+          ),
         ),
       ),
     );
-  }
-
-  void _onNavTap(BuildContext context, int index) {
-    switch (index) {
-      case 0:
-        context.go('/dashboard');
-        break;
-      case 1:
-        context.go('/attendance');
-        break;
-      case 2:
-        context.go('/for-you');
-        break;
-      case 3:
-        context.go('/settings');
-        break;
-    }
   }
 }
 

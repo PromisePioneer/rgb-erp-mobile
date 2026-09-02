@@ -112,7 +112,8 @@ void initRouter(AuthNotifier authNotifier) {
           return MainShell(navigationShell: navigationShell);
         },
         branches: [
-          // Branch 0: Home / Dashboard
+          // ===== INDEXED BRANCHES (shown in bottom nav) =====
+          // Branch 0: Dashboard (Home tab)
           StatefulShellBranch(
             routes: [
               GoRoute(
@@ -122,7 +123,7 @@ void initRouter(AuthNotifier authNotifier) {
               ),
             ],
           ),
-          // Branch 1: Presensi
+          // Branch 1: Attendance (Presensi tab)
           StatefulShellBranch(
             routes: [
               GoRoute(
@@ -132,7 +133,7 @@ void initRouter(AuthNotifier authNotifier) {
               ),
             ],
           ),
-          // Branch 2: For You
+          // Branch 2: For You (For You tab)
           StatefulShellBranch(
             routes: [
               GoRoute(
@@ -142,7 +143,7 @@ void initRouter(AuthNotifier authNotifier) {
               ),
             ],
           ),
-          // Branch 3: Akun / Settings
+          // Branch 3: Settings (Akun tab)
           StatefulShellBranch(
             routes: [
               GoRoute(
@@ -152,7 +153,164 @@ void initRouter(AuthNotifier authNotifier) {
               ),
             ],
           ),
-          // Branch 4: Face Enrollment (non-indexed, but part of shell)
+
+          // ===== NON-INDEXED BRANCHES (hidden in bottom nav, but still inside shell) =====
+          // Branch 4: Daily Task - ALL related routes nested under one parent
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/daily-task',
+                name: 'daily-task',
+                builder: (context, state) => const DailyTaskListScreen(),
+                routes: [
+                  // Nested parameterized route for task detail
+                  GoRoute(
+                    path: ':id',
+                    name: 'daily-task-detail',
+                    builder: (context, state) {
+                      final id = int.parse(state.pathParameters['id']!);
+                      return TaskDetailScreen(taskId: id);
+                    },
+                    routes: [
+                      // Nested route for task review
+                      GoRoute(
+                        path: 'review',
+                        name: 'task-review',
+                        builder: (context, state) {
+                          final id = int.parse(state.pathParameters['id']!);
+                          final taskData = state.extra as Map<String, dynamic>?;
+                          if (taskData == null) {
+                            return const Scaffold(
+                              body: Center(child: Text('Data tugas tidak ditemukan')),
+                            );
+                          }
+                          return TaskReviewScreen(taskId: id, taskData: taskData);
+                        },
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ],
+          ),
+          // Branch 7: Task Assignment List
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/daily-task-assignment/list',
+                name: 'task-assignment-list',
+                builder: (context, state) => const TaskAssignmentListScreen(),
+              ),
+            ],
+          ),
+          // Branch 8: Task Assignment Form
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/daily-task-assignment/new',
+                name: 'task-assignment-new',
+                builder: (context, state) => const TaskAssignmentFormScreen(),
+              ),
+            ],
+          ),
+          // Branch 9: Report List
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/report',
+                name: 'report',
+                builder: (context, state) => const ReportListScreen(),
+              ),
+            ],
+          ),
+          // Branch 10: Report Form
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/report/form',
+                name: 'report-form',
+                builder: (context, state) => const ReportFormScreen(),
+              ),
+            ],
+          ),
+          // Branch 11: Edit Menu
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/edit-menu',
+                name: 'edit-menu',
+                builder: (context, state) => const EditMenuScreen(),
+              ),
+            ],
+          ),
+          // Branch 12: Shift Response
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/attendance/shift-response',
+                name: 'shift-response',
+                builder: (context, state) {
+                  final shiftId = state.uri.queryParameters['shiftId'] ?? '';
+                  return ShiftResponseScreen(shiftId: shiftId);
+                },
+              ),
+            ],
+          ),
+          // Branch 13: Backup Offer
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/attendance/backup-offer',
+                name: 'backup-offer',
+                builder: (context, state) {
+                  final offerId = state.uri.queryParameters['offerId'] ?? '';
+                  return BackupOfferScreen(offerId: offerId);
+                },
+              ),
+            ],
+          ),
+          // Branch 14: Violation Report - ALL related routes nested under one parent
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/violation-report',
+                name: 'violation-report',
+                builder: (context, state) => const ViolationReportHistoryScreen(),
+                routes: [
+                  // Nested parameterized route for violation detail
+                  GoRoute(
+                    path: ':id',
+                    name: 'violation-report-detail',
+                    builder: (context, state) {
+                      final id = int.parse(state.pathParameters['id']!);
+                      return ViolationReportDetailScreen(violationId: id);
+                    },
+                  ),
+                ],
+              ),
+            ],
+          ),
+          // Branch 15: Violation Report Form
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/violation-report/form',
+                name: 'violation-report-form',
+                builder: (context, state) => const ViolationReportFormScreen(),
+              ),
+            ],
+          ),
+          // Branch 16: Change Password
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/change-password',
+                name: 'change-password',
+                builder: (context, state) => const ChangePasswordScreen(),
+              ),
+            ],
+          ),
+          // Branch 17: Face Enrollment
           StatefulShellBranch(
             routes: [
               GoRoute(
@@ -162,7 +320,7 @@ void initRouter(AuthNotifier authNotifier) {
               ),
             ],
           ),
-          // Branch 5: Patrol (non-indexed, but part of shell)
+          // Branch 18: Patrol
           StatefulShellBranch(
             routes: [
               GoRoute(
@@ -172,7 +330,7 @@ void initRouter(AuthNotifier authNotifier) {
               ),
             ],
           ),
-          // Branch 6: Schedule (non-indexed, but part of shell)
+          // Branch 19: Schedule
           StatefulShellBranch(
             routes: [
               GoRoute(
@@ -182,7 +340,7 @@ void initRouter(AuthNotifier authNotifier) {
               ),
             ],
           ),
-          // Branch 7: Payroll (non-indexed, but part of shell)
+          // Branch 20: Payroll
           StatefulShellBranch(
             routes: [
               GoRoute(
@@ -192,7 +350,20 @@ void initRouter(AuthNotifier authNotifier) {
               ),
             ],
           ),
-          // Branch 8: Leave (non-indexed, but part of shell)
+          // Branch 21: Payroll Detail
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/payroll/detail',
+                name: 'payroll-detail',
+                builder: (context, state) {
+                  final payslip = state.extra as dynamic;
+                  return PayrollDetailScreen(payslip: payslip);
+                },
+              ),
+            ],
+          ),
+          // Branch 22: Leave
           StatefulShellBranch(
             routes: [
               GoRoute(
@@ -202,87 +373,66 @@ void initRouter(AuthNotifier authNotifier) {
               ),
             ],
           ),
+          // Branch 23: Leave Form
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/leave/form',
+                name: 'leave-form',
+                builder: (context, state) => const LeaveFormScreen(),
+              ),
+            ],
+          ),
         ],
       ),
 
       // Immersive/Modal routes (outside shell, full-screen without bottom nav)
-
-      // Client Dashboard
       GoRoute(
         path: '/client/dashboard',
         name: 'client-dashboard',
         builder: (context, state) => const ClientDashboardScreen(),
       ),
-
-      // Client Employee List
       GoRoute(
         path: '/client/employees',
         name: 'client-employees',
         builder: (context, state) => const ClientEmployeeListScreen(),
       ),
-
-      // Client Area List
       GoRoute(
         path: '/client/areas',
         name: 'client-areas',
         builder: (context, state) => const ClientAreaListScreen(),
       ),
-
-      // Client Attendance
       GoRoute(
         path: '/client/attendance',
         name: 'client-attendance',
         builder: (context, state) => const ClientAttendanceScreen(),
       ),
-
-      // Client Daily Tasks
       GoRoute(
         path: '/client/tasks',
         name: 'client-tasks',
         builder: (context, state) => const ClientReportsScreen(reportType: 'tasks'),
       ),
-
-      // Client Patrol Reports
       GoRoute(
         path: '/client/patrol',
         name: 'client-patrol',
         builder: (context, state) => const ClientReportsScreen(reportType: 'patrol'),
       ),
-
-      // Client Field Reports
       GoRoute(
         path: '/client/field-reports',
         name: 'client-field-reports',
         builder: (context, state) => const ClientReportsScreen(reportType: 'field'),
       ),
-
-      // Client Schedule
       GoRoute(
         path: '/client/schedules',
         name: 'client-schedules',
         builder: (context, state) => const ClientScheduleScreen(),
       ),
 
+      // Full-screen camera routes (outside shell - no bottom nav)
       GoRoute(
         path: '/attendance/capture',
         name: 'attendance-capture',
         builder: (context, state) => const AttendanceCaptureScreen(),
-      ),
-      GoRoute(
-        path: '/attendance/shift-response',
-        name: 'shift-response',
-        builder: (context, state) {
-          final shiftId = state.uri.queryParameters['shiftId'] ?? '';
-          return ShiftResponseScreen(shiftId: shiftId);
-        },
-      ),
-      GoRoute(
-        path: '/attendance/backup-offer',
-        name: 'backup-offer',
-        builder: (context, state) {
-          final offerId = state.uri.queryParameters['offerId'] ?? '';
-          return BackupOfferScreen(offerId: offerId);
-        },
       ),
       GoRoute(
         path: '/face-enrollment/capture',
@@ -303,122 +453,6 @@ void initRouter(AuthNotifier authNotifier) {
               'Waktunya patroli checkpoint berikutnya!';
           return PatrolAlarmScreen(message: message);
         },
-      ),
-
-      // Edit Menu Screen (full-screen modal)
-      GoRoute(
-        path: '/edit-menu',
-        name: 'edit-menu',
-        builder: (context, state) => const EditMenuScreen(),
-      ),
-
-      // Change Password Screen (full-screen modal)
-      GoRoute(
-        path: '/change-password',
-        name: 'change-password',
-        builder: (context, state) => const ChangePasswordScreen(),
-      ),
-
-      // Payroll Detail Screen (full-screen modal)
-      GoRoute(
-        path: '/payroll/detail',
-        name: 'payroll-detail',
-        builder: (context, state) {
-          final payslip = state.extra as dynamic;
-          return PayrollDetailScreen(payslip: payslip);
-        },
-      ),
-
-      // Leave Form Screen (full-screen modal)
-      GoRoute(
-        path: '/leave/form',
-        name: 'leave-form',
-        builder: (context, state) => const LeaveFormScreen(),
-      ),
-
-      // Violation Report History Screen
-      GoRoute(
-        path: '/violation-report',
-        name: 'violation-report',
-        builder: (context, state) => const ViolationReportHistoryScreen(),
-      ),
-
-      // Violation Report Form Screen (full-screen modal) - MUST be before /:id
-      GoRoute(
-        path: '/violation-report/form',
-        name: 'violation-report-form',
-        builder: (context, state) => const ViolationReportFormScreen(),
-      ),
-
-      // Violation Report Detail Screen
-      GoRoute(
-        path: '/violation-report/:id',
-        name: 'violation-report-detail',
-        builder: (context, state) {
-          final id = int.parse(state.pathParameters['id']!);
-          return ViolationReportDetailScreen(violationId: id);
-        },
-      ),
-
-      // Field Report List Screen
-      GoRoute(
-        path: '/report',
-        name: 'report',
-        builder: (context, state) => const ReportListScreen(),
-      ),
-
-      // Field Report Form Screen (full-screen modal)
-      GoRoute(
-        path: '/report/form',
-        name: 'report-form',
-        builder: (context, state) => const ReportFormScreen(),
-      ),
-
-      // Daily Task List Screen
-      GoRoute(
-        path: '/daily-task',
-        name: 'daily-task',
-        builder: (context, state) => const DailyTaskListScreen(),
-      ),
-
-      // Daily Task Detail Screen
-      GoRoute(
-        path: '/daily-task/:id',
-        name: 'daily-task-detail',
-        builder: (context, state) {
-          final id = int.parse(state.pathParameters['id']!);
-          return TaskDetailScreen(taskId: id);
-        },
-      ),
-
-      // Task Review Screen (Team Leader only - requires daily_task_assign privilege)
-      GoRoute(
-        path: '/daily-task/:id/review',
-        name: 'task-review',
-        builder: (context, state) {
-          final id = int.parse(state.pathParameters['id']!);
-          final taskData = state.extra as Map<String, dynamic>?;
-          if (taskData == null) {
-            return const Scaffold(
-              body: Center(child: Text('Data tugas tidak ditemukan')),
-            );
-          }
-          return TaskReviewScreen(taskId: id, taskData: taskData);
-        },
-      ),
-
-      // Task Assignment List Screen (Supervisor)
-      GoRoute(
-        path: '/daily-task-assignment/list',
-        name: 'task-assignment-list',
-        builder: (context, state) => const TaskAssignmentListScreen(),
-      ),
-
-      // Task Assignment Form Screen (Supervisor)
-      GoRoute(
-        path: '/daily-task-assignment/new',
-        name: 'task-assignment-new',
-        builder: (context, state) => const TaskAssignmentFormScreen(),
       ),
     ],
     errorBuilder: (context, state) => Scaffold(
@@ -463,14 +497,12 @@ class _MainShellState extends State<MainShell> {
   @override
   void initState() {
     super.initState();
-    // Show onboarding after first frame renders
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _checkAndShowOnboarding();
     });
   }
 
   Future<void> _checkAndShowOnboarding() async {
-    // Only show once per session
     if (_hasShownOnboarding) return;
 
     final hasSeen = await _onboardingService.hasSeenOnboarding();
@@ -479,12 +511,10 @@ class _MainShellState extends State<MainShell> {
       return;
     }
 
-    // Wait for widgets to build
     await Future.delayed(const Duration(milliseconds: 500));
 
     if (!mounted) return;
 
-    // Build tutorial targets
     final targets = _buildTutorialTargets();
 
     if (targets.isEmpty) {
@@ -492,169 +522,135 @@ class _MainShellState extends State<MainShell> {
       return;
     }
 
-    // Create and show tutorial
     _showTutorial(targets);
   }
 
   List<TargetFocus> _buildTutorialTargets() {
     final targets = <TargetFocus>[];
 
-    // Menu Grid
     if (TutorialKeys.menuGridKey.currentContext != null) {
-      targets.add(
-        TargetFocus(
-          identify: 'menuGrid',
-          keyTarget: TutorialKeys.menuGridKey,
-          shape: ShapeLightFocus.RRect,
-          radius: 16,
-          contents: [
-            TargetContent(
-              align: ContentAlign.bottom,
-              child: _buildTutorialCard(
-                'Menu Layanan',
-                'Akses semua fitur aplikasi dari sini. Tap untuk masuk ke fitur yang diinginkan.',
-              ),
+      targets.add(TargetFocus(
+        identify: 'menuGrid',
+        keyTarget: TutorialKeys.menuGridKey,
+        shape: ShapeLightFocus.RRect,
+        radius: 16,
+        contents: [
+          TargetContent(
+            align: ContentAlign.bottom,
+            child: _buildTutorialCard(
+              'Menu Layanan',
+              'Akses semua fitur aplikasi dari sini.',
             ),
-          ],
-        ),
-      );
+          ),
+        ],
+      ));
     }
 
-    // Notification
     if (TutorialKeys.notificationKey.currentContext != null) {
-      targets.add(
-        TargetFocus(
-          identify: 'notification',
-          keyTarget: TutorialKeys.notificationKey,
-          shape: ShapeLightFocus.Circle,
-          contents: [
-            TargetContent(
-              align: ContentAlign.bottom,
-              child: _buildTutorialCard(
-                'Notifikasi',
-                'Lihat notifikasi dan pengumuman penting di sini.',
-              ),
+      targets.add(TargetFocus(
+        identify: 'notification',
+        keyTarget: TutorialKeys.notificationKey,
+        shape: ShapeLightFocus.Circle,
+        contents: [
+          TargetContent(
+            align: ContentAlign.bottom,
+            child: _buildTutorialCard(
+              'Notifikasi',
+              'Lihat notifikasi dan pengumuman penting.',
             ),
-          ],
-        ),
-      );
+          ),
+        ],
+      ));
     }
 
-    // Scan Button
     if (TutorialKeys.scanButtonKey.currentContext != null) {
-      targets.add(
-        TargetFocus(
-          identify: 'scanButton',
-          keyTarget: TutorialKeys.scanButtonKey,
-          shape: ShapeLightFocus.Circle,
-          contents: [
-            TargetContent(
-              align: ContentAlign.top,
-              child: _buildTutorialCard(
-                'Tombol Scan',
-                'Tekan untuk scan wajah saat absen atau scan QR saat patroli.',
-              ),
+      targets.add(TargetFocus(
+        identify: 'scanButton',
+        keyTarget: TutorialKeys.scanButtonKey,
+        shape: ShapeLightFocus.Circle,
+        contents: [
+          TargetContent(
+            align: ContentAlign.top,
+            child: _buildTutorialCard(
+              'Tombol Scan',
+              'Tekan untuk scan wajah saat absen.',
             ),
-          ],
-        ),
-      );
+          ),
+        ],
+      ));
     }
 
-    // Panic Button
     if (TutorialKeys.panicButtonKey.currentContext != null) {
-      targets.add(
-        TargetFocus(
-          identify: 'panicButton',
-          keyTarget: TutorialKeys.panicButtonKey,
-          shape: ShapeLightFocus.Circle,
-          contents: [
-            TargetContent(
-              align: ContentAlign.top,
-              child: _buildTutorialCard(
-                'Tombol Panic / SOS',
-                'Tekan dan tahan 3 detik saat darurat. Lokasi Anda akan dikirim ke tim keamanan.',
-              ),
+      targets.add(TargetFocus(
+        identify: 'panicButton',
+        keyTarget: TutorialKeys.panicButtonKey,
+        shape: ShapeLightFocus.Circle,
+        contents: [
+          TargetContent(
+            align: ContentAlign.top,
+            child: _buildTutorialCard(
+              'Tombol Panic / SOS',
+              'Tekan dan tahan 3 detik saat darurat.',
             ),
-          ],
-        ),
-      );
+          ),
+        ],
+      ));
     }
 
-    // Bottom Nav Tabs
     if (TutorialKeys.homeKey.currentContext != null) {
-      targets.add(
-        TargetFocus(
-          identify: 'homeTab',
-          keyTarget: TutorialKeys.homeKey,
-          shape: ShapeLightFocus.Circle,
-          contents: [
-            TargetContent(
-              align: ContentAlign.top,
-              child: _buildTutorialCard(
-                'Tab Home',
-                'Kembali ke dashboard utama.',
-              ),
-            ),
-          ],
-        ),
-      );
+      targets.add(TargetFocus(
+        identify: 'homeTab',
+        keyTarget: TutorialKeys.homeKey,
+        shape: ShapeLightFocus.Circle,
+        contents: [
+          TargetContent(
+            align: ContentAlign.top,
+            child: _buildTutorialCard('Tab Home', 'Kembali ke dashboard.'),
+          ),
+        ],
+      ));
     }
 
     if (TutorialKeys.presensiKey.currentContext != null) {
-      targets.add(
-        TargetFocus(
-          identify: 'presensiTab',
-          keyTarget: TutorialKeys.presensiKey,
-          shape: ShapeLightFocus.Circle,
-          contents: [
-            TargetContent(
-              align: ContentAlign.top,
-              child: _buildTutorialCard(
-                'Tab Absensi',
-                'Catat kehadiran masuk dan pulang melalui tab ini.',
-              ),
-            ),
-          ],
-        ),
-      );
+      targets.add(TargetFocus(
+        identify: 'presensiTab',
+        keyTarget: TutorialKeys.presensiKey,
+        shape: ShapeLightFocus.Circle,
+        contents: [
+          TargetContent(
+            align: ContentAlign.top,
+            child: _buildTutorialCard('Tab Absensi', 'Catat kehadiran.'),
+          ),
+        ],
+      ));
     }
 
     if (TutorialKeys.forYouKey.currentContext != null) {
-      targets.add(
-        TargetFocus(
-          identify: 'forYouTab',
-          keyTarget: TutorialKeys.forYouKey,
-          shape: ShapeLightFocus.Circle,
-          contents: [
-            TargetContent(
-              align: ContentAlign.top,
-              child: _buildTutorialCard(
-                'Tab For You',
-                'Dapatkan konten dan informasi yang dipersonalisasi.',
-              ),
-            ),
-          ],
-        ),
-      );
+      targets.add(TargetFocus(
+        identify: 'forYouTab',
+        keyTarget: TutorialKeys.forYouKey,
+        shape: ShapeLightFocus.Circle,
+        contents: [
+          TargetContent(
+            align: ContentAlign.top,
+            child: _buildTutorialCard('Tab For You', 'Konten personalisasi.'),
+          ),
+        ],
+      ));
     }
 
     if (TutorialKeys.akunKey.currentContext != null) {
-      targets.add(
-        TargetFocus(
-          identify: 'akunTab',
-          keyTarget: TutorialKeys.akunKey,
-          shape: ShapeLightFocus.Circle,
-          contents: [
-            TargetContent(
-              align: ContentAlign.top,
-              child: _buildTutorialCard(
-                'Tab Akun',
-                'Kelola profil, pengaturan, dan informasi akun Anda.',
-              ),
-            ),
-          ],
-        ),
-      );
+      targets.add(TargetFocus(
+        identify: 'akunTab',
+        keyTarget: TutorialKeys.akunKey,
+        shape: ShapeLightFocus.Circle,
+        contents: [
+          TargetContent(
+            align: ContentAlign.top,
+            child: _buildTutorialCard('Tab Akun', 'Kelola akun Anda.'),
+          ),
+        ],
+      ));
     }
 
     return targets;
@@ -730,15 +726,8 @@ class _MainShellState extends State<MainShell> {
     return Scaffold(
       body: widget.navigationShell,
       bottomNavigationBar: AppBottomNavBar(
-        currentIndex: _getNavIndex(widget.navigationShell.currentIndex),
-        onTap: (index) {
-          // Map nav index back to branch index
-          final branchIndex = _getBranchIndex(index);
-          widget.navigationShell.goBranch(
-            branchIndex,
-            initialLocation: branchIndex == widget.navigationShell.currentIndex,
-          );
-        },
+        currentIndex: _getNavIndex(),
+        onTap: (index) => _onTabTapped(index),
         homeKey: TutorialKeys.homeKey,
         presensiKey: TutorialKeys.presensiKey,
         forYouKey: TutorialKeys.forYouKey,
@@ -749,19 +738,70 @@ class _MainShellState extends State<MainShell> {
     );
   }
 
-  /// Map navigation bar index to branch index
-  /// Branches 0-3 are indexed (shown in bottom nav)
-  /// Branches 4+ are non-indexed (not shown in bottom nav)
-  int _getBranchIndex(int navIndex) => navIndex;
+  int _getNavIndex() {
+    // Branches 0-3 are indexed (shown in bottom nav)
+    if (widget.navigationShell.currentIndex < 4) {
+      return widget.navigationShell.currentIndex;
+    }
 
-  /// Map branch index to navigation bar index
-  /// Only indexed branches (0-3) are shown
-  int _getNavIndex(int branchIndex) {
-    if (branchIndex >= 4) {
-      // Non-indexed branches show the first tab as active
+    // For non-indexed branches (4+), detect which tab should be active
+    final path = _getCurrentPath();
+
+    // Dashboard tab routes
+    if (_isDashboardRoute(path)) {
       return 0;
     }
-    return branchIndex;
+    // Attendance tab routes
+    if (_isAttendanceRoute(path)) {
+      return 1;
+    }
+    // For You tab routes
+    if (_isForYouRoute(path)) {
+      return 2;
+    }
+    // Settings tab routes
+    if (_isSettingsRoute(path)) {
+      return 3;
+    }
+
+    // Default to first tab
+    return 0;
+  }
+
+  String _getCurrentPath() {
+    try {
+      final router = GoRouter.of(context);
+      final config = router.routerDelegate.currentConfiguration;
+      return config.uri.toString();
+    } catch (_) {
+      return '';
+    }
+  }
+
+  bool _isDashboardRoute(String path) =>
+      path.startsWith('/daily-task') ||
+      path.startsWith('/daily-task-assignment') ||
+      path.startsWith('/report') ||
+      path == '/edit-menu';
+
+  bool _isAttendanceRoute(String path) =>
+      path.startsWith('/attendance/shift-response') ||
+      path.startsWith('/attendance/backup-offer');
+
+  bool _isForYouRoute(String path) =>
+      path.startsWith('/violation-report');
+
+  bool _isSettingsRoute(String path) =>
+      path == '/change-password';
+
+  void _onTabTapped(int index) {
+    // Only handle tabs 0-3
+    if (index < 4) {
+      widget.navigationShell.goBranch(
+        index,
+        initialLocation: index != widget.navigationShell.currentIndex,
+      );
+    }
   }
 }
 
@@ -777,7 +817,6 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   void initState() {
     super.initState();
-    // Delay hydrate until after first frame to avoid setState during build
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _initializeAndNavigate();
     });
@@ -800,7 +839,6 @@ class _SplashScreenState extends State<SplashScreen> {
 
     String destination;
     if (isAuthenticated) {
-      // Auto-detect destination based on user type
       destination = isClient ? '/client/dashboard' : '/dashboard';
     } else {
       destination = '/login';

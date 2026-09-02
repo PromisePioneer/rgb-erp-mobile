@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import '../../../../core/core.dart';
 import '../../data/repositories/daily_task_repository.dart';
 import '../../domain/models/daily_task.dart';
 
@@ -22,6 +23,7 @@ class DailyTaskNotifier extends ChangeNotifier {
   bool _isLoading = false;
   bool _isSubmitting = false;
   String? _error;
+  Map<String, List<String>>? _validationErrors;
 
   // Separate state for master data (tools, chemicals, ppes)
   // to avoid race conditions with task detail loading
@@ -48,6 +50,7 @@ class DailyTaskNotifier extends ChangeNotifier {
   bool get isLoading => _isLoading;
   bool get isSubmitting => _isSubmitting;
   String? get error => _error;
+  Map<String, List<String>>? get validationErrors => _validationErrors;
 
   // Getters - Master data state (separate to avoid race conditions)
   bool get isLoadingMasterData => _isLoadingMasterData;
@@ -156,6 +159,76 @@ class DailyTaskNotifier extends ChangeNotifier {
   /// Does not affect task detail loading state
   Future<void> retryLoadMasterData() async {
     await loadMasterData();
+  }
+
+  // ====================
+  // Search Methods for Async Select
+  // ====================
+
+  /// Search tools by name (for async select) and cache results
+  Future<List<DailyTaskTool>> searchTools(String query) async {
+    try {
+      final tools = await _repository.getTools(query: query.isEmpty ? null : query);
+      // Cache tools for later lookup (avoid duplicates)
+      for (final tool in tools) {
+        if (!_tools.any((t) => t.id == tool.id)) {
+          _tools.add(tool);
+        }
+      }
+      return tools;
+    } catch (e) {
+      return [];
+    }
+  }
+
+  /// Search chemicals by name (for async select) and cache results
+  Future<List<DailyTaskChemical>> searchChemicals(String query) async {
+    try {
+      final chemicals = await _repository.getChemicals(query: query.isEmpty ? null : query);
+      // Cache chemicals for later lookup (avoid duplicates)
+      for (final chemical in chemicals) {
+        if (!_chemicals.any((c) => c.id == chemical.id)) {
+          _chemicals.add(chemical);
+        }
+      }
+      return chemicals;
+    } catch (e) {
+      return [];
+    }
+  }
+
+  /// Search PPEs by name (for async select) and cache results
+  Future<List<DailyTaskPpe>> searchPpes(String query) async {
+    try {
+      final ppes = await _repository.getPpes(query: query.isEmpty ? null : query);
+      // Cache ppes for later lookup (avoid duplicates)
+      for (final ppe in ppes) {
+        if (!_ppes.any((p) => p.id == ppe.id)) {
+          _ppes.add(ppe);
+        }
+      }
+      return ppes;
+    } catch (e) {
+      return [];
+    }
+  }
+
+  /// Search items by name (for async select)
+  Future<List<DailyTaskMasterItem>> searchItems(String query) async {
+    try {
+      return await _repository.getItems(query: query.isEmpty ? null : query);
+    } catch (e) {
+      return [];
+    }
+  }
+
+  /// Search employees for mobile assign (for async select)
+  Future<List<Map<String, dynamic>>> searchMobileAssignEmployees(String query) async {
+    try {
+      return await _repository.getMobileAssignEmployees(query: query.isEmpty ? null : query);
+    } catch (e) {
+      return [];
+    }
   }
 
   Future<bool> startTask({
@@ -343,7 +416,7 @@ class DailyTaskNotifier extends ChangeNotifier {
   }
 
   Future<Map<String, dynamic>?> mobileAssignTask({
-    required int employeeId,
+    required List<int> employeeIds,
     int? itemId,
     int? areaId,
     int? targetMinutes,
@@ -360,7 +433,7 @@ class DailyTaskNotifier extends ChangeNotifier {
 
     try {
       final result = await _repository.mobileAssignTask(
-        employeeId: employeeId,
+        employeeIds: employeeIds,
         itemId: itemId,
         areaId: areaId,
         targetMinutes: targetMinutes,
@@ -381,7 +454,14 @@ class DailyTaskNotifier extends ChangeNotifier {
       return result;
     } catch (e) {
       _isSubmitting = false;
-      _error = e.toString();
+      _validationErrors = null;
+
+      if (e is ApiException) {
+        _error = e.message;
+        _validationErrors = e.validationErrors;
+      } else {
+        _error = e.toString();
+      }
       notifyListeners();
       return null;
     }

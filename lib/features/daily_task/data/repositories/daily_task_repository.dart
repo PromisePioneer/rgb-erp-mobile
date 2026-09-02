@@ -46,9 +46,9 @@ class DailyTaskRepository {
     }
   }
 
-  Future<List<DailyTaskMasterItem>> getItems() async {
+  Future<List<DailyTaskMasterItem>> getItems({String? query}) async {
     try {
-      final response = await api.getItems();
+      final response = await api.getItems(query: query);
       final data = response['data'];
       if (data == null) return [];
       final list = data is List ? data : [];
@@ -63,9 +63,9 @@ class DailyTaskRepository {
     }
   }
 
-  Future<List<DailyTaskTool>> getTools() async {
+  Future<List<DailyTaskTool>> getTools({String? query}) async {
     try {
-      final response = await api.getTools();
+      final response = await api.getTools(query: query);
       final data = response['data'];
       if (data == null) return [];
       final list = data is List ? data : [];
@@ -80,9 +80,9 @@ class DailyTaskRepository {
     }
   }
 
-  Future<List<DailyTaskChemical>> getChemicals() async {
+  Future<List<DailyTaskChemical>> getChemicals({String? query}) async {
     try {
-      final response = await api.getChemicals();
+      final response = await api.getChemicals(query: query);
       final data = response['data'];
       if (data == null) return [];
       final list = data is List ? data : [];
@@ -97,9 +97,9 @@ class DailyTaskRepository {
     }
   }
 
-  Future<List<DailyTaskPpe>> getPpes() async {
+  Future<List<DailyTaskPpe>> getPpes({String? query}) async {
     try {
-      final response = await api.getPpes();
+      final response = await api.getPpes(query: query);
       final data = response['data'];
       if (data == null) return [];
       final list = data is List ? data : [];
@@ -264,9 +264,9 @@ class DailyTaskRepository {
   // ====================
 
   /// GET /daily-task/assign/employees - Get employees for mobile assignment
-  Future<List<Map<String, dynamic>>> getMobileAssignEmployees() async {
+  Future<List<Map<String, dynamic>>> getMobileAssignEmployees({String? query}) async {
     try {
-      final response = await api.getMobileAssignEmployees();
+      final response = await api.getMobileAssignEmployees(query: query);
       final data = response['data'];
       if (data == null) return [];
       return (data is List ? data : []).map((json) => _toMap(json)).toList();
@@ -280,10 +280,10 @@ class DailyTaskRepository {
     }
   }
 
-  /// POST /daily-task/assign - Assign task using mobile API
+  /// POST /daily-task/assign - Assign task using mobile API (supports multiple employees)
   /// Returns the created assignment data
   Future<Map<String, dynamic>?> mobileAssignTask({
-    required int employeeId,
+    required List<int> employeeIds,
     int? itemId,
     int? areaId,
     int? targetMinutes,
@@ -296,7 +296,7 @@ class DailyTaskRepository {
   }) async {
     try {
       final response = await api.mobileAssignTask(
-        employeeId: employeeId,
+        employeeIds: employeeIds,
         itemId: itemId,
         areaId: areaId,
         targetMinutes: targetMinutes,

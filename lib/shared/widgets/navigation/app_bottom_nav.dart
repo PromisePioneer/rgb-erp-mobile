@@ -30,29 +30,28 @@ class AppBottomNavBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = FTheme.of(context);
-    return SizedBox(
-      height: 80, // Extra height for FAB overlap
+    return Container(
+      height: 64 + MediaQuery.of(context).padding.bottom,
+      decoration: BoxDecoration(
+        color: theme.colors.primary,
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.gray200.withAlpha(128),
+            blurRadius: 8,
+            offset: const Offset(0, -2),
+          ),
+        ],
+      ),
       child: Stack(
         clipBehavior: Clip.none,
         children: [
-          // Bottom nav bar background with FTheme colors
+          // Bottom nav bar items
           Positioned(
             left: 0,
             right: 0,
-            bottom: 0,
-            child: Container(
+            bottom: MediaQuery.of(context).padding.bottom,
+            child: SizedBox(
               height: 64,
-              decoration: BoxDecoration(
-                color: theme.colors.primary,
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-                boxShadow: [
-                  BoxShadow(
-                    color: AppColors.gray200.withAlpha(128),
-                    blurRadius: 8,
-                    offset: const Offset(0, -2),
-                  ),
-                ],
-              ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
@@ -93,11 +92,11 @@ class AppBottomNavBar extends StatelessWidget {
               ),
             ),
           ),
-          // Floating center button (FAB) with FTheme primary
+          // Floating center button (FAB)
           Positioned(
             left: 0,
             right: 0,
-            bottom: 32, // Half of FAB height (64/2) minus overlap
+            bottom: 32 + MediaQuery.of(context).padding.bottom,
             child: Center(
               child: GestureDetector(
                 key: scanButtonKey,
@@ -262,7 +261,6 @@ class _NavItem extends StatelessWidget {
     if (globalKey != null) {
       return Container(key: globalKey, child: widget);
     }
-
     return widget;
   }
 }

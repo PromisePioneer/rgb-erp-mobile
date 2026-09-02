@@ -229,7 +229,12 @@ class _TaskReviewScreenState extends State<TaskReviewScreen> {
       body: _isLoading
           ? const Center(child: LoadingIndicator())
           : ListView(
-              padding: const EdgeInsets.all(AppSpacing.md),
+              padding: EdgeInsets.fromLTRB(
+                AppSpacing.md,
+                AppSpacing.md,
+                AppSpacing.md,
+                AppSpacing.md + 56 + MediaQuery.of(context).padding.bottom,
+              ),
               children: [
                 // Task info card
                 Container(
@@ -315,7 +320,6 @@ class _TaskReviewScreenState extends State<TaskReviewScreen> {
                     onPressed: _submitReview,
                   ),
                 ],
-                const SizedBox(height: AppSpacing.xxl),
               ],
             ),
     );

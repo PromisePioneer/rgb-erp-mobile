@@ -777,43 +777,59 @@ class DailyTaskApi {
  }
 
  /// GET /daily-task/items - Get available task items
- Future<Map<String, dynamic>> getItems() async {
- try {
- final response = await _dio.get(ApiEndpoints.dailyTaskItems);
- return response.data as Map<String, dynamic>;
- } on DioException catch (e) {
- throw ApiException.fromDioException(e);
- }
+ /// Optional: pass q parameter for search
+ Future<Map<String, dynamic>> getItems({String? query}) async {
+  try {
+   final response = await _dio.get(
+    ApiEndpoints.dailyTaskItems,
+    queryParameters: query != null && query.isNotEmpty ? {'q': query} : null,
+   );
+   return response.data as Map<String, dynamic>;
+  } on DioException catch (e) {
+   throw ApiException.fromDioException(e);
+  }
  }
 
  /// GET /daily-task/tools - Get available tools
- Future<Map<String, dynamic>> getTools() async {
- try {
- final response = await _dio.get(ApiEndpoints.dailyTaskTools);
- return response.data as Map<String, dynamic>;
- } on DioException catch (e) {
- throw ApiException.fromDioException(e);
- }
+ /// Optional: pass q parameter for search
+ Future<Map<String, dynamic>> getTools({String? query}) async {
+  try {
+   final response = await _dio.get(
+    ApiEndpoints.dailyTaskTools,
+    queryParameters: query != null && query.isNotEmpty ? {'q': query} : null,
+   );
+   return response.data as Map<String, dynamic>;
+  } on DioException catch (e) {
+   throw ApiException.fromDioException(e);
+  }
  }
 
  /// GET /daily-task/chemicals - Get available chemicals
- Future<Map<String, dynamic>> getChemicals() async {
- try {
- final response = await _dio.get(ApiEndpoints.dailyTaskChemicals);
- return response.data as Map<String, dynamic>;
- } on DioException catch (e) {
- throw ApiException.fromDioException(e);
- }
+ /// Optional: pass q parameter for search
+ Future<Map<String, dynamic>> getChemicals({String? query}) async {
+  try {
+   final response = await _dio.get(
+    ApiEndpoints.dailyTaskChemicals,
+    queryParameters: query != null && query.isNotEmpty ? {'q': query} : null,
+   );
+   return response.data as Map<String, dynamic>;
+  } on DioException catch (e) {
+   throw ApiException.fromDioException(e);
+  }
  }
 
  /// GET /daily-task/ppes - Get available PPEs
- Future<Map<String, dynamic>> getPpes() async {
- try {
- final response = await _dio.get(ApiEndpoints.dailyTaskPpes);
- return response.data as Map<String, dynamic>;
- } on DioException catch (e) {
- throw ApiException.fromDioException(e);
- }
+ /// Optional: pass q parameter for search
+ Future<Map<String, dynamic>> getPpes({String? query}) async {
+  try {
+   final response = await _dio.get(
+    ApiEndpoints.dailyTaskPpes,
+    queryParameters: query != null && query.isNotEmpty ? {'q': query} : null,
+   );
+   return response.data as Map<String, dynamic>;
+  } on DioException catch (e) {
+   throw ApiException.fromDioException(e);
+  }
  }
 
  /// GET /daily-task/history - Get task history
@@ -977,18 +993,22 @@ class DailyTaskApi {
   // ====================
 
   /// GET /daily-task/assign/employees - Get employees that can be assigned tasks
-  Future<Map<String, dynamic>> getMobileAssignEmployees() async {
+  /// Optional: pass q parameter for search
+  Future<Map<String, dynamic>> getMobileAssignEmployees({String? query}) async {
     try {
-      final response = await _dio.get(ApiEndpoints.dailyTaskMobileAssignEmployees);
+      final response = await _dio.get(
+        ApiEndpoints.dailyTaskMobileAssignEmployees,
+        queryParameters: query != null && query.isNotEmpty ? {'q': query} : null,
+      );
       return response.data as Map<String, dynamic>;
     } on DioException catch (e) {
       throw ApiException.fromDioException(e);
     }
   }
 
-  /// POST /daily-task/assign - Assign a task to an employee
+  /// POST /daily-task/assign - Assign a task to employees (supports multiple)
   Future<Map<String, dynamic>> mobileAssignTask({
-    required int employeeId,
+    required List<int> employeeIds,
     int? itemId,
     int? areaId,
     int? targetMinutes,
@@ -1003,7 +1023,7 @@ class DailyTaskApi {
       final response = await _dio.post(
         ApiEndpoints.dailyTaskMobileAssign,
         data: {
-          'employee_id': employeeId,
+          'employee_ids': employeeIds,
           if (itemId != null) 'item_id': itemId,
           if (areaId != null) 'area_id': areaId,
           if (targetMinutes != null) 'target_minutes': targetMinutes,

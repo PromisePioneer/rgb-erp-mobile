@@ -93,25 +93,30 @@ class _DailyTaskListScreenState extends State<DailyTaskListScreen>
           ],
         ),
       ),
-      body: TabBarView(
-        controller: _tabController,
-        children: [
-          _TodayTasksTab(
-            onRefresh: _loadData,
-            isTeamLeader: _canAssignTask,
-          ),
-          _HistoryTasksTab(onRefresh: _loadData),
-        ],
+      body: SafeArea(
+        child: TabBarView(
+          controller: _tabController,
+          children: [
+            _TodayTasksTab(
+              onRefresh: _loadData,
+              isTeamLeader: _canAssignTask,
+            ),
+            _HistoryTasksTab(onRefresh: _loadData),
+          ],
+        ),
       ),
-      floatingActionButton: canAssignTask
-          ? FloatingActionButton.extended(
-              onPressed: () => context.push('/daily-task-assignment/new'),
-              backgroundColor: AppColors.primary,
-              foregroundColor: Colors.white,
-              icon: const Icon(Icons.add),
-              label: const Text('Assign Tugas'),
-            )
-          : null,
+      floatingActionButton: Padding(
+        padding: EdgeInsets.only(bottom: MediaQuery.of(context).padding.bottom),
+        child: canAssignTask
+            ? FloatingActionButton.extended(
+                onPressed: () => context.push('/daily-task-assignment/new'),
+                backgroundColor: AppColors.primary,
+                foregroundColor: Colors.white,
+                icon: const Icon(Icons.add),
+                label: const Text('Assign Tugas'),
+              )
+            : null,
+      ),
     );
   }
 }
