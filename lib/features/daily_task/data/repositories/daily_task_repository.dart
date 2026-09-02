@@ -130,12 +130,17 @@ class DailyTaskRepository {
   Future<DailyTask> startTask({
     required int taskId,
     required List<String> photos,
-    // Tools/Chemicals/PPE sudah di-set oleh TL saat assign
+    List<Map<String, String>>? toolConditions,
+    List<Map<String, String>>? ppeConditions,
+    List<Map<String, String>>? chemicalConditions,
   }) async {
     try {
       final response = await api.startTask(
         taskId: taskId,
         photos: photos,
+        toolConditions: toolConditions,
+        ppeConditions: ppeConditions,
+        chemicalConditions: chemicalConditions,
       );
       final data = response['data'];
       if (data == null) {
@@ -156,12 +161,18 @@ class DailyTaskRepository {
     required int taskId,
     required List<String> photos,
     String? notes,
+    List<Map<String, String>>? toolConditions,
+    List<Map<String, String>>? ppeConditions,
+    List<Map<String, String>>? chemicalConditions,
   }) async {
     try {
       final response = await api.finishTask(
         taskId: taskId,
         photos: photos,
         notes: notes,
+        toolConditions: toolConditions,
+        ppeConditions: ppeConditions,
+        chemicalConditions: chemicalConditions,
       );
       final data = response['data'];
       if (data == null) {
@@ -254,6 +265,56 @@ class DailyTaskRepository {
     } catch (e) {
       throw ApiException(
         message: 'Gagal menghapus tugas: $e',
+        statusCode: 500,
+      );
+    }
+  }
+
+  /// DELETE /daily-task/{id} - Delete/cancel a task (for TL)
+  Future<bool> deleteTask(int taskId) async {
+    try {
+      await api.deleteTask(taskId);
+      return true;
+    } on ApiException {
+      rethrow;
+    } catch (e) {
+      throw ApiException(
+        message: 'Gagal menghapus tugas: $e',
+        statusCode: 500,
+      );
+    }
+  }
+
+  /// PUT /daily-task/{id} - Update a task (for TL)
+  Future<Map<String, dynamic>?> updateTask({
+    required int taskId,
+    List<int>? employeeIds,
+    int? itemId,
+    String? assignedDate,
+    int? targetMinutes,
+    String? notes,
+    List<int>? toolIds,
+    List<int>? chemicalIds,
+    List<int>? ppeIds,
+  }) async {
+    try {
+      final response = await api.updateTask(
+        taskId: taskId,
+        employeeIds: employeeIds,
+        itemId: itemId,
+        assignedDate: assignedDate,
+        targetMinutes: targetMinutes,
+        notes: notes,
+        toolIds: toolIds,
+        chemicalIds: chemicalIds,
+        ppeIds: ppeIds,
+      );
+      return response['data'] as Map<String, dynamic>?;
+    } on ApiException {
+      rethrow;
+    } catch (e) {
+      throw ApiException(
+        message: 'Gagal memperbarui tugas: $e',
         statusCode: 500,
       );
     }

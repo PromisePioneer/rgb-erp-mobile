@@ -234,7 +234,9 @@ class DailyTaskNotifier extends ChangeNotifier {
   Future<bool> startTask({
     required int taskId,
     required List<String> photos,
-    // Tools/Chemicals/PPE sudah di-set oleh TL saat assign
+    List<Map<String, String>>? toolConditions,
+    List<Map<String, String>>? ppeConditions,
+    List<Map<String, String>>? chemicalConditions,
   }) async {
     _isSubmitting = true;
     _error = null;
@@ -244,6 +246,9 @@ class DailyTaskNotifier extends ChangeNotifier {
       final task = await _repository.startTask(
         taskId: taskId,
         photos: photos,
+        toolConditions: toolConditions,
+        ppeConditions: ppeConditions,
+        chemicalConditions: chemicalConditions,
       );
 
       _todayTasks = _todayTasks.map((t) => t.id == taskId ? task : t).toList();
@@ -263,6 +268,9 @@ class DailyTaskNotifier extends ChangeNotifier {
     required int taskId,
     required List<String> photos,
     String? notes,
+    List<Map<String, String>>? toolConditions,
+    List<Map<String, String>>? ppeConditions,
+    List<Map<String, String>>? chemicalConditions,
   }) async {
     _isSubmitting = true;
     _error = null;
@@ -273,6 +281,9 @@ class DailyTaskNotifier extends ChangeNotifier {
         taskId: taskId,
         photos: photos,
         notes: notes,
+        toolConditions: toolConditions,
+        ppeConditions: ppeConditions,
+        chemicalConditions: chemicalConditions,
       );
 
       _todayTasks = _todayTasks.map((t) => t.id == taskId ? task : t).toList();
@@ -354,6 +365,67 @@ class DailyTaskNotifier extends ChangeNotifier {
     try {
       await _repository.deleteAssignment(id);
       _assignments = _assignments.where((a) => a['id'] != id).toList();
+      _isSubmitting = false;
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _isSubmitting = false;
+      _error = e.toString();
+      notifyListeners();
+      return false;
+    }
+  }
+
+  /// Delete a task (for leader to cancel assigned task)
+  Future<bool> deleteTask(int taskId) async {
+    _isSubmitting = true;
+    _error = null;
+    notifyListeners();
+
+    try {
+      final success = await _repository.deleteTask(taskId);
+      if (success) {
+        _assignments = _assignments.where((a) => a['id'] != taskId).toList();
+      }
+      _isSubmitting = false;
+      notifyListeners();
+      return success;
+    } catch (e) {
+      _isSubmitting = false;
+      _error = e.toString();
+      notifyListeners();
+      return false;
+    }
+  }
+
+  /// Update a task (for leader to edit assigned task)
+  Future<bool> updateTask({
+    required int taskId,
+    List<int>? employeeIds,
+    int? itemId,
+    String? assignedDate,
+    int? targetMinutes,
+    String? notes,
+    List<int>? toolIds,
+    List<int>? chemicalIds,
+    List<int>? ppeIds,
+  }) async {
+    _isSubmitting = true;
+    _error = null;
+    notifyListeners();
+
+    try {
+      await _repository.updateTask(
+        taskId: taskId,
+        employeeIds: employeeIds,
+        itemId: itemId,
+        assignedDate: assignedDate,
+        targetMinutes: targetMinutes,
+        notes: notes,
+        toolIds: toolIds,
+        chemicalIds: chemicalIds,
+        ppeIds: ppeIds,
+      );
       _isSubmitting = false;
       notifyListeners();
       return true;

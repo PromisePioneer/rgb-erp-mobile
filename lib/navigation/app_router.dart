@@ -42,6 +42,7 @@ import '../features/report/presentation/screens/report_list_screen.dart';
 import '../features/report/presentation/screens/report_form_screen.dart';
 import '../features/daily_task/presentation/screens/daily_task_list_screen.dart';
 import '../features/daily_task/presentation/screens/task_detail_screen.dart';
+import '../features/daily_task/presentation/screens/task_detail_leader_screen.dart';
 import '../features/daily_task/presentation/screens/task_review_screen.dart';
 import '../features/daily_task/presentation/screens/task_assignment_list_screen.dart';
 import '../features/daily_task/presentation/screens/task_assignment_form_screen.dart';
@@ -163,12 +164,16 @@ void initRouter(AuthNotifier authNotifier) {
                 name: 'daily-task',
                 builder: (context, state) => const DailyTaskListScreen(),
                 routes: [
-                  // Nested parameterized route for task detail
+                  // Employee task detail - with actions
                   GoRoute(
                     path: ':id',
                     name: 'daily-task-detail',
                     builder: (context, state) {
                       final id = int.parse(state.pathParameters['id']!);
+                      final isLeader = state.extra as bool? ?? false;
+                      if (isLeader) {
+                        return TaskDetailLeaderScreen(taskId: id);
+                      }
                       return TaskDetailScreen(taskId: id);
                     },
                     routes: [
@@ -209,7 +214,10 @@ void initRouter(AuthNotifier authNotifier) {
               GoRoute(
                 path: '/daily-task-assignment/new',
                 name: 'task-assignment-new',
-                builder: (context, state) => const TaskAssignmentFormScreen(),
+                builder: (context, state) {
+                  final editData = state.extra as Map<String, dynamic>?;
+                  return TaskAssignmentFormScreen(editData: editData);
+                },
               ),
             ],
           ),

@@ -46,7 +46,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
     // Get NIK from controller (if editing) or from savedNik
     String nik;
-    if (_isEditingNik) {
+    if (_isEditingNik || _nikController.text.isNotEmpty) {
       nik = _nikController.text.trim();
     } else {
       nik = authNotifier.state.savedNik ?? '';

@@ -361,7 +361,13 @@ class _AssignedTaskCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = FTheme.of(context);
 
-    final employeeName = assignment['employee_name'] ?? 'Unknown';
+    // Support both single employee_name and employees array
+    final List<String> employeeNames = _extractEmployeeNames(assignment);
+    final int employeeCount = _getEmployeeCount(assignment);
+    final String displayNames = employeeCount > 2
+        ? '${employeeNames.take(2).join(", ")} +${employeeCount - 2}'
+        : employeeNames.join(", ");
+
     final itemName = assignment['item_name'] ?? assignment['item']?['name'] ?? '-';
     final areaName = assignment['area_name'] ?? assignment['area']?['name'] ?? '-';
     final status = assignment['status'] ?? 'assigned';
@@ -408,16 +414,22 @@ class _AssignedTaskCard extends StatelessWidget {
     final reviewData = assignment['review'] as Map<String, dynamic>?;
     final isReviewed = status == 'reviewed';
 
+    // Team Leader can view task detail regardless of status
+    void onCardTap() {
+      if (canReview) {
+        context.push('/daily-task/$taskId/review', extra: assignment);
+      } else if (isReviewed) {
+        context.push('/daily-task/$taskId/review', extra: assignment);
+      } else {
+        // View task detail for leader (read-only)
+        context.push('/daily-task/$taskId', extra: true);
+      }
+    }
+
     return Card(
       margin: const EdgeInsets.only(bottom: AppSpacing.md),
       child: InkWell(
-        onTap: () {
-          if (canReview) {
-            context.push('/daily-task/$taskId/review', extra: assignment);
-          } else if (isReviewed) {
-            context.push('/daily-task/$taskId/review', extra: assignment);
-          }
-        },
+        onTap: onCardTap,
         borderRadius: AppRadius.radiusLg,
         child: Padding(
           padding: const EdgeInsets.all(AppSpacing.md),
@@ -470,14 +482,34 @@ class _AssignedTaskCard extends StatelessWidget {
                   const SizedBox(width: 4),
                   Expanded(
                     child: Text(
-                      employeeName,
+                      displayNames.isNotEmpty ? displayNames : 'Unknown',
                       style: TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.w600,
                         color: theme.colors.foreground,
                       ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
+                  if (employeeCount > 1) ...[
+                    const SizedBox(width: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: theme.colors.primary.withAlpha(26),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        '$employeeCount orang',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                          color: theme.colors.primary,
+                        ),
+                      ),
+                    ),
+                  ],
                 ],
               ),
               const SizedBox(height: AppSpacing.xs),
@@ -751,6 +783,84 @@ class _AssignedTaskCard extends StatelessWidget {
       ],
     );
   }
+
+  /// Extract employee names from various API response formats
+  List<String> _extractEmployeeNames(Map<String, dynamic> assignment) {
+    // Format 1: employees array with id, name, code (NEW - from myAssignments API)
+    if (assignment.containsKey('employees') && assignment['employees'] != null) {
+      final employees = assignment['employees'];
+      if (employees is List) {
+        return employees
+            .map((e) {
+              if (e is String) return e;
+              if (e is Map) {
+                return e['name'] as String? ?? e['employee_name'] as String? ?? '';
+              }
+              return '';
+            })
+            .where((name) => name.isNotEmpty)
+            .toList();
+      }
+    }
+
+    // Format 2: employee_names array (NEW - from myAssignments API)
+    if (assignment.containsKey('employee_names') && assignment['employee_names'] != null) {
+      final names = assignment['employee_names'];
+      if (names is List) {
+        return names.whereType<String>().toList();
+      }
+    }
+
+    // Format 3: Single employee_name field
+    if (assignment.containsKey('employee_name') && assignment['employee_name'] != null) {
+      final name = assignment['employee_name'];
+      if (name is String) {
+        return [name];
+      }
+    }
+
+    // Format 4: employee object with name
+    if (assignment.containsKey('employee') && assignment['employee'] != null) {
+      final emp = assignment['employee'];
+      if (emp is Map) {
+        final name = emp['name'] as String? ?? emp['employee_name'] as String? ?? '';
+        if (name.isNotEmpty) return [name];
+      }
+    }
+
+    return ['Unknown'];
+  }
+
+  /// Get employee count from assignment
+  int _getEmployeeCount(Map<String, dynamic> assignment) {
+    // Use employee_count if available
+    if (assignment.containsKey('employee_count') && assignment['employee_count'] != null) {
+      return assignment['employee_count'] as int;
+    }
+
+    // Count from employees array
+    if (assignment.containsKey('employees') && assignment['employees'] != null) {
+      final employees = assignment['employees'];
+      if (employees is List) {
+        return employees.length;
+      }
+    }
+
+    // Count from employee_names array
+    if (assignment.containsKey('employee_names') && assignment['employee_names'] != null) {
+      final names = assignment['employee_names'];
+      if (names is List) {
+        return names.length;
+      }
+    }
+
+    // Single employee
+    if (assignment.containsKey('employee_name') && assignment['employee_name'] != null) {
+      return 1;
+    }
+
+    return 1;
+  }
 }
 
 class _HistoryTasksTab extends StatelessWidget {
@@ -904,6 +1014,26 @@ class _DailyTaskCard extends StatelessWidget {
                   color: theme.colors.foreground,
                 ),
               ),
+              if (task.assignedEmployeeNames != null && task.assignedEmployeeNames!.isNotEmpty && task.assignedEmployeeNames!.length > 1) ...[
+                const SizedBox(height: AppSpacing.xs),
+                Row(
+                  children: [
+                    Icon(IconMap.users, size: 14, color: theme.colors.mutedForeground),
+                    const SizedBox(width: 4),
+                    Expanded(
+                      child: Text(
+                        task.assignedEmployeeNames!.take(3).join(', ') + (task.assignedEmployeeNames!.length > 3 ? ' +${task.assignedEmployeeNames!.length - 3}' : ''),
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: theme.colors.mutedForeground,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
               if (task.itemDescription != null) ...[
                 const SizedBox(height: AppSpacing.xs),
                 Text(

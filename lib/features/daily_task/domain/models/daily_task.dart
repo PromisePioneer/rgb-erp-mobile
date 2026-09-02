@@ -18,6 +18,8 @@ class DailyTask {
   final String? notes;
   final String? assignedBy;
   final DateTime? assignedDate;
+  final String? employeeName;
+  final List<String>? assignedEmployeeNames;
 
   DailyTask({
     required this.id,
@@ -38,6 +40,8 @@ class DailyTask {
     this.notes,
     this.assignedBy,
     this.assignedDate,
+    this.employeeName,
+    this.assignedEmployeeNames,
   });
 
   factory DailyTask.fromJson(Map<String, dynamic> json) {
@@ -77,6 +81,10 @@ class DailyTask {
       assignedDate: json['assigned_date'] != null
           ? DateTime.tryParse(json['assigned_date'] as String)
           : null,
+      employeeName: json['employee_name'] as String?,
+      assignedEmployeeNames: (json['employee_names'] as List<dynamic>?)
+          ?.map((e) => e as String)
+          .toList(),
     );
   }
 
@@ -122,13 +130,22 @@ class DailyTaskPhoto {
 class DailyTaskTool {
   final int id;
   final String name;
+  final String? initialCondition;
+  final String? finalCondition;
 
-  DailyTaskTool({required this.id, required this.name});
+  DailyTaskTool({
+    required this.id,
+    required this.name,
+    this.initialCondition,
+    this.finalCondition,
+  });
 
   factory DailyTaskTool.fromJson(Map<String, dynamic> json) {
     return DailyTaskTool(
       id: int.tryParse(json['id']?.toString() ?? '') ?? 0,
       name: json['name'] as String? ?? '',
+      initialCondition: json['initial_condition'] as String?,
+      finalCondition: json['final_condition'] as String?,
     );
   }
 }
@@ -136,13 +153,22 @@ class DailyTaskTool {
 class DailyTaskChemical {
   final int id;
   final String name;
+  final String? initialCondition;
+  final String? finalCondition;
 
-  DailyTaskChemical({required this.id, required this.name});
+  DailyTaskChemical({
+    required this.id,
+    required this.name,
+    this.initialCondition,
+    this.finalCondition,
+  });
 
   factory DailyTaskChemical.fromJson(Map<String, dynamic> json) {
     return DailyTaskChemical(
       id: int.tryParse(json['id']?.toString() ?? '') ?? 0,
       name: json['name'] as String? ?? '',
+      initialCondition: json['initial_condition'] as String?,
+      finalCondition: json['final_condition'] as String?,
     );
   }
 }
@@ -150,13 +176,22 @@ class DailyTaskChemical {
 class DailyTaskPpe {
   final int id;
   final String name;
+  final String? initialCondition;
+  final String? finalCondition;
 
-  DailyTaskPpe({required this.id, required this.name});
+  DailyTaskPpe({
+    required this.id,
+    required this.name,
+    this.initialCondition,
+    this.finalCondition,
+  });
 
   factory DailyTaskPpe.fromJson(Map<String, dynamic> json) {
     return DailyTaskPpe(
       id: int.tryParse(json['id']?.toString() ?? '') ?? 0,
       name: json['name'] as String? ?? '',
+      initialCondition: json['initial_condition'] as String?,
+      finalCondition: json['final_condition'] as String?,
     );
   }
 }

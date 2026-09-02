@@ -10,6 +10,7 @@ import '../../../../core/core.dart';
 import '../../../../shared/widgets/buttons/primary_button.dart';
 import '../../../../shared/widgets/feedback/loading_indicator.dart';
 import '../../../../shared/widgets/icons/forui_icon_map.dart';
+import '../../../../shared/widgets/inputs/app_text_field.dart';
 import '../../domain/models/daily_task.dart';
 import '../providers/daily_task_provider.dart';
 
@@ -32,6 +33,16 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
   // Form state for finish - multiple photos
   final List<String> _afterPhotoPaths = [];
   final _notesController = TextEditingController();
+
+  // Condition tracking state
+  // For tools and PPEs: excellent, good, fair, poor, replace
+  // For chemicals: full, half, low
+  Map<int, String> _initialToolConditions = {};
+  Map<int, String> _initialPpeConditions = {};
+  Map<int, String> _initialChemicalConditions = {};
+  Map<int, String> _finalToolConditions = {};
+  Map<int, String> _finalPpeConditions = {};
+  Map<int, String> _finalChemicalConditions = {};
 
   @override
   void initState() {
@@ -186,17 +197,100 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
     );
   }
 
+  /// Validate that final condition is not better than initial condition
+  /// Order: excellent > good > fair > poor > replace
+  String? _validateConditionProgression() {
+    final task = context.read<DailyTaskNotifier>().selectedTask;
+    if (task == null) return null;
+
+    // Helper to compare conditions
+    int conditionRank(String? condition) {
+      switch (condition) {
+        case 'excellent': return 5; // SB
+        case 'good': return 4;       // B
+        case 'fair': return 3;       // CB
+        case 'poor': return 2;        // KB
+        case 'replace': return 1;     // Ganti
+        default: return 0;
+      }
+    }
+
+    // Check tools
+    if (task.tools != null) {
+      for (final tool in task.tools!) {
+        final initial = _initialToolConditions[tool.id];
+        final finalCond = _finalToolConditions[tool.id];
+        if (initial != null && finalCond != null) {
+          if (conditionRank(finalCond) > conditionRank(initial)) {
+            return 'Kondisi akhir ${tool.name} tidak boleh lebih baik dari kondisi awal.\n'
+                'Contoh: Jika kondisi awal CB, tidak boleh pilih SB atau B.';
+          }
+        }
+      }
+    }
+
+    // Check PPEs
+    if (task.ppes != null) {
+      for (final ppe in task.ppes!) {
+        final initial = _initialPpeConditions[ppe.id];
+        final finalCond = _finalPpeConditions[ppe.id];
+        if (initial != null && finalCond != null) {
+          if (conditionRank(finalCond) > conditionRank(initial)) {
+            return 'Kondisi akhir ${ppe.name} tidak boleh lebih baik dari kondisi awal.';
+          }
+        }
+      }
+    }
+
+    return null;
+  }
+
   Future<void> _handleStartTask() async {
     if (_beforePhotoPaths.isEmpty) {
       _showErrorDialog('Foto Sebelum', 'Silakan ambil foto sebelum bekerja.');
       return;
     }
 
+    // Get task to check if there are tools/chemicals/ppes that need conditions
+    final task = context.read<DailyTaskNotifier>().selectedTask;
+    final hasItems = (task?.tools?.isNotEmpty ?? false) ||
+        (task?.chemicals?.isNotEmpty ?? false) ||
+        (task?.ppes?.isNotEmpty ?? false);
+
+    // Validate conditions if there are items
+    if (hasItems) {
+      final hasToolConditions = _initialToolConditions.isNotEmpty;
+      final hasPpeConditions = _initialPpeConditions.isNotEmpty;
+      final hasChemicalConditions = _initialChemicalConditions.isNotEmpty;
+
+      if (!hasToolConditions && !hasPpeConditions && !hasChemicalConditions) {
+        _showErrorDialog('Kondisi Awal', 'Silakan pilih kondisi alat, APD, dan chemical sebelum bekerja.');
+        return;
+      }
+    }
+
+    // Build condition data for tools
+    final toolConditions = _initialToolConditions.entries
+        .map((e) => {'product_id': e.key.toString(), 'condition': e.value})
+        .toList();
+
+    // Build condition data for PPEs
+    final ppeConditions = _initialPpeConditions.entries
+        .map((e) => {'product_id': e.key.toString(), 'condition': e.value})
+        .toList();
+
+    // Build condition data for chemicals
+    final chemicalConditions = _initialChemicalConditions.entries
+        .map((e) => {'product_id': e.key.toString(), 'condition': e.value})
+        .toList();
+
     final notifier = context.read<DailyTaskNotifier>();
-    // Tools/Chemicals/PPE sudah di-set oleh TL saat assign, employee cukup upload foto saja
     final success = await notifier.startTask(
       taskId: widget.taskId,
       photos: _beforePhotoPaths,
+      toolConditions: toolConditions.isNotEmpty ? toolConditions : null,
+      ppeConditions: ppeConditions.isNotEmpty ? ppeConditions : null,
+      chemicalConditions: chemicalConditions.isNotEmpty ? chemicalConditions : null,
     );
 
     if (!mounted) return;
@@ -214,11 +308,36 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
       return;
     }
 
+    // Validate final conditions are not better than initial conditions
+    final validationError = _validateConditionProgression();
+    if (validationError != null) {
+      _showErrorDialog('Kondisi Tidak Valid', validationError);
+      return;
+    }
+
+    // Build condition data for tools
+    final toolConditions = _finalToolConditions.entries
+        .map((e) => {'product_id': e.key.toString(), 'condition': e.value})
+        .toList();
+
+    // Build condition data for PPEs
+    final ppeConditions = _finalPpeConditions.entries
+        .map((e) => {'product_id': e.key.toString(), 'condition': e.value})
+        .toList();
+
+    // Build condition data for chemicals
+    final chemicalConditions = _finalChemicalConditions.entries
+        .map((e) => {'product_id': e.key.toString(), 'condition': e.value})
+        .toList();
+
     final notifier = context.read<DailyTaskNotifier>();
     final success = await notifier.finishTask(
       taskId: widget.taskId,
       photos: _afterPhotoPaths,
       notes: _notesController.text.isEmpty ? null : _notesController.text,
+      toolConditions: toolConditions.isNotEmpty ? toolConditions : null,
+      ppeConditions: ppeConditions.isNotEmpty ? ppeConditions : null,
+      chemicalConditions: chemicalConditions.isNotEmpty ? chemicalConditions : null,
     );
 
     if (!mounted) return;
@@ -329,7 +448,12 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
           return Stack(
             children: [
               ListView(
-                padding: const EdgeInsets.all(AppSpacing.md),
+                padding: EdgeInsets.fromLTRB(
+                  AppSpacing.md,
+                  AppSpacing.md,
+                  AppSpacing.md,
+                  AppSpacing.md + MediaQuery.of(context).padding.bottom + 80,
+                ),
                 children: [
                   // Task info card
                   _buildTaskInfoCard(task, theme),
@@ -337,8 +461,7 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
 
                   // Form based on status
                   if (task.canStart) ...[
-                    // Start form - employee cukup upload foto saja
-                    // Tools/Chemicals/PPE sudah di-set oleh TL saat assign
+                    // Start form - employee perlu input kondisi awal alat & bahan
                     _buildPhotoSection(
                       label: 'Foto Sebelum',
                       photoPaths: _beforePhotoPaths,
@@ -348,11 +471,11 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
                     ),
                     const SizedBox(height: AppSpacing.md),
 
-                    // Show assigned tools/chemicals/ppes (read-only info)
+                    // Show tools/chemicals/ppes with condition selection (initial)
                     if ((task.tools?.isNotEmpty ?? false) ||
                         (task.chemicals?.isNotEmpty ?? false) ||
                         (task.ppes?.isNotEmpty ?? false)) ...[
-                      _buildAssignedItemsInfo(task, theme),
+                      _buildInitialConditionSection(task, theme),
                       const SizedBox(height: AppSpacing.md),
                     ],
 
@@ -383,6 +506,10 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
                         (task.ppes?.isNotEmpty ?? false)) ...[
                       _buildUsedItemsPreview(task, theme),
                       const SizedBox(height: AppSpacing.md),
+
+                      // Final condition selection
+                      _buildFinalConditionSection(task, theme),
+                      const SizedBox(height: AppSpacing.md),
                     ],
 
                     _buildPhotoSection(
@@ -408,22 +535,10 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
                           ),
                         ),
                         const SizedBox(height: AppSpacing.sm),
-                        TextField(
+                        AppTextField(
                           controller: _notesController,
+                          hint: 'Tambahkan catatan...',
                           maxLines: 3,
-                          decoration: InputDecoration(
-                            hintText: 'Tambahkan catatan...',
-                            hintStyle:
-                                TextStyle(color: theme.colors.mutedForeground),
-                            filled: true,
-                            fillColor: theme.colors.card,
-                            border: OutlineInputBorder(
-                              borderRadius: AppRadius.radiusMd,
-                              borderSide: BorderSide.none,
-                            ),
-                            contentPadding:
-                                const EdgeInsets.all(AppSpacing.md),
-                          ),
                         ),
                       ],
                     ),
@@ -439,8 +554,6 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
                     // Read-only view (completed/reviewed)
                     _buildReadOnlyView(task, theme),
                   ],
-
-                  const SizedBox(height: AppSpacing.xxl),
                 ],
               ),
 
@@ -1305,6 +1418,367 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
         style: TextStyle(
           fontSize: 12,
           color: AppColors.primary,
+        ),
+      ),
+    );
+  }
+
+  /// Build initial condition selection section (shown when starting task)
+  Widget _buildInitialConditionSection(DailyTask task, FThemeData theme) {
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: theme.colors.card,
+        borderRadius: AppRadius.radiusMd,
+        border: Border.all(color: AppColors.primary.withAlpha(77)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(IconMap.checklist, size: 16, color: AppColors.primary),
+              const SizedBox(width: 6),
+              Text(
+                'Kondisi Awal Alat & Bahan',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.primary,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          Text(
+            'Pilih kondisi alat, APD, dan chemical sebelum mulai bekerja',
+            style: TextStyle(
+              fontSize: 12,
+              color: theme.colors.mutedForeground,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.md),
+
+          // Tools condition
+          if (task.tools?.isNotEmpty ?? false) ...[
+            _buildConditionSectionHeader('Alat', IconMap.build, theme),
+            const SizedBox(height: AppSpacing.xs),
+            ...task.tools!.map((t) => _buildToolConditionSelector(
+              itemId: t.id,
+              itemName: t.name,
+              selectedCondition: _initialToolConditions[t.id],
+              onChanged: (condition) {
+                setState(() {
+                  _initialToolConditions[t.id] = condition;
+                });
+              },
+              theme: theme,
+            )),
+            const SizedBox(height: AppSpacing.sm),
+          ],
+
+          // PPEs condition
+          if (task.ppes?.isNotEmpty ?? false) ...[
+            _buildConditionSectionHeader('Alat Pelindung Diri (APD)', IconMap.shieldCheck, theme),
+            const SizedBox(height: AppSpacing.xs),
+            ...task.ppes!.map((p) => _buildToolConditionSelector(
+              itemId: p.id,
+              itemName: p.name,
+              selectedCondition: _initialPpeConditions[p.id],
+              onChanged: (condition) {
+                setState(() {
+                  _initialPpeConditions[p.id] = condition;
+                });
+              },
+              theme: theme,
+            )),
+            const SizedBox(height: AppSpacing.sm),
+          ],
+
+          // Chemicals condition
+          if (task.chemicals?.isNotEmpty ?? false) ...[
+            _buildConditionSectionHeader('Chemical', IconMap.flaskConical, theme),
+            const SizedBox(height: AppSpacing.xs),
+            ...task.chemicals!.map((c) => _buildChemicalConditionSelector(
+              chemical: c,
+              selectedCondition: _initialChemicalConditions[c.id],
+              onChanged: (condition) {
+                setState(() {
+                  _initialChemicalConditions[c.id] = condition;
+                });
+              },
+              theme: theme,
+            )),
+          ],
+        ],
+      ),
+    );
+  }
+
+  /// Build final condition selection section (shown when finishing task)
+  Widget _buildFinalConditionSection(DailyTask task, FThemeData theme) {
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: theme.colors.card,
+        borderRadius: AppRadius.radiusMd,
+        border: Border.all(color: AppColors.warning.withAlpha(77)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(IconMap.checklist, size: 16, color: AppColors.warning),
+              const SizedBox(width: 6),
+              Text(
+                'Kondisi Akhir Alat & Bahan',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.warning,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          Text(
+            'Pilih kondisi alat, APD, dan chemical setelah selesai bekerja',
+            style: TextStyle(
+              fontSize: 12,
+              color: theme.colors.mutedForeground,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.md),
+
+          // Tools condition
+          if (task.tools?.isNotEmpty ?? false) ...[
+            _buildConditionSectionHeader('Alat', IconMap.build, theme),
+            const SizedBox(height: AppSpacing.xs),
+            ...task.tools!.map((t) => _buildToolConditionSelector(
+              itemId: t.id,
+              itemName: t.name,
+              selectedCondition: _finalToolConditions[t.id],
+              onChanged: (condition) {
+                setState(() {
+                  _finalToolConditions[t.id] = condition;
+                });
+              },
+              theme: theme,
+            )),
+            const SizedBox(height: AppSpacing.sm),
+          ],
+
+          // PPEs condition
+          if (task.ppes?.isNotEmpty ?? false) ...[
+            _buildConditionSectionHeader('Alat Pelindung Diri (APD)', IconMap.shieldCheck, theme),
+            const SizedBox(height: AppSpacing.xs),
+            ...task.ppes!.map((p) => _buildToolConditionSelector(
+              itemId: p.id,
+              itemName: p.name,
+              selectedCondition: _finalPpeConditions[p.id],
+              onChanged: (condition) {
+                setState(() {
+                  _finalPpeConditions[p.id] = condition;
+                });
+              },
+              theme: theme,
+            )),
+            const SizedBox(height: AppSpacing.sm),
+          ],
+
+          // Chemicals condition
+          if (task.chemicals?.isNotEmpty ?? false) ...[
+            _buildConditionSectionHeader('Chemical', IconMap.flaskConical, theme),
+            const SizedBox(height: AppSpacing.xs),
+            ...task.chemicals!.map((c) => _buildChemicalConditionSelector(
+              chemical: c,
+              selectedCondition: _finalChemicalConditions[c.id],
+              onChanged: (condition) {
+                setState(() {
+                  _finalChemicalConditions[c.id] = condition;
+                });
+              },
+              theme: theme,
+            )),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildConditionSectionHeader(String title, IconData icon, FThemeData theme) {
+    return Row(
+      children: [
+        Icon(icon, size: 14, color: theme.colors.mutedForeground),
+        const SizedBox(width: 4),
+        Text(
+          title,
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w500,
+            color: theme.colors.mutedForeground,
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// Build condition selector for tools/APD (excellent, good, fair, poor, replace)
+  Widget _buildToolConditionSelector({
+    required int itemId,
+    required String itemName,
+    required String? selectedCondition,
+    required void Function(String) onChanged,
+    required FThemeData theme,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.only(top: AppSpacing.xs),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            itemName,
+            style: TextStyle(
+              fontSize: 13,
+              color: theme.colors.foreground,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Wrap(
+            spacing: AppSpacing.xs,
+            runSpacing: AppSpacing.xs,
+            children: [
+              _buildConditionChip(
+                label: 'SB (100%-85%)',
+                value: 'excellent',
+                isSelected: selectedCondition == 'excellent',
+                onTap: () => onChanged('excellent'),
+                theme: theme,
+              ),
+              _buildConditionChip(
+                label: 'B (85%-65%)',
+                value: 'good',
+                isSelected: selectedCondition == 'good',
+                onTap: () => onChanged('good'),
+                theme: theme,
+              ),
+              _buildConditionChip(
+                label: 'CB (65%-45%)',
+                value: 'fair',
+                isSelected: selectedCondition == 'fair',
+                onTap: () => onChanged('fair'),
+                theme: theme,
+              ),
+              _buildConditionChip(
+                label: 'KB (45%-25%)',
+                value: 'poor',
+                isSelected: selectedCondition == 'poor',
+                onTap: () => onChanged('poor'),
+                theme: theme,
+              ),
+              _buildConditionChip(
+                label: 'Ganti (<25%)',
+                value: 'replace',
+                isSelected: selectedCondition == 'replace',
+                onTap: () => onChanged('replace'),
+                theme: theme,
+                isWarning: true,
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Build condition selector for chemicals (full, half, low)
+  Widget _buildChemicalConditionSelector({
+    required DailyTaskChemical chemical,
+    required String? selectedCondition,
+    required void Function(String) onChanged,
+    required FThemeData theme,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.only(top: AppSpacing.xs),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            chemical.name,
+            style: TextStyle(
+              fontSize: 13,
+              color: theme.colors.foreground,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Wrap(
+            spacing: AppSpacing.xs,
+            runSpacing: AppSpacing.xs,
+            children: [
+              _buildConditionChip(
+                label: 'Full (100%)',
+                value: 'full',
+                isSelected: selectedCondition == 'full',
+                onTap: () => onChanged('full'),
+                theme: theme,
+              ),
+              _buildConditionChip(
+                label: 'Setengah (50%)',
+                value: 'half',
+                isSelected: selectedCondition == 'half',
+                onTap: () => onChanged('half'),
+                theme: theme,
+              ),
+              _buildConditionChip(
+                label: 'Sedikit (30%)',
+                value: 'low',
+                isSelected: selectedCondition == 'low',
+                onTap: () => onChanged('low'),
+                theme: theme,
+                isWarning: true,
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildConditionChip({
+    required String label,
+    required String value,
+    required bool isSelected,
+    required VoidCallback onTap,
+    required FThemeData theme,
+    bool isWarning = false,
+  }) {
+    final bgColor = isSelected
+        ? (isWarning ? AppColors.warning : AppColors.primary).withAlpha(51)
+        : theme.colors.muted;
+    final borderColor = isSelected
+        ? (isWarning ? AppColors.warning : AppColors.primary)
+        : theme.colors.border;
+    final textColor = isSelected
+        ? (isWarning ? AppColors.warning : AppColors.primary)
+        : theme.colors.mutedForeground;
+
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        decoration: BoxDecoration(
+          color: bgColor,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: borderColor),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: 11,
+            fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+            color: textColor,
+          ),
         ),
       ),
     );

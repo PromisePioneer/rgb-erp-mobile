@@ -203,6 +203,79 @@ class _TaskReviewScreenState extends State<TaskReviewScreen> {
     }
   }
 
+  /// Extract employee names from various API response formats
+  List<String> _extractEmployeeNames() {
+    final taskData = widget.taskData;
+
+    // Format 1: employees array with id, name, code
+    if (taskData.containsKey('employees') && taskData['employees'] != null) {
+      final employees = taskData['employees'];
+      if (employees is List) {
+        return employees
+            .map((e) {
+              if (e is String) return e;
+              if (e is Map) {
+                return e['name'] as String? ?? e['employee_name'] as String? ?? '';
+              }
+              return '';
+            })
+            .where((name) => name.isNotEmpty)
+            .toList();
+      }
+    }
+
+    // Format 2: employee_names array
+    if (taskData.containsKey('employee_names') && taskData['employee_names'] != null) {
+      final names = taskData['employee_names'];
+      if (names is List) {
+        return names.whereType<String>().toList();
+      }
+    }
+
+    // Format 3: Single employee_name field
+    if (taskData.containsKey('employee_name') && taskData['employee_name'] != null) {
+      final name = taskData['employee_name'];
+      if (name is String) {
+        return [name];
+      }
+    }
+
+    return [];
+  }
+
+  /// Get employee count from task data
+  int _getEmployeeCount() {
+    final taskData = widget.taskData;
+
+    // Use employee_count if available
+    if (taskData.containsKey('employee_count') && taskData['employee_count'] != null) {
+      return taskData['employee_count'] as int;
+    }
+
+    // Count from employees array
+    if (taskData.containsKey('employees') && taskData['employees'] != null) {
+      final employees = taskData['employees'];
+      if (employees is List) {
+        return employees.length;
+      }
+    }
+
+    // Count from employee_names array
+    if (taskData.containsKey('employee_names') && taskData['employee_names'] != null) {
+      final names = taskData['employee_names'];
+      if (names is List) {
+        return names.length;
+      }
+    }
+
+    // Single employee
+    if (taskData.containsKey('employee_name') && taskData['employee_name'] != null) {
+      return 1;
+    }
+
+    return 1;
+  }
+
   ReviewData? _getReviewData() {
     final reviewJson = widget.taskData['review'];
     if (reviewJson == null) return null;
@@ -213,10 +286,16 @@ class _TaskReviewScreenState extends State<TaskReviewScreen> {
   Widget build(BuildContext context) {
     final theme = FTheme.of(context);
     final taskName = widget.taskData['item_name'] ?? widget.taskData['employee_name'] ?? 'Tugas';
-    final employeeName = widget.taskData['employee_name'];
     final status = widget.taskData['status'] as String? ?? 'completed';
     final isReviewed = status == 'reviewed';
     final reviewData = _getReviewData();
+
+    // Extract all employee names
+    final employeeNames = _extractEmployeeNames();
+    final employeeCount = _getEmployeeCount();
+    final displayNames = employeeCount > 2
+        ? '${employeeNames.take(2).join(", ")} +${employeeCount - 2}'
+        : employeeNames.join(", ");
 
     return Scaffold(
       backgroundColor: theme.colors.muted,
@@ -246,19 +325,39 @@ class _TaskReviewScreenState extends State<TaskReviewScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      if (employeeName != null) ...[
+                      if (employeeNames.isNotEmpty) ...[
                         Row(
                           children: [
-                            Icon(IconMap.person, size: 18, color: theme.colors.primary),
+                            Icon(employeeCount > 1 ? IconMap.users : IconMap.person, size: 18, color: theme.colors.primary),
                             const SizedBox(width: 8),
-                            Text(
-                              employeeName,
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
-                                color: theme.colors.foreground,
+                            Expanded(
+                              child: Text(
+                                displayNames,
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                  color: theme.colors.foreground,
+                                ),
                               ),
                             ),
+                            if (employeeCount > 1) ...[
+                              const SizedBox(width: 8),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                decoration: BoxDecoration(
+                                  color: theme.colors.primary.withAlpha(26),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Text(
+                                  '$employeeCount orang',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w500,
+                                    color: theme.colors.primary,
+                                  ),
+                                ),
+                              ),
+                            ],
                           ],
                         ),
                         const SizedBox(height: AppSpacing.sm),
@@ -731,7 +830,7 @@ class _TaskReviewScreenState extends State<TaskReviewScreen> {
       children: [
         if (tools.isNotEmpty) ...[
           _buildUsedItemsCard(
-            label: 'ALAT DIGUNAKAN',
+            label: 'ALAT & APD',
             items: tools,
             theme: theme,
             icon: IconMap.build,
@@ -740,19 +839,11 @@ class _TaskReviewScreenState extends State<TaskReviewScreen> {
         ],
         if (chemicals.isNotEmpty) ...[
           _buildUsedItemsCard(
-            label: 'CHEMICAL DIGUNAKAN',
+            label: 'CHEMICAL',
             items: chemicals,
             theme: theme,
             icon: IconMap.flaskConical,
-          ),
-          const SizedBox(height: AppSpacing.sm),
-        ],
-        if (ppes.isNotEmpty) ...[
-          _buildUsedItemsCard(
-            label: 'ALAT PELINDUNG DIRI',
-            items: ppes,
-            theme: theme,
-            icon: IconMap.shieldCheck,
+            isChemical: true,
           ),
         ],
       ],
@@ -764,6 +855,7 @@ class _TaskReviewScreenState extends State<TaskReviewScreen> {
     required List<dynamic> items,
     required FThemeData theme,
     required IconData icon,
+    bool isChemical = false,
   }) {
     return Container(
       padding: const EdgeInsets.all(AppSpacing.md),
@@ -790,35 +882,115 @@ class _TaskReviewScreenState extends State<TaskReviewScreen> {
             ],
           ),
           const SizedBox(height: AppSpacing.sm),
-          Wrap(
-            spacing: AppSpacing.xs,
-            runSpacing: AppSpacing.xs,
-            children: items.map((item) {
-              final name = item['name']?.toString() ?? 'Unknown';
-              return Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: AppSpacing.sm,
-                  vertical: AppSpacing.xs,
-                ),
-                decoration: BoxDecoration(
-                  color: AppColors.primary.withAlpha(26),
-                  borderRadius: BorderRadius.circular(AppSpacing.xs),
-                  border: Border.all(color: AppColors.primary.withAlpha(51)),
-                ),
-                child: Text(
-                  name,
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: AppColors.primary,
-                    fontWeight: FontWeight.w500,
+          ...items.map((item) {
+            final name = item['name']?.toString() ?? 'Unknown';
+            final initialCondition = item['initial_condition'] as String?;
+            final finalCondition = item['final_condition'] as String?;
+
+            return Padding(
+              padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          name,
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: theme.colors.foreground,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                ),
-              );
-            }).toList(),
-          ),
+                  const SizedBox(height: 4),
+                  // Show conditions
+                  Row(
+                    children: [
+                      // Initial condition
+                      if (initialCondition != null) ...[
+                        _buildConditionBadge(
+                          label: 'Awal: ${_formatCondition(initialCondition)}',
+                          color: AppColors.warning,
+                          theme: theme,
+                        ),
+                        const SizedBox(width: 8),
+                      ],
+                      // Final condition
+                      if (finalCondition != null) ...[
+                        _buildConditionBadge(
+                          label: 'Akhir: ${_formatCondition(finalCondition)}',
+                          color: AppColors.success,
+                          theme: theme,
+                        ),
+                      ],
+                      // Show "Belum diinput" if no conditions
+                      if (initialCondition == null && finalCondition == null)
+                        Text(
+                          'Belum ada kondisi tercatat',
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: theme.colors.mutedForeground,
+                            fontStyle: FontStyle.italic,
+                          ),
+                        ),
+                    ],
+                  ),
+                ],
+              ),
+            );
+          }),
         ],
       ),
     );
+  }
+
+  Widget _buildConditionBadge({
+    required String label,
+    required Color color,
+    required FThemeData theme,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: color.withAlpha(26),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: color.withAlpha(77)),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          fontSize: 11,
+          fontWeight: FontWeight.w500,
+          color: color,
+        ),
+      ),
+    );
+  }
+
+  String _formatCondition(String condition) {
+    switch (condition) {
+      case 'excellent':
+        return 'SB (100-85%)';
+      case 'good':
+        return 'B (85-65%)';
+      case 'fair':
+        return 'CB (65-45%)';
+      case 'poor':
+        return 'KB (45-25%)';
+      case 'replace':
+        return 'Ganti (<25%)';
+      case 'full':
+        return 'Full (100%)';
+      case 'half':
+        return 'Setengah (50%)';
+      case 'low':
+        return 'Sedikit (30%)';
+      default:
+        return condition;
+    }
   }
 
   Widget _buildCriteriaRating(ReviewCriteria criteria, FThemeData theme) {

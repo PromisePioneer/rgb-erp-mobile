@@ -68,4 +68,9 @@ class IconMap {
   // Additional icons for Daily Task
   static IconData flaskConical = FLucideIcons.flaskConical;
   static IconData shieldCheck = FLucideIcons.shieldCheck;
+  static IconData chevronLeft = FLucideIcons.chevronLeft;
+  static IconData pencil = FLucideIcons.pencil;
+  static IconData users = FLucideIcons.users;
+  static IconData camera = FLucideIcons.camera;
+  static IconData trash = FLucideIcons.trash;
 }

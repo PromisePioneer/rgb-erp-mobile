@@ -846,10 +846,13 @@ class DailyTaskApi {
  }
 
  /// POST /daily-task/{id}/start - Start a task
- /// Tools/Chemicals/PPE sudah di-set oleh TL saat assign
+ /// Include initial conditions for tools, ppes, and chemicals
  Future<Map<String, dynamic>> startTask({
  required int taskId,
  required List<String> photos,
+ List<Map<String, String>>? toolConditions,
+ List<Map<String, String>>? ppeConditions,
+ List<Map<String, String>>? chemicalConditions,
  }) async {
  try {
  final formData = FormData();
@@ -869,6 +872,48 @@ class DailyTaskApi {
  }
  }
 
+ // Add tool conditions
+ if (toolConditions != null && toolConditions.isNotEmpty) {
+ for (int i = 0; i < toolConditions.length; i++) {
+ formData.fields.add(MapEntry(
+ 'tool_conditions[$i][product_id]',
+ toolConditions[i]['product_id']!,
+ ));
+ formData.fields.add(MapEntry(
+ 'tool_conditions[$i][condition]',
+ toolConditions[i]['condition']!,
+ ));
+ }
+ }
+
+ // Add PPE conditions
+ if (ppeConditions != null && ppeConditions.isNotEmpty) {
+ for (int i = 0; i < ppeConditions.length; i++) {
+ formData.fields.add(MapEntry(
+ 'ppe_conditions[$i][product_id]',
+ ppeConditions[i]['product_id']!,
+ ));
+ formData.fields.add(MapEntry(
+ 'ppe_conditions[$i][condition]',
+ ppeConditions[i]['condition']!,
+ ));
+ }
+ }
+
+ // Add chemical conditions
+ if (chemicalConditions != null && chemicalConditions.isNotEmpty) {
+ for (int i = 0; i < chemicalConditions.length; i++) {
+ formData.fields.add(MapEntry(
+ 'chemical_conditions[$i][product_id]',
+ chemicalConditions[i]['product_id']!,
+ ));
+ formData.fields.add(MapEntry(
+ 'chemical_conditions[$i][condition]',
+ chemicalConditions[i]['condition']!,
+ ));
+ }
+ }
+
  final response = await _dio.post(
  '${ApiEndpoints.dailyTask}/$taskId/start',
  data: formData,
@@ -883,10 +928,14 @@ class DailyTaskApi {
  }
 
   /// POST /daily-task/{id}/finish - Finish a task
+  /// Include final conditions for tools, ppes, and chemicals
   Future<Map<String, dynamic>> finishTask({
     required int taskId,
     required List<String> photos,
     String? notes,
+    List<Map<String, String>>? toolConditions,
+    List<Map<String, String>>? ppeConditions,
+    List<Map<String, String>>? chemicalConditions,
   }) async {
     try {
       final formData = FormData();
@@ -909,6 +958,48 @@ class DailyTaskApi {
       // Add notes
       if (notes != null && notes.isNotEmpty) {
         formData.fields.add(MapEntry('notes', notes));
+      }
+
+      // Add tool conditions
+      if (toolConditions != null && toolConditions.isNotEmpty) {
+        for (int i = 0; i < toolConditions.length; i++) {
+          formData.fields.add(MapEntry(
+            'tool_conditions[$i][product_id]',
+            toolConditions[i]['product_id']!,
+          ));
+          formData.fields.add(MapEntry(
+            'tool_conditions[$i][condition]',
+            toolConditions[i]['condition']!,
+          ));
+        }
+      }
+
+      // Add PPE conditions
+      if (ppeConditions != null && ppeConditions.isNotEmpty) {
+        for (int i = 0; i < ppeConditions.length; i++) {
+          formData.fields.add(MapEntry(
+            'ppe_conditions[$i][product_id]',
+            ppeConditions[i]['product_id']!,
+          ));
+          formData.fields.add(MapEntry(
+            'ppe_conditions[$i][condition]',
+            ppeConditions[i]['condition']!,
+          ));
+        }
+      }
+
+      // Add chemical conditions
+      if (chemicalConditions != null && chemicalConditions.isNotEmpty) {
+        for (int i = 0; i < chemicalConditions.length; i++) {
+          formData.fields.add(MapEntry(
+            'chemical_conditions[$i][product_id]',
+            chemicalConditions[i]['product_id']!,
+          ));
+          formData.fields.add(MapEntry(
+            'chemical_conditions[$i][condition]',
+            chemicalConditions[i]['condition']!,
+          ));
+        }
       }
 
       final response = await _dio.post(
@@ -982,6 +1073,49 @@ class DailyTaskApi {
   Future<Map<String, dynamic>> deleteAssignment(int id) async {
     try {
       final response = await _dio.delete('${ApiEndpoints.dailyTaskAssignments}/$id');
+      return response.data as Map<String, dynamic>;
+    } on DioException catch (e) {
+      throw ApiException.fromDioException(e);
+    }
+  }
+
+  /// DELETE /daily-task/{id} - Delete/cancel a task (for TL)
+  Future<Map<String, dynamic>> deleteTask(int taskId) async {
+    try {
+      final response = await _dio.delete('${ApiEndpoints.dailyTask}/$taskId');
+      return response.data as Map<String, dynamic>;
+    } on DioException catch (e) {
+      throw ApiException.fromDioException(e);
+    }
+  }
+
+  /// PUT /daily-task/{id} - Update a task (for TL)
+  Future<Map<String, dynamic>> updateTask({
+    required int taskId,
+    List<int>? employeeIds,
+    int? itemId,
+    String? assignedDate,
+    int? targetMinutes,
+    String? notes,
+    List<int>? toolIds,
+    List<int>? chemicalIds,
+    List<int>? ppeIds,
+  }) async {
+    try {
+      final data = <String, dynamic>{};
+      if (employeeIds != null) data['employee_ids'] = employeeIds;
+      if (itemId != null) data['item_id'] = itemId;
+      if (assignedDate != null) data['assigned_date'] = assignedDate;
+      if (targetMinutes != null) data['target_minutes'] = targetMinutes;
+      if (notes != null) data['notes'] = notes;
+      if (toolIds != null) data['tool_ids'] = toolIds;
+      if (chemicalIds != null) data['chemical_ids'] = chemicalIds;
+      if (ppeIds != null) data['ppe_ids'] = ppeIds;
+
+      final response = await _dio.put(
+        '${ApiEndpoints.dailyTask}/$taskId',
+        data: data,
+      );
       return response.data as Map<String, dynamic>;
     } on DioException catch (e) {
       throw ApiException.fromDioException(e);

@@ -36,6 +36,8 @@ class AsyncSelectField extends StatefulWidget {
   final bool disabled;
   final int minSearchChars;
   final int debounceMs;
+  /// Pre-populated options for initial selected items (e.g., when editing)
+  final List<AsyncSelectOption>? initialOptions;
 
   const AsyncSelectField({
     super.key,
@@ -48,6 +50,7 @@ class AsyncSelectField extends StatefulWidget {
     this.disabled = false,
     this.minSearchChars = 0,
     this.debounceMs = 300,
+    this.initialOptions,
   });
 
   @override
@@ -63,6 +66,7 @@ class _AsyncSelectFieldState extends State<AsyncSelectField> {
   List<AsyncSelectOption> _options = [];
   List<AsyncSelectOption> _allSelectedOptions = [];
   bool _isLoading = false;
+  bool _initialOptionsLoaded = false;
   String? _error;
   Timer? _debounceTimer;
   bool _isOpen = false;
@@ -71,7 +75,38 @@ class _AsyncSelectFieldState extends State<AsyncSelectField> {
   void initState() {
     super.initState();
     _focusNode.addListener(_onFocusChange);
+
+    // If initialOptions are provided (edit mode), use them immediately
+    if (widget.initialOptions != null && widget.initialOptions!.isNotEmpty) {
+      _allSelectedOptions = List.from(widget.initialOptions!);
+      _initialOptionsLoaded = true;
+    }
+
     _loadSelectedOptions();
+  }
+
+  @override
+  void didUpdateWidget(AsyncSelectField oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    // If initialOptions changed (new data loaded), update _allSelectedOptions
+    if (widget.initialOptions != null &&
+        widget.initialOptions != oldWidget.initialOptions &&
+        widget.initialOptions!.isNotEmpty) {
+      // Merge initial options with loaded options
+      final existingIds = _allSelectedOptions.map((o) => o.id).toSet();
+      for (final opt in widget.initialOptions!) {
+        if (!existingIds.contains(opt.id)) {
+          _allSelectedOptions.add(opt);
+        }
+      }
+      _initialOptionsLoaded = true;
+    }
+
+    // If selectedIds changed, reload options
+    if (oldWidget.selectedIds != widget.selectedIds) {
+      _loadSelectedOptions();
+    }
   }
 
   void _loadSelectedOptions() async {
@@ -79,19 +114,22 @@ class _AsyncSelectFieldState extends State<AsyncSelectField> {
       final allOptions = await widget.loadOptions('');
       if (mounted) {
         setState(() {
-          _allSelectedOptions = allOptions;
+          // Merge loaded options with any initial options
+          final existingIds = _allSelectedOptions.map((o) => o.id).toSet();
+          for (final opt in allOptions) {
+            if (!existingIds.contains(opt.id)) {
+              _allSelectedOptions.add(opt);
+            }
+          }
+          _initialOptionsLoaded = true;
         });
       }
     } catch (e) {
-      // Ignore
-    }
-  }
-
-  @override
-  void didUpdateWidget(AsyncSelectField oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (oldWidget.selectedIds != widget.selectedIds) {
-      _loadSelectedOptions();
+      if (mounted) {
+        setState(() {
+          _error = 'Gagal memuat data';
+        });
+      }
     }
   }
 
@@ -164,10 +202,6 @@ class _AsyncSelectFieldState extends State<AsyncSelectField> {
     setState(() {
       _isOpen = true;
     });
-    // Call _fetchOptions first: it synchronously flips _isLoading = true
-    // (via setState) before hitting its first await, so by the time the
-    // overlay is created right after, it captures isLoading = true and
-    // shows the spinner immediately instead of a flash of "Tidak ada hasil".
     _fetchOptions('');
     _ensureOverlayCreated();
   }
@@ -205,12 +239,6 @@ class _AsyncSelectFieldState extends State<AsyncSelectField> {
   }
 
   OverlayEntry _createOverlayEntry() {
-    // IMPORTANT: measure the field's own RenderBox HERE, using this widget's
-    // context (already laid out in the tree). Do NOT try to measure it from
-    // inside the overlay builder below - that context belongs to a brand new
-    // subtree living in the Overlay, which hasn't been laid out yet, so
-    // findRenderObject() there returns null/no-size and the dropdown
-    // silently renders nothing.
     final RenderBox renderBox = context.findRenderObject() as RenderBox;
     final Size fieldSize = renderBox.size;
     final Offset fieldPosition = renderBox.localToGlobal(Offset.zero);
@@ -272,8 +300,9 @@ class _AsyncSelectFieldState extends State<AsyncSelectField> {
             widget.label!.toUpperCase(),
             style: const TextStyle(
               fontSize: 12,
-              fontWeight: FontWeight.w500,
+              fontWeight: FontWeight.w600,
               color: AppColors.slate700,
+              letterSpacing: 0.5,
             ),
           ),
           const SizedBox(height: 8),
@@ -283,118 +312,266 @@ class _AsyncSelectFieldState extends State<AsyncSelectField> {
           child: GestureDetector(
             onTap: _toggleDropdown,
             child: Container(
-              padding: const EdgeInsets.all(16),
+              constraints: const BoxConstraints(minHeight: 48),
               decoration: BoxDecoration(
-                color: widget.disabled ? AppColors.slate100 : Colors.white,
-                borderRadius: BorderRadius.circular(12),
+                color: widget.disabled ? AppColors.slate50 : Colors.white,
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(
+                  color: _isOpen ? AppColors.primary : AppColors.slate300,
+                  width: _isOpen ? 1.5 : 1,
+                ),
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Chips + Search
-                  if (widget.selectedIds.isNotEmpty) ...[
-                    Wrap(
-                      spacing: 6,
-                      runSpacing: 6,
-                      children: [
-                        ...widget.selectedIds.map((id) {
-                          final option = _allSelectedOptions.firstWhere(
-                                (o) => o.id == id,
-                            orElse: () => AsyncSelectOption(id: id, name: '...'),
-                          );
-                          return Chip(
-                            label: Text(option.name, style: const TextStyle(fontSize: 12)),
-                            deleteIcon: const Icon(Icons.close, size: 16),
-                            onDeleted: widget.disabled ? null : () => _removeSelection(id),
-                            backgroundColor: AppColors.primary.withAlpha(26),
-                            padding: EdgeInsets.zero,
-                            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                            visualDensity: VisualDensity.compact,
-                            deleteIconColor: AppColors.slate600,
-                          );
-                        }),
-                        // Only show the inline search box for multi-select
-                        // fields (so the user can keep adding more items).
-                        // Single-select already has its one value picked -
-                        // tap the field itself to reopen the dropdown and
-                        // change it instead.
-                        if (widget.multiSelect)
-                          SizedBox(
-                            height: 24,
-                            width: 120,
-                            child: TextField(
-                              controller: _searchController,
-                              focusNode: _focusNode,
-                              enabled: !widget.disabled,
-                              onChanged: _onSearchChanged,
-                              onTap: _openDropdown,
-                              style: const TextStyle(fontSize: 12),
-                              decoration: const InputDecoration(
-                                hintText: 'Ketik...',
-                                hintStyle: TextStyle(fontSize: 12, color: AppColors.slate400),
-                                border: InputBorder.none,
-                                enabledBorder: InputBorder.none,
-                                focusedBorder: InputBorder.none,
-                                disabledBorder: InputBorder.none,
-                                isDense: true,
-                                contentPadding: EdgeInsets.symmetric(vertical: 2),
-                              ),
-                            ),
-                          ),
-                      ],
-                    ),
-                  ] else ...[
-                    Row(
-                      children: [
-                        Expanded(
-                          child: TextField(
-                            controller: _searchController,
-                            focusNode: _focusNode,
-                            enabled: !widget.disabled,
-                            onChanged: _onSearchChanged,
-                            onTap: _openDropdown,
-                            style: const TextStyle(fontSize: 14),
-                            decoration: InputDecoration(
-                              hintText: widget.placeholder,
-                              hintStyle: const TextStyle(fontSize: 14, color: AppColors.slate400),
-                              border: InputBorder.none,
-                              enabledBorder: InputBorder.none,
-                              focusedBorder: InputBorder.none,
-                              disabledBorder: InputBorder.none,
-                              isDense: true,
-                              contentPadding: EdgeInsets.zero,
-                            ),
-                          ),
-                        ),
-                        if (_isLoading)
-                          const SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        else
-                          Icon(
-                            _isOpen ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
-                            color: AppColors.slate400,
-                            size: 20,
-                          ),
-                      ],
-                    ),
-                  ],
-                ],
-              ),
+              child: widget.selectedIds.isNotEmpty
+                  ? _buildSelectedChips()
+                  : _buildSearchField(),
             ),
           ),
         ),
       ],
     );
   }
+
+  Widget _buildSelectedChips() {
+    // For single-select, show as a text with clear button
+    if (!widget.multiSelect && widget.selectedIds.length == 1) {
+      final selectedId = widget.selectedIds.first;
+      final option = _allSelectedOptions.firstWhere(
+        (o) => o.id == selectedId,
+        orElse: () => AsyncSelectOption(id: selectedId, name: '...'),
+      );
+
+      final isLoading = !_initialOptionsLoaded && option.name == '...';
+
+      return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        child: Row(
+          children: [
+            Expanded(
+              child: isLoading
+                  ? Row(
+                      children: [
+                        SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: AppColors.slate400,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Memuat...',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: AppColors.slate400,
+                          ),
+                        ),
+                      ],
+                    )
+                  : Text(
+                      option.name,
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: option.name == '...' ? AppColors.slate400 : AppColors.slate800,
+                        fontWeight: FontWeight.w500,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+            ),
+            if (!widget.disabled && !isLoading)
+              GestureDetector(
+                onTap: () => _removeSelection(selectedId),
+                child: Container(
+                  padding: const EdgeInsets.all(4),
+                  decoration: BoxDecoration(
+                    color: AppColors.slate100,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    Icons.close,
+                    size: 16,
+                    color: AppColors.slate600,
+                  ),
+                ),
+              ),
+          ],
+        ),
+      );
+    }
+
+    // For multi-select, show chips with inline search
+    return Padding(
+      padding: const EdgeInsets.all(12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Chips
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              ...widget.selectedIds.map((id) {
+                final option = _allSelectedOptions.firstWhere(
+                  (o) => o.id == id,
+                  orElse: () => AsyncSelectOption(id: id, name: '...'),
+                );
+                return _SelectChip(
+                  label: option.name,
+                  onDelete: widget.disabled ? null : () => _removeSelection(id),
+                );
+              }),
+              // Inline search for multi-select
+              if (widget.multiSelect)
+                SizedBox(
+                  height: 28,
+                  width: 100,
+                  child: TextField(
+                    controller: _searchController,
+                    focusNode: _focusNode,
+                    enabled: !widget.disabled,
+                    onChanged: _onSearchChanged,
+                    onTap: _openDropdown,
+                    style: const TextStyle(fontSize: 13),
+                    decoration: InputDecoration(
+                      hintText: 'Cari...',
+                      hintStyle: TextStyle(
+                        fontSize: 13,
+                        color: AppColors.slate400,
+                      ),
+                      border: InputBorder.none,
+                      enabledBorder: InputBorder.none,
+                      focusedBorder: InputBorder.none,
+                      disabledBorder: InputBorder.none,
+                      isDense: true,
+                      contentPadding: const EdgeInsets.symmetric(vertical: 4),
+                      filled: true,
+                      fillColor: AppColors.slate100,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSearchField() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 12),
+      child: Row(
+        children: [
+          Icon(
+            Icons.search,
+            color: AppColors.slate400,
+            size: 20,
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: TextField(
+              controller: _searchController,
+              focusNode: _focusNode,
+              enabled: !widget.disabled,
+              onChanged: _onSearchChanged,
+              onTap: _openDropdown,
+              style: const TextStyle(fontSize: 14),
+              decoration: InputDecoration(
+                hintText: widget.placeholder,
+                hintStyle: const TextStyle(
+                  fontSize: 14,
+                  color: AppColors.slate400,
+                ),
+                border: InputBorder.none,
+                enabledBorder: InputBorder.none,
+                focusedBorder: InputBorder.none,
+                disabledBorder: InputBorder.none,
+                isDense: true,
+                contentPadding: const EdgeInsets.symmetric(vertical: 14),
+              ),
+            ),
+          ),
+          if (_isLoading)
+            const SizedBox(
+              width: 20,
+              height: 20,
+              child: Padding(
+                padding: EdgeInsets.all(2),
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: AppColors.primary,
+                ),
+              ),
+            )
+          else
+            Icon(
+              _isOpen ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
+              color: AppColors.slate400,
+              size: 22,
+            ),
+        ],
+      ),
+    );
+  }
 }
 
-/// Dropdown overlay content. Rebuilds automatically whenever MediaQuery
-/// (in particular viewInsets.bottom, i.e. the keyboard) changes, because
-/// it reads MediaQuery.of(context) directly in build() and Flutter
-/// schedules a rebuild for any dependent widget when metrics change.
+/// Stylized chip for selected items
+class _SelectChip extends StatelessWidget {
+  final String label;
+  final VoidCallback? onDelete;
+
+  const _SelectChip({
+    required this.label,
+    this.onDelete,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: AppColors.primary.withAlpha(20),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(
+          color: AppColors.primary.withAlpha(50),
+          width: 1,
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            label,
+            style: const TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w500,
+              color: AppColors.primary,
+            ),
+          ),
+          if (onDelete != null) ...[
+            const SizedBox(width: 4),
+            GestureDetector(
+              onTap: onDelete,
+              child: Container(
+                padding: const EdgeInsets.all(2),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withAlpha(30),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.close,
+                  size: 12,
+                  color: AppColors.primary,
+                ),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+/// Dropdown overlay content
 class _DropdownOverlay extends StatelessWidget {
   final LayerLink layerLink;
   final VoidCallback onClose;
@@ -420,19 +597,41 @@ class _DropdownOverlay extends StatelessWidget {
     required this.fieldSize,
   });
 
-  static const double _dropdownHeight = 200;
+  static const double _dropdownHeight = 280;
+  static const double _dropdownMaxHeightWithKeyboard = 200;
 
   @override
   Widget build(BuildContext context) {
     final mediaQuery = MediaQuery.of(context);
     final keyboardHeight = mediaQuery.viewInsets.bottom;
     final screenHeight = mediaQuery.size.height;
+    final isKeyboardOpen = keyboardHeight > 0;
 
+    // Calculate available space
     final availableBelow = screenHeight - keyboardHeight - fieldPosition.dy - fieldSize.height;
-    final availableAbove = fieldPosition.dy;
+    final availableAbove = fieldPosition.dy - keyboardHeight;
 
-    final showAbove = availableBelow < _dropdownHeight && availableAbove > availableBelow;
-    final offsetY = showAbove ? -(_dropdownHeight + 4) : fieldSize.height + 4;
+    // When keyboard is open, show dropdown above keyboard
+    // Otherwise, show based on available space
+    final showAbove = isKeyboardOpen
+        ? true  // Always show above when keyboard is open
+        : (availableBelow < _dropdownHeight && availableAbove > availableBelow);
+
+    // Adjust height based on keyboard state
+    final maxHeight = isKeyboardOpen
+        ? (availableAbove > _dropdownMaxHeightWithKeyboard
+            ? _dropdownMaxHeightWithKeyboard
+            : availableAbove - 20)  // Leave some padding
+        : _dropdownHeight;
+
+    // Calculate offset
+    final double offsetY;
+    if (isKeyboardOpen) {
+      // Position dropdown above keyboard
+      offsetY = fieldPosition.dy - maxHeight - keyboardHeight - 8;
+    } else {
+      offsetY = showAbove ? -(_dropdownHeight + 4) : fieldSize.height + 4;
+    }
 
     return Stack(
       children: [
@@ -444,9 +643,7 @@ class _DropdownOverlay extends StatelessWidget {
             child: Container(color: Colors.transparent),
           ),
         ),
-        // Dropdown positioned above or below the field depending on
-        // available space (recomputed every rebuild, so it reacts live
-        // to the keyboard opening/closing).
+        // Dropdown positioned above or below the field
         Positioned(
           width: fieldSize.width,
           child: CompositedTransformFollower(
@@ -454,16 +651,19 @@ class _DropdownOverlay extends StatelessWidget {
             showWhenUnlinked: false,
             offset: Offset(0, offsetY),
             child: Material(
-              elevation: 4,
-              borderRadius: BorderRadius.circular(8),
+              elevation: 8,
+              borderRadius: BorderRadius.circular(12),
+              shadowColor: Colors.black26,
               child: Container(
-                constraints: const BoxConstraints(maxHeight: _dropdownHeight),
+                constraints: BoxConstraints(
+                  maxHeight: maxHeight.clamp(100.0, _dropdownHeight),
+                ),
                 decoration: BoxDecoration(
                   color: Colors.white,
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(12),
                   border: Border.all(color: AppColors.slate200),
                 ),
-                child: _buildContent(),
+                child: _buildContent(isKeyboardOpen),
               ),
             ),
           ),
@@ -472,31 +672,64 @@ class _DropdownOverlay extends StatelessWidget {
     );
   }
 
-  Widget _buildContent() {
+  Widget _buildContent(bool isKeyboardOpen) {
     if (isLoading && options.isEmpty) {
-      return const Padding(
-        padding: EdgeInsets.all(16),
-        child: Center(
-          child: SizedBox(
-            width: 24,
-            height: 24,
-            child: CircularProgressIndicator(strokeWidth: 2),
+      return Container(
+        padding: const EdgeInsets.all(24),
+        child: const Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              SizedBox(
+                width: 32,
+                height: 32,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2.5,
+                  color: AppColors.primary,
+                ),
+              ),
+              SizedBox(height: 12),
+              Text(
+                'Memuat data...',
+                style: TextStyle(
+                  fontSize: 13,
+                  color: AppColors.slate500,
+                ),
+              ),
+            ],
           ),
         ),
       );
     }
 
     if (error != null && options.isEmpty) {
-      return Padding(
-        padding: const EdgeInsets.all(16),
+      return Container(
+        padding: const EdgeInsets.all(20),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(error!, style: const TextStyle(color: AppColors.danger)),
+            Icon(
+              Icons.error_outline,
+              color: AppColors.danger,
+              size: 32,
+            ),
             const SizedBox(height: 8),
-            TextButton(
+            Text(
+              error!,
+              style: const TextStyle(
+                color: AppColors.danger,
+                fontSize: 13,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 12),
+            TextButton.icon(
               onPressed: onRetry,
-              child: const Text('Coba lagi'),
+              icon: const Icon(Icons.refresh, size: 16),
+              label: const Text('Coba lagi'),
+              style: TextButton.styleFrom(
+                foregroundColor: AppColors.primary,
+              ),
             ),
           ],
         ),
@@ -504,42 +737,106 @@ class _DropdownOverlay extends StatelessWidget {
     }
 
     if (options.isEmpty) {
-      return const Padding(
-        padding: EdgeInsets.all(16),
-        child: Text('Tidak ada hasil', style: TextStyle(color: AppColors.slate500)),
+      return Container(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.search_off,
+              color: AppColors.slate400,
+              size: 32,
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              'Tidak ada hasil',
+              style: TextStyle(
+                color: AppColors.slate500,
+                fontSize: 13,
+              ),
+            ),
+          ],
+        ),
       );
     }
 
-    return ListView.builder(
-      shrinkWrap: true,
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      itemCount: options.length,
-      itemBuilder: (context, index) {
-        final option = options[index];
-        final isSelected = selectedIds.contains(option.id);
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(12),
+      child: ListView.separated(
+        shrinkWrap: true,
+        // Use BouncingScrollPhysics for iOS-like feel, or clamp when keyboard is open
+        physics: isKeyboardOpen
+            ? const ClampingScrollPhysics()
+            : const BouncingScrollPhysics(),
+        padding: const EdgeInsets.symmetric(vertical: 6),
+        itemCount: options.length,
+        separatorBuilder: (context, index) => Divider(
+          height: 1,
+          color: AppColors.slate100,
+        ),
+        itemBuilder: (context, index) {
+          final option = options[index];
+          final isSelected = selectedIds.contains(option.id);
 
-        return InkWell(
-          onTap: () => onToggle(option),
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            color: isSelected ? AppColors.primary.withAlpha(26) : null,
-            child: Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    option.name,
-                    style: TextStyle(
-                      color: isSelected ? AppColors.primary : AppColors.slate800,
-                      fontWeight: isSelected ? FontWeight.w500 : FontWeight.normal,
+          return InkWell(
+            onTap: () => onToggle(option),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              color: isSelected ? AppColors.primary.withAlpha(15) : null,
+              child: Row(
+                children: [
+                  // Checkbox indicator
+                  Container(
+                    width: 20,
+                    height: 20,
+                    decoration: BoxDecoration(
+                      color: isSelected ? AppColors.primary : Colors.transparent,
+                      borderRadius: BorderRadius.circular(4),
+                      border: Border.all(
+                        color: isSelected ? AppColors.primary : AppColors.slate300,
+                        width: 1.5,
+                      ),
+                    ),
+                    child: isSelected
+                        ? const Icon(
+                            Icons.check,
+                            size: 14,
+                            color: Colors.white,
+                          )
+                        : null,
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          option.name,
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: isSelected ? AppColors.primary : AppColors.slate800,
+                            fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                          ),
+                        ),
+                        if (option.description != null) ...[
+                          const SizedBox(height: 2),
+                          Text(
+                            option.description!,
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: AppColors.slate500,
+                            ),
+                          ),
+                        ],
+                      ],
                     ),
                   ),
-                ),
-                if (isSelected) Icon(Icons.check, color: AppColors.primary, size: 20),
-              ],
+                ],
+              ),
             ),
-          ),
-        );
-      },
+          );
+        },
+      ),
     );
   }
 }

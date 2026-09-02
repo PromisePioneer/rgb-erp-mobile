@@ -122,9 +122,11 @@ class FormFieldCard extends StatelessWidget {
   }
 }
 
-/// Form wizard screen for creating a new daily task assignment
+/// Form wizard screen for creating or editing a daily task assignment
 class TaskAssignmentFormScreen extends StatefulWidget {
-  const TaskAssignmentFormScreen({super.key});
+  final Map<String, dynamic>? editData; // Data for edit mode
+
+  const TaskAssignmentFormScreen({super.key, this.editData});
 
   @override
   State<TaskAssignmentFormScreen> createState() => _TaskAssignmentFormScreenState();
@@ -133,6 +135,10 @@ class TaskAssignmentFormScreen extends StatefulWidget {
 class _TaskAssignmentFormScreenState extends State<TaskAssignmentFormScreen> {
   int _currentStep = 0;
   final int _totalSteps = 4;
+
+  // Edit mode flag
+  bool get _isEditMode => widget.editData != null;
+  int? _editTaskId;
 
   // Form data
   final Set<int> _selectedEmployeeIds = {};
@@ -169,11 +175,123 @@ class _TaskAssignmentFormScreenState extends State<TaskAssignmentFormScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final notifier = context.read<DailyTaskNotifier>();
-      notifier.loadMobileAssignEmployees();
-      notifier.loadItems();
-      notifier.loadMasterData();
+      _initializeData();
     });
+  }
+
+  void _initializeData() {
+    final notifier = context.read<DailyTaskNotifier>();
+
+    // Load master data
+    notifier.loadMobileAssignEmployees();
+    notifier.loadItems();
+    notifier.loadMasterData();
+
+    // If edit mode, pre-fill data
+    if (_isEditMode) {
+      _prefillFromEditData();
+    }
+  }
+
+  void _prefillFromEditData() {
+    final data = widget.editData!;
+
+    _editTaskId = data['id'] as int?;
+
+    // Prefill employees
+    if (data.containsKey('employees') && data['employees'] != null) {
+      final employees = data['employees'] as List;
+      for (final emp in employees) {
+        if (emp is Map) {
+          final id = emp['id'] as int?;
+          final name = emp['name'] as String?;
+          if (id != null && name != null) {
+            _selectedEmployeeIds.add(id);
+            _selectedEmployeeNames.add(name);
+          }
+        }
+      }
+    }
+
+    // Prefill item
+    if (data.containsKey('item_id') && data['item_id'] != null) {
+      _selectedItemId = data['item_id'] as int;
+    }
+    if (data.containsKey('item_name') && data['item_name'] != null) {
+      _selectedItemName = data['item_name'] as String;
+    }
+    // Also check nested item object
+    if (data.containsKey('item') && data['item'] != null) {
+      final item = data['item'] as Map;
+      _selectedItemId = item['id'] as int?;
+      _selectedItemName = item['name'] as String?;
+    }
+
+    // Prefill target minutes
+    if (data.containsKey('target_minutes') && data['target_minutes'] != null) {
+      _targetMinutesController.text = data['target_minutes'].toString();
+    }
+
+    // Prefill notes
+    if (data.containsKey('notes') && data['notes'] != null) {
+      _notesController.text = data['notes'] as String;
+    }
+
+    // Prefill date
+    if (data.containsKey('assigned_date') && data['assigned_date'] != null) {
+      try {
+        _selectedDate = DateTime.parse(data['assigned_date'] as String);
+      } catch (_) {
+        _selectedDate = DateTime.now();
+      }
+    }
+
+    // Prefill tools
+    if (data.containsKey('tools') && data['tools'] != null) {
+      final tools = data['tools'] as List;
+      for (final tool in tools) {
+        if (tool is Map) {
+          final id = tool['id'] as int?;
+          final name = tool['name'] as String?;
+          if (id != null && name != null) {
+            _selectedToolIds.add(id);
+            _selectedToolNames.add(name);
+          }
+        }
+      }
+    }
+
+    // Prefill chemicals
+    if (data.containsKey('chemicals') && data['chemicals'] != null) {
+      final chemicals = data['chemicals'] as List;
+      for (final chem in chemicals) {
+        if (chem is Map) {
+          final id = chem['id'] as int?;
+          final name = chem['name'] as String?;
+          if (id != null && name != null) {
+            _selectedChemicalIds.add(id);
+            _selectedChemicalNames.add(name);
+          }
+        }
+      }
+    }
+
+    // Prefill ppes
+    if (data.containsKey('ppes') && data['ppes'] != null) {
+      final ppes = data['ppes'] as List;
+      for (final ppe in ppes) {
+        if (ppe is Map) {
+          final id = ppe['id'] as int?;
+          final name = ppe['name'] as String?;
+          if (id != null && name != null) {
+            _selectedPpeIds.add(id);
+            _selectedPpeNames.add(name);
+          }
+        }
+      }
+    }
+
+    setState(() {});
   }
 
   @override
@@ -248,54 +366,93 @@ class _TaskAssignmentFormScreenState extends State<TaskAssignmentFormScreen> {
     final assignedDate = DateFormat('yyyy-MM-dd').format(_selectedDate);
 
     final notifier = context.read<DailyTaskNotifier>();
-    final result = await notifier.mobileAssignTask(
-      employeeIds: _selectedEmployeeIds.toList(),
-      itemId: _selectedItemId,
-      targetMinutes: targetMinutes,
-      notes: notes,
-      assignedDate: assignedDate,
-      toolIds: _selectedToolIds.isEmpty ? null : _selectedToolIds.toList(),
-      chemicalIds: _selectedChemicalIds.isEmpty ? null : _selectedChemicalIds.toList(),
-      ppeIds: _selectedPpeIds.isEmpty ? null : _selectedPpeIds.toList(),
-    );
 
-    if (!mounted) return;
+    bool success = false;
 
-    if (result != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Tugas berhasil ditugaskan ke ${_selectedEmployeeIds.length} karyawan'),
-          backgroundColor: AppColors.success,
-        ),
+    if (_isEditMode && _editTaskId != null) {
+      // Edit mode - update existing task
+      success = await notifier.updateTask(
+        taskId: _editTaskId!,
+        employeeIds: _selectedEmployeeIds.isEmpty ? null : _selectedEmployeeIds.toList(),
+        itemId: _selectedItemId,
+        assignedDate: assignedDate,
+        targetMinutes: targetMinutes,
+        notes: notes,
+        toolIds: _selectedToolIds.isEmpty ? null : _selectedToolIds.toList(),
+        chemicalIds: _selectedChemicalIds.isEmpty ? null : _selectedChemicalIds.toList(),
+        ppeIds: _selectedPpeIds.isEmpty ? null : _selectedPpeIds.toList(),
       );
-      context.pop();
-    } else {
-      // Tampilkan validation errors per field
-      final validationErrors = notifier.validationErrors;
-      if (validationErrors != null && validationErrors.isNotEmpty) {
-        final List<String> errorMessages = [];
-        validationErrors.forEach((field, errors) {
-          for (final error in errors) {
-            errorMessages.add(error);
-          }
-        });
+
+      if (!mounted) return;
+
+      if (success) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              errorMessages.join('\n'),
-              style: const TextStyle(fontSize: 13),
-            ),
-            backgroundColor: AppColors.danger,
-            duration: const Duration(seconds: 4),
+          const SnackBar(
+            content: Text('Tugas berhasil diperbarui'),
+            backgroundColor: AppColors.success,
           ),
         );
+        context.pop();
+        context.pop(); // Also pop the detail screen
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(notifier.error ?? 'Gagal membuat tugas'),
+            content: Text(notifier.error ?? 'Gagal memperbarui tugas'),
             backgroundColor: AppColors.danger,
           ),
         );
+      }
+    } else {
+      // Create mode - create new task
+      final result = await notifier.mobileAssignTask(
+        employeeIds: _selectedEmployeeIds.toList(),
+        itemId: _selectedItemId,
+        targetMinutes: targetMinutes,
+        notes: notes,
+        assignedDate: assignedDate,
+        toolIds: _selectedToolIds.isEmpty ? null : _selectedToolIds.toList(),
+        chemicalIds: _selectedChemicalIds.isEmpty ? null : _selectedChemicalIds.toList(),
+        ppeIds: _selectedPpeIds.isEmpty ? null : _selectedPpeIds.toList(),
+      );
+
+      if (!mounted) return;
+
+      if (result != null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Tugas berhasil ditugaskan ke ${_selectedEmployeeIds.length} karyawan'),
+            backgroundColor: AppColors.success,
+          ),
+        );
+        context.pop();
+      } else {
+        // Tampilkan validation errors per field
+        final validationErrors = notifier.validationErrors;
+        if (validationErrors != null && validationErrors.isNotEmpty) {
+          final List<String> errorMessages = [];
+          validationErrors.forEach((field, errors) {
+            for (final error in errors) {
+              errorMessages.add(error);
+            }
+          });
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                errorMessages.join('\n'),
+                style: const TextStyle(fontSize: 13),
+              ),
+              backgroundColor: AppColors.danger,
+              duration: const Duration(seconds: 4),
+            ),
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(notifier.error ?? 'Gagal membuat tugas'),
+              backgroundColor: AppColors.danger,
+            ),
+          );
+        }
       }
     }
   }
@@ -316,6 +473,26 @@ class _TaskAssignmentFormScreenState extends State<TaskAssignmentFormScreen> {
   }
 
   Widget _buildStep1Info(DailyTaskNotifier notifier, bool isSubmitting) {
+    // Build initial options for edit mode
+    final initialItemOptions = _isEditMode && _selectedItemId != null
+        ? [AsyncSelectOption(id: _selectedItemId!, name: _selectedItemName ?? 'Memuat...')]
+        : <AsyncSelectOption>[];
+
+    final initialEmployeeOptions = _isEditMode && _selectedEmployeeIds.isNotEmpty
+        ? _selectedEmployeeIds.map((id) {
+            final name = _selectedEmployeeNames.firstWhere(
+              (n) => notifier.mobileAssignEmployees.any((e) => e['id'] == id && e['name'] == n),
+              orElse: () => 'Memuat...',
+            );
+            final emp = notifier.mobileAssignEmployees.cast<Map<String, dynamic>?>().firstWhere(
+              (e) => e?['id'] == id,
+              orElse: () => null,
+            );
+            final displayName = emp != null ? '${emp['name']} (${emp['code'] ?? ''})' : name;
+            return AsyncSelectOption(id: id, name: displayName);
+          }).toList()
+        : <AsyncSelectOption>[];
+
     return ListView(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
@@ -332,6 +509,7 @@ class _TaskAssignmentFormScreenState extends State<TaskAssignmentFormScreen> {
                   .toList();
             },
             selectedIds: _selectedItemId != null ? {_selectedItemId!} : {},
+            initialOptions: initialItemOptions.isNotEmpty ? initialItemOptions : null,
             onSelectionChanged: (ids) {
               setState(() {
                 _selectedItemId = ids.isNotEmpty ? ids.first : null;
@@ -362,6 +540,7 @@ class _TaskAssignmentFormScreenState extends State<TaskAssignmentFormScreen> {
                   .toList();
             },
             selectedIds: _selectedEmployeeIds,
+            initialOptions: initialEmployeeOptions.isNotEmpty ? initialEmployeeOptions : null,
             onSelectionChanged: (ids) {
               setState(() {
                 _selectedEmployeeIds.clear();
@@ -489,6 +668,37 @@ class _TaskAssignmentFormScreenState extends State<TaskAssignmentFormScreen> {
   }
 
   Widget _buildStep3Peralatan(DailyTaskNotifier notifier, bool isSubmitting) {
+    // Build initial options for edit mode
+    final initialToolOptions = _isEditMode && _selectedToolIds.isNotEmpty
+        ? _selectedToolIds.map((id) {
+            final name = _selectedToolNames.firstWhere(
+              (n) => notifier.tools.any((t) => t.id == id && t.name == n),
+              orElse: () => 'Memuat...',
+            );
+            return AsyncSelectOption(id: id, name: name);
+          }).toList()
+        : <AsyncSelectOption>[];
+
+    final initialChemicalOptions = _isEditMode && _selectedChemicalIds.isNotEmpty
+        ? _selectedChemicalIds.map((id) {
+            final name = _selectedChemicalNames.firstWhere(
+              (n) => notifier.chemicals.any((c) => c.id == id && c.name == n),
+              orElse: () => 'Memuat...',
+            );
+            return AsyncSelectOption(id: id, name: name);
+          }).toList()
+        : <AsyncSelectOption>[];
+
+    final initialPpeOptions = _isEditMode && _selectedPpeIds.isNotEmpty
+        ? _selectedPpeIds.map((id) {
+            final name = _selectedPpeNames.firstWhere(
+              (n) => notifier.ppes.any((p) => p.id == id && p.name == n),
+              orElse: () => 'Memuat...',
+            );
+            return AsyncSelectOption(id: id, name: name);
+          }).toList()
+        : <AsyncSelectOption>[];
+
     return ListView(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
@@ -505,6 +715,7 @@ class _TaskAssignmentFormScreenState extends State<TaskAssignmentFormScreen> {
                   .toList();
             },
             selectedIds: _selectedToolIds,
+            initialOptions: initialToolOptions.isNotEmpty ? initialToolOptions : null,
             onSelectionChanged: (ids) {
               setState(() {
                 _selectedToolIds.clear();
@@ -537,6 +748,7 @@ class _TaskAssignmentFormScreenState extends State<TaskAssignmentFormScreen> {
                   .toList();
             },
             selectedIds: _selectedChemicalIds,
+            initialOptions: initialChemicalOptions.isNotEmpty ? initialChemicalOptions : null,
             onSelectionChanged: (ids) {
               setState(() {
                 _selectedChemicalIds.clear();
@@ -569,6 +781,7 @@ class _TaskAssignmentFormScreenState extends State<TaskAssignmentFormScreen> {
                   .toList();
             },
             selectedIds: _selectedPpeIds,
+            initialOptions: initialPpeOptions.isNotEmpty ? initialPpeOptions : null,
             onSelectionChanged: (ids) {
               setState(() {
                 _selectedPpeIds.clear();
@@ -832,7 +1045,7 @@ class _TaskAssignmentFormScreenState extends State<TaskAssignmentFormScreen> {
     return Scaffold(
       backgroundColor: AppColors.slate100,
       appBar: AppBar(
-        title: Text('Step ${_currentStep + 1} dari $_totalSteps'),
+        title: Text(_isEditMode ? 'Edit Tugas' : 'Step ${_currentStep + 1} dari $_totalSteps'),
         backgroundColor: Colors.white,
         foregroundColor: AppColors.slate800,
         elevation: 0,
@@ -895,7 +1108,9 @@ class _TaskAssignmentFormScreenState extends State<TaskAssignmentFormScreen> {
                               color: Colors.white,
                             ),
                           )
-                        : Text(_currentStep == _totalSteps - 1 ? 'TUGASKAN' : 'SELANJUTNYA'),
+                        : Text(_currentStep == _totalSteps - 1
+                            ? (_isEditMode ? 'SIMPAN' : 'TUGASKAN')
+                            : 'SELANJUTNYA'),
                   ),
                 ),
               ],
