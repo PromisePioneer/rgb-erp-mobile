@@ -334,24 +334,27 @@ class _RGBERPAppState extends State<RGBERPApp> {
 
   @override
   Widget build(BuildContext context) {
-    return FTheme(
-      data: AppFTheme.light,
-      child: MaterialApp.router(
-        title: 'RGB 86',
-        debugShowCheckedModeBanner: false,
-        theme: AppTheme.light,
-        routerConfig: appRouterProvider,
-        locale: const Locale('id', 'ID'),
-        supportedLocales: const [
-          Locale('id', 'ID'),
-          Locale('en', 'US'),
-        ],
-        localizationsDelegates: const [
-          GlobalMaterialLocalizations.delegate,
-          GlobalWidgetsLocalizations.delegate,
-          GlobalCupertinoLocalizations.delegate,
-        ],
-      ),
+    return MaterialApp.router(
+      title: 'RGB 86',
+      debugShowCheckedModeBanner: false,
+      theme: AppTheme.light,
+      routerConfig: appRouterProvider,
+      locale: const Locale('id', 'ID'),
+      supportedLocales: const [
+        Locale('id', 'ID'),
+        Locale('en', 'US'),
+      ],
+      localizationsDelegates: const [
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      builder: (context, child) {
+        return FTheme(
+          data: AppFTheme.light,
+          child: child ?? const SizedBox.shrink(),
+        );
+      },
     );
   }
 }

@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import '../../../../core/core.dart';
 import '../../domain/models/daily_task.dart';
 
@@ -66,10 +67,15 @@ class DailyTaskRepository {
   Future<List<DailyTaskPosition>> getPositions() async {
     try {
       final response = await api.getPositions();
+      debugPrint('REPO: getPositions response = $response');
       final data = response['data'];
+      debugPrint('REPO: data = $data');
       if (data == null) return [];
       final list = data is List ? data : [];
-      return list.map((json) => DailyTaskPosition.fromJson(_toMap(json))).toList();
+      debugPrint('REPO: list = $list');
+      final result = list.map((json) => DailyTaskPosition.fromJson(_toMap(json))).toList();
+      debugPrint('REPO: result = $result');
+      return result;
     } on ApiException {
       rethrow;
     } catch (e) {
@@ -363,15 +369,19 @@ class DailyTaskRepository {
   // ====================
 
   /// GET /daily-task/assign/employees - Get employees for mobile assignment
-  Future<List<Map<String, dynamic>>> getMobileAssignEmployees({String? query}) async {
+  /// Supports filtering by position_ids
+  Future<List<Map<String, dynamic>>> getMobileAssignEmployees({String? query, List<int>? positionIds}) async {
+    debugPrint('REPO: getMobileAssignEmployees called with query=$query, positionIds=$positionIds');
     try {
-      final response = await api.getMobileAssignEmployees(query: query);
+      final response = await api.getMobileAssignEmployees(query: query, positionIds: positionIds);
       final data = response['data'];
+      debugPrint('REPO: response data = $data');
       if (data == null) return [];
       return (data is List ? data : []).map((json) => _toMap(json)).toList();
     } on ApiException {
       rethrow;
     } catch (e) {
+      debugPrint('REPO: getMobileAssignEmployees error = $e');
       throw ApiException(
         message: 'Gagal memuat daftar karyawan: $e',
         statusCode: 500,

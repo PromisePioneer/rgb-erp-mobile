@@ -309,16 +309,21 @@ class DailyTaskMasterItem {
 class DailyTaskPosition {
   final int id;
   final String name;
+  final int? parentPositionId;
 
   DailyTaskPosition({
     required this.id,
     required this.name,
+    this.parentPositionId,
   });
 
   factory DailyTaskPosition.fromJson(Map<String, dynamic> json) {
     return DailyTaskPosition(
       id: int.tryParse(json['id']?.toString() ?? '') ?? 0,
       name: json['name'] as String? ?? '',
+      parentPositionId: json['parent_position_id'] != null
+          ? int.tryParse(json['parent_position_id'].toString())
+          : null,
     );
   }
 }

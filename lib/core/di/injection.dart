@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import '../network/api_endpoints.dart';
 import '../network/api_exception.dart';
 
@@ -788,17 +789,21 @@ class DailyTaskApi {
  /// Optional: pass q parameter for search, position_ids[] for filtering by positions
  Future<Map<String, dynamic>> getItems({String? query, List<int>? positionIds}) async {
   try {
-   final queryParams = <String, dynamic>{};
+   // Build query string manually for reliable Laravel array binding
+   final queryParts = <String>[];
    if (query != null && query.isNotEmpty) {
-    queryParams['q'] = query;
+    queryParts.add('q=${Uri.encodeComponent(query)}');
    }
    if (positionIds != null && positionIds.isNotEmpty) {
-    queryParams['position_ids'] = positionIds;
+    for (var id in positionIds) {
+     queryParts.add('position_ids[]=$id');
+    }
    }
-   final response = await _dio.get(
-    ApiEndpoints.dailyTaskItems,
-    queryParameters: queryParams.isNotEmpty ? queryParams : null,
-   );
+
+   final queryString = queryParts.isNotEmpty ? '?${queryParts.join('&')}' : '';
+   final url = '${ApiEndpoints.dailyTaskItems}$queryString';
+
+   final response = await _dio.get(url);
    return response.data as Map<String, dynamic>;
   } on DioException catch (e) {
    throw ApiException.fromDioException(e);
@@ -1196,13 +1201,25 @@ class DailyTaskApi {
   // ====================
 
   /// GET /daily-task/assign/employees - Get employees that can be assigned tasks
-  /// Optional: pass q parameter for search
-  Future<Map<String, dynamic>> getMobileAssignEmployees({String? query}) async {
+  /// Optional: pass q parameter for search, position_ids[] for filtering by positions
+  Future<Map<String, dynamic>> getMobileAssignEmployees({String? query, List<int>? positionIds}) async {
     try {
-      final response = await _dio.get(
-        ApiEndpoints.dailyTaskMobileAssignEmployees,
-        queryParameters: query != null && query.isNotEmpty ? {'q': query} : null,
-      );
+      // Build query string manually for reliable Laravel array binding
+      final queryParts = <String>[];
+      if (query != null && query.isNotEmpty) {
+        queryParts.add('q=${Uri.encodeComponent(query)}');
+      }
+      if (positionIds != null && positionIds.isNotEmpty) {
+        for (var id in positionIds) {
+          queryParts.add('position_ids[]=$id');
+        }
+      }
+
+      final queryString = queryParts.isNotEmpty ? '?${queryParts.join('&')}' : '';
+      final url = '${ApiEndpoints.dailyTaskMobileAssignEmployees}$queryString';
+
+      debugPrint('API: getMobileAssignEmployees url = $url');
+      final response = await _dio.get(url);
       return response.data as Map<String, dynamic>;
     } on DioException catch (e) {
       throw ApiException.fromDioException(e);

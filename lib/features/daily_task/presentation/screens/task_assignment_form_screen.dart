@@ -34,7 +34,8 @@ class _StepIndicator extends StatelessWidget {
             child: LinearProgressIndicator(
               value: (currentStep + 1) / totalSteps,
               backgroundColor: AppColors.slate200,
-              valueColor: const AlwaysStoppedAnimation<Color>(AppColors.primary),
+              valueColor: const AlwaysStoppedAnimation<Color>(
+                  AppColors.primary),
             ),
           ),
         ),
@@ -54,20 +55,22 @@ class _StepIndicator extends StatelessWidget {
                       width: 28,
                       height: 28,
                       decoration: BoxDecoration(
-                        color: isActive ? AppColors.primary : AppColors.slate200,
+                        color: isActive ? AppColors.primary : AppColors
+                            .slate200,
                         shape: BoxShape.circle,
                       ),
                       child: Center(
                         child: isActive && !isCurrent
-                            ? const Icon(Icons.check, color: Colors.white, size: 16)
+                            ? const Icon(
+                            Icons.check, color: Colors.white, size: 16)
                             : Text(
-                                '${index + 1}',
-                                style: TextStyle(
-                                  color: isActive ? Colors.white : AppColors.slate500,
-                                  fontWeight: FontWeight.w600,
-                                  fontSize: 12,
-                                ),
-                              ),
+                          '${index + 1}',
+                          style: TextStyle(
+                            color: isActive ? Colors.white : AppColors.slate500,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 12,
+                          ),
+                        ),
                       ),
                     ),
                     const SizedBox(height: 4),
@@ -75,8 +78,10 @@ class _StepIndicator extends StatelessWidget {
                       stepLabels[index],
                       style: TextStyle(
                         fontSize: 10,
-                        fontWeight: isCurrent ? FontWeight.w600 : FontWeight.normal,
-                        color: isActive ? AppColors.primary : AppColors.slate500,
+                        fontWeight: isCurrent ? FontWeight.w600 : FontWeight
+                            .normal,
+                        color: isActive ? AppColors.primary : AppColors
+                            .slate500,
                       ),
                       textAlign: TextAlign.center,
                       maxLines: 1,
@@ -129,7 +134,8 @@ class TaskAssignmentFormScreen extends StatefulWidget {
   const TaskAssignmentFormScreen({super.key, this.editData});
 
   @override
-  State<TaskAssignmentFormScreen> createState() => _TaskAssignmentFormScreenState();
+  State<TaskAssignmentFormScreen> createState() =>
+      _TaskAssignmentFormScreenState();
 }
 
 class _TaskAssignmentFormScreenState extends State<TaskAssignmentFormScreen> {
@@ -161,7 +167,12 @@ class _TaskAssignmentFormScreenState extends State<TaskAssignmentFormScreen> {
   final Set<int> _selectedMachineIds = {};
   final Set<String> _selectedMachineNames = {};
 
-  final List<String> _stepLabels = ['Info', 'Detail', 'Peralatan', 'Konfirmasi'];
+  final List<String> _stepLabels = [
+    'Info',
+    'Detail',
+    'Peralatan',
+    'Konfirmasi'
+  ];
 
   Future<void> _selectDate() async {
     final picked = await showDatePicker(
@@ -309,20 +320,24 @@ class _TaskAssignmentFormScreenState extends State<TaskAssignmentFormScreen> {
   bool _canProceed() {
     switch (_currentStep) {
       case 0:
-        // Step 1: Posisi dan jenis tugas wajib, minimal 1 karyawan wajib
+      // Step 1: Posisi dan jenis tugas wajib, minimal 1 karyawan wajib
         return _selectedPositionIds.isNotEmpty &&
-               _selectedEmployeeIds.isNotEmpty &&
-               _selectedItemId != null;
+            _selectedEmployeeIds.isNotEmpty &&
+            _selectedItemId != null;
       case 1:
-        // Step 2: Target durasi dan catatan wajib
-        final hasTargetMinutes = _targetMinutesController.text.trim().isNotEmpty;
-        final hasNotes = _notesController.text.trim().isNotEmpty;
+      // Step 2: Target durasi dan catatan wajib
+        final hasTargetMinutes = _targetMinutesController.text
+            .trim()
+            .isNotEmpty;
+        final hasNotes = _notesController.text
+            .trim()
+            .isNotEmpty;
         return hasTargetMinutes && hasNotes;
       case 2:
-        // Step 3: Alat, Chemical, dan APD wajib (Mesin optional)
+      // Step 3: Alat, Chemical, dan APD wajib (Mesin optional)
         return _selectedToolIds.isNotEmpty &&
-               _selectedChemicalIds.isNotEmpty &&
-               _selectedPpeIds.isNotEmpty;
+            _selectedChemicalIds.isNotEmpty &&
+            _selectedPpeIds.isNotEmpty;
       case 3:
         return true;
       default:
@@ -369,7 +384,9 @@ class _TaskAssignmentFormScreenState extends State<TaskAssignmentFormScreen> {
 
   Future<void> _submit() async {
     final targetMinutes = int.tryParse(_targetMinutesController.text);
-    final notes = _notesController.text.trim().isEmpty ? null : _notesController.text.trim();
+    final notes = _notesController.text
+        .trim()
+        .isEmpty ? null : _notesController.text.trim();
     final assignedDate = DateFormat('yyyy-MM-dd').format(_selectedDate);
 
     final notifier = context.read<DailyTaskNotifier>();
@@ -380,13 +397,15 @@ class _TaskAssignmentFormScreenState extends State<TaskAssignmentFormScreen> {
       // Edit mode - update existing task
       success = await notifier.updateTask(
         taskId: _editTaskId!,
-        employeeIds: _selectedEmployeeIds.isEmpty ? null : _selectedEmployeeIds.toList(),
+        employeeIds: _selectedEmployeeIds.isEmpty ? null : _selectedEmployeeIds
+            .toList(),
         itemId: _selectedItemId,
         assignedDate: assignedDate,
         targetMinutes: targetMinutes,
         notes: notes,
         toolIds: _selectedToolIds.isEmpty ? null : _selectedToolIds.toList(),
-        chemicalIds: _selectedChemicalIds.isEmpty ? null : _selectedChemicalIds.toList(),
+        chemicalIds: _selectedChemicalIds.isEmpty ? null : _selectedChemicalIds
+            .toList(),
         ppeIds: _selectedPpeIds.isEmpty ? null : _selectedPpeIds.toList(),
       );
 
@@ -418,9 +437,11 @@ class _TaskAssignmentFormScreenState extends State<TaskAssignmentFormScreen> {
         notes: notes,
         assignedDate: assignedDate,
         toolIds: _selectedToolIds.isEmpty ? null : _selectedToolIds.toList(),
-        chemicalIds: _selectedChemicalIds.isEmpty ? null : _selectedChemicalIds.toList(),
+        chemicalIds: _selectedChemicalIds.isEmpty ? null : _selectedChemicalIds
+            .toList(),
         ppeIds: _selectedPpeIds.isEmpty ? null : _selectedPpeIds.toList(),
-        machineIds: _selectedMachineIds.isEmpty ? null : _selectedMachineIds.toList(),
+        machineIds: _selectedMachineIds.isEmpty ? null : _selectedMachineIds
+            .toList(),
       );
 
       if (!mounted) return;
@@ -428,7 +449,8 @@ class _TaskAssignmentFormScreenState extends State<TaskAssignmentFormScreen> {
       if (result != null) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Tugas berhasil ditugaskan ke ${_selectedEmployeeIds.length} karyawan'),
+            content: Text('Tugas berhasil ditugaskan ke ${_selectedEmployeeIds
+                .length} karyawan'),
             backgroundColor: AppColors.success,
           ),
         );
@@ -483,22 +505,32 @@ class _TaskAssignmentFormScreenState extends State<TaskAssignmentFormScreen> {
   Widget _buildStep1Info(DailyTaskNotifier notifier, bool isSubmitting) {
     // Build initial options for edit mode
     final initialItemOptions = _isEditMode && _selectedItemId != null
-        ? [AsyncSelectOption(id: _selectedItemId!, name: _selectedItemName ?? 'Memuat...')]
+        ? [
+      AsyncSelectOption(
+          id: _selectedItemId!, name: _selectedItemName ?? 'Memuat...')
+    ]
         : <AsyncSelectOption>[];
 
-    final initialEmployeeOptions = _isEditMode && _selectedEmployeeIds.isNotEmpty
+    final initialEmployeeOptions = _isEditMode &&
+        _selectedEmployeeIds.isNotEmpty
         ? _selectedEmployeeIds.map((id) {
-            final name = _selectedEmployeeNames.firstWhere(
-              (n) => notifier.mobileAssignEmployees.any((e) => e['id'] == id && e['name'] == n),
-              orElse: () => 'Memuat...',
-            );
-            final emp = notifier.mobileAssignEmployees.cast<Map<String, dynamic>?>().firstWhere(
-              (e) => e?['id'] == id,
-              orElse: () => null,
-            );
-            final displayName = emp != null ? '${emp['name']} (${emp['code'] ?? ''})' : name;
-            return AsyncSelectOption(id: id, name: displayName);
-          }).toList()
+      final name = _selectedEmployeeNames.firstWhere(
+            (n) =>
+            notifier.mobileAssignEmployees.any((e) =>
+        e['id'] == id && e['name'] == n),
+        orElse: () => 'Memuat...',
+      );
+      final emp = notifier.mobileAssignEmployees
+          .cast<Map<String, dynamic>?>()
+          .firstWhere(
+            (e) => e?['id'] == id,
+        orElse: () => null,
+      );
+      final displayName = emp != null
+          ? '${emp['name']} (${emp['code'] ?? ''})'
+          : name;
+      return AsyncSelectOption(id: id, name: displayName);
+    }).toList()
         : <AsyncSelectOption>[];
 
     return ListView(
@@ -511,21 +543,64 @@ class _TaskAssignmentFormScreenState extends State<TaskAssignmentFormScreen> {
             label: 'POSISI',
             placeholder: 'Pilih posisi untuk filter tugas',
             loadOptions: (query) async {
-              // Filter positions by query if needed
               final positions = notifier.positions;
-              if (query.isEmpty) return positions.map((p) => AsyncSelectOption(id: p.id, name: p.name)).toList();
-              return positions
-                  .where((p) => p.name.toLowerCase().contains(query.toLowerCase()))
-                  .map((p) => AsyncSelectOption(id: p.id, name: p.name))
+
+              // Calculate hierarchy levels
+              final positionMap = {for (var p in positions) p.id: p};
+              List<({int id, String name, int level})> buildHierarchy() {
+                final result = <({int id, String name, int level})>[];
+
+                void addWithLevel(int id, int level) {
+                  final pos = positionMap[id];
+                  if (pos == null) return;
+                  // Avoid infinite loop for circular references
+                  if (result.any((r) => r.id == id)) return;
+
+                  result.add((id: pos.id, name: pos.name, level: level));
+
+                  // Add children (positions that have this as parent)
+                  for (final child in positions.where((p) => p.parentPositionId == id)) {
+                    addWithLevel(child.id, level + 1);
+                  }
+                }
+
+                // Start with root positions (no parent)
+                for (final pos in positions.where((p) => p.parentPositionId == null)) {
+                  addWithLevel(pos.id, 0);
+                }
+
+                return result;
+              }
+
+              final hierarchy = buildHierarchy();
+
+              // If no hierarchy (all positions have parents), use flat list
+              final displayPositions = hierarchy.isNotEmpty ? hierarchy : positions
+                  .map((p) => (id: p.id, name: p.name, level: 0))
                   .toList();
+
+              // Filter by query if needed
+              final filtered = query.isEmpty
+                  ? displayPositions
+                  : displayPositions.where((p) => p.name.toLowerCase().contains(query.toLowerCase())).toList();
+
+              return filtered.map((p) {
+                final indent = '  ' * p.level + (p.level > 0 ? '└─ ' : '');
+                return AsyncSelectOption(id: p.id, name: '$indent${p.name}');
+              }).toList();
             },
             selectedIds: _selectedPositionIds,
             initialOptions: _selectedPositionIds.isNotEmpty
                 ? _selectedPositionIds.map((id) {
-                    return AsyncSelectOption(id: id, name: _selectedPositionName ?? 'Memuat...');
-                  }).toList()
+              return AsyncSelectOption(
+                  id: id, name: _selectedPositionName ?? 'Memuat...');
+            }).toList()
                 : null,
             onSelectionChanged: (ids) {
+              final previousPositionId = _selectedPositionIds.isNotEmpty
+                  ? _selectedPositionIds.first
+                  : null;
+
               setState(() {
                 _selectedPositionIds.clear();
                 if (ids.isNotEmpty) {
@@ -533,16 +608,25 @@ class _TaskAssignmentFormScreenState extends State<TaskAssignmentFormScreen> {
                   _selectedPositionIds.add(positionId);
                   // Store position name
                   final pos = notifier.positions.firstWhere(
-                    (p) => p.id == positionId,
-                    orElse: () => DailyTaskPosition(id: positionId, name: 'Unknown'),
+                        (p) => p.id == positionId,
+                    orElse: () =>
+                        DailyTaskPosition(id: positionId, name: 'Unknown'),
                   );
                   _selectedPositionName = pos.name;
                 } else {
                   _selectedPositionName = null;
                 }
-                // Clear item selection when position changes
+
+                // Reset Jenis Tugas when position changes
                 _selectedItemId = null;
                 _selectedItemName = null;
+
+                // Reset Karyawan when position changes (different position = different employees)
+                if (previousPositionId != null && ids.isNotEmpty &&
+                    ids.first != previousPositionId) {
+                  _selectedEmployeeIds.clear();
+                  _selectedEmployeeNames.clear();
+                }
               });
             },
             multiSelect: false,
@@ -555,18 +639,28 @@ class _TaskAssignmentFormScreenState extends State<TaskAssignmentFormScreen> {
         FormFieldCard(
           child: AsyncSelectField(
             label: 'KARYAWAN (TIM)',
-            placeholder: 'Pilih karyawan untuk tugas tim',
+            placeholder: _selectedPositionIds.isEmpty
+                ? 'Pilih posisi terlebih dahulu'
+                : 'Pilih karyawan untuk tugas tim',
             loadOptions: (query) async {
-              final employees = await notifier.searchMobileAssignEmployees(query);
+              // Filter by selected position if any
+              final positionIds = _selectedPositionIds.isNotEmpty
+                  ? _selectedPositionIds.toList()
+                  : null;
+              final employees = await notifier.searchMobileAssignEmployees(
+                  query, positionIds: positionIds);
               return employees
-                  .map((emp) => AsyncSelectOption(
-                        id: emp['id'] as int,
-                        name: '${emp['name']} (${emp['code'] ?? ''})',
-                      ))
+                  .map((emp) =>
+                  AsyncSelectOption(
+                    id: emp['id'] as int,
+                    name: '${emp['name']} (${emp['code'] ?? ''})',
+                  ))
                   .toList();
             },
             selectedIds: _selectedEmployeeIds,
-            initialOptions: initialEmployeeOptions.isNotEmpty ? initialEmployeeOptions : null,
+            initialOptions: initialEmployeeOptions.isNotEmpty
+                ? initialEmployeeOptions
+                : null,
             onSelectionChanged: (ids) {
               setState(() {
                 _selectedEmployeeIds.clear();
@@ -575,7 +669,7 @@ class _TaskAssignmentFormScreenState extends State<TaskAssignmentFormScreen> {
                 // Store employee names
                 for (final id in ids) {
                   final emp = notifier.mobileAssignEmployees.firstWhere(
-                    (e) => e['id'] == id,
+                        (e) => e['id'] == id,
                     orElse: () => {'name': 'Unknown'},
                   );
                   _selectedEmployeeNames.add(emp['name'] as String);
@@ -583,7 +677,7 @@ class _TaskAssignmentFormScreenState extends State<TaskAssignmentFormScreen> {
               });
             },
             multiSelect: true,
-            disabled: isSubmitting,
+            disabled: isSubmitting || _selectedPositionIds.isEmpty,
           ),
         ),
         const SizedBox(height: 16),
@@ -599,18 +693,23 @@ class _TaskAssignmentFormScreenState extends State<TaskAssignmentFormScreen> {
               final positionIds = _selectedPositionIds.isNotEmpty
                   ? _selectedPositionIds.toList()
                   : null;
-              final items = await notifier.searchItems(query, positionIds: positionIds);
+              final items = await notifier.searchItems(
+                  query, positionIds: positionIds);
               return items
-                  .map((item) => AsyncSelectOption(id: item.id, name: item.name))
+                  .map((item) =>
+                  AsyncSelectOption(id: item.id, name: item.name))
                   .toList();
             },
             selectedIds: _selectedItemId != null ? {_selectedItemId!} : {},
-            initialOptions: initialItemOptions.isNotEmpty ? initialItemOptions : null,
+            initialOptions: initialItemOptions.isNotEmpty
+                ? initialItemOptions
+                : null,
             onSelectionChanged: (ids) {
               setState(() {
                 _selectedItemId = ids.isNotEmpty ? ids.first : null;
                 if (_selectedItemId != null) {
-                  final item = notifier.items.firstWhere((i) => i.id == _selectedItemId);
+                  final item = notifier.items.firstWhere((i) =>
+                  i.id == _selectedItemId);
                   _selectedItemName = item.name;
                 }
               });
@@ -630,7 +729,8 @@ class _TaskAssignmentFormScreenState extends State<TaskAssignmentFormScreen> {
               padding: const EdgeInsets.symmetric(vertical: 8),
               child: Row(
                 children: [
-                  const Icon(Icons.calendar_today, color: AppColors.slate500, size: 20),
+                  const Icon(Icons.calendar_today, color: AppColors.slate500,
+                      size: 20),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Column(
@@ -646,7 +746,8 @@ class _TaskAssignmentFormScreenState extends State<TaskAssignmentFormScreen> {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          DateFormat('dd MMMM yyyy', 'id_ID').format(_selectedDate),
+                          DateFormat('dd MMMM yyyy', 'id_ID').format(
+                              _selectedDate),
                           style: const TextStyle(
                             fontSize: 15,
                             color: AppColors.slate800,
@@ -655,7 +756,9 @@ class _TaskAssignmentFormScreenState extends State<TaskAssignmentFormScreen> {
                       ],
                     ),
                   ),
-                  const Icon(Icons.keyboard_arrow_down, color: AppColors.slate500, size: 20),
+                  const Icon(
+                      Icons.keyboard_arrow_down, color: AppColors.slate500,
+                      size: 20),
                 ],
               ),
             ),
@@ -716,7 +819,7 @@ class _TaskAssignmentFormScreenState extends State<TaskAssignmentFormScreen> {
                   controller: _notesController,
                 ),
                 size: FTextFieldSizeVariant.sm,
-                hint: 'Masukkan catatan (opsional)',
+                hint: 'Masukkan catatan (Wajib)',
                 maxLines: 3,
               ),
             ],
@@ -730,32 +833,33 @@ class _TaskAssignmentFormScreenState extends State<TaskAssignmentFormScreen> {
     // Build initial options for edit mode
     final initialToolOptions = _isEditMode && _selectedToolIds.isNotEmpty
         ? _selectedToolIds.map((id) {
-            final name = _selectedToolNames.firstWhere(
-              (n) => notifier.tools.any((t) => t.id == id && t.name == n),
-              orElse: () => 'Memuat...',
-            );
-            return AsyncSelectOption(id: id, name: name);
-          }).toList()
+      final name = _selectedToolNames.firstWhere(
+            (n) => notifier.tools.any((t) => t.id == id && t.name == n),
+        orElse: () => 'Memuat...',
+      );
+      return AsyncSelectOption(id: id, name: name);
+    }).toList()
         : <AsyncSelectOption>[];
 
-    final initialChemicalOptions = _isEditMode && _selectedChemicalIds.isNotEmpty
+    final initialChemicalOptions = _isEditMode &&
+        _selectedChemicalIds.isNotEmpty
         ? _selectedChemicalIds.map((id) {
-            final name = _selectedChemicalNames.firstWhere(
-              (n) => notifier.chemicals.any((c) => c.id == id && c.name == n),
-              orElse: () => 'Memuat...',
-            );
-            return AsyncSelectOption(id: id, name: name);
-          }).toList()
+      final name = _selectedChemicalNames.firstWhere(
+            (n) => notifier.chemicals.any((c) => c.id == id && c.name == n),
+        orElse: () => 'Memuat...',
+      );
+      return AsyncSelectOption(id: id, name: name);
+    }).toList()
         : <AsyncSelectOption>[];
 
     final initialPpeOptions = _isEditMode && _selectedPpeIds.isNotEmpty
         ? _selectedPpeIds.map((id) {
-            final name = _selectedPpeNames.firstWhere(
-              (n) => notifier.ppes.any((p) => p.id == id && p.name == n),
-              orElse: () => 'Memuat...',
-            );
-            return AsyncSelectOption(id: id, name: name);
-          }).toList()
+      final name = _selectedPpeNames.firstWhere(
+            (n) => notifier.ppes.any((p) => p.id == id && p.name == n),
+        orElse: () => 'Memuat...',
+      );
+      return AsyncSelectOption(id: id, name: name);
+    }).toList()
         : <AsyncSelectOption>[];
 
     return ListView(
@@ -774,7 +878,9 @@ class _TaskAssignmentFormScreenState extends State<TaskAssignmentFormScreen> {
                   .toList();
             },
             selectedIds: _selectedToolIds,
-            initialOptions: initialToolOptions.isNotEmpty ? initialToolOptions : null,
+            initialOptions: initialToolOptions.isNotEmpty
+                ? initialToolOptions
+                : null,
             onSelectionChanged: (ids) {
               setState(() {
                 _selectedToolIds.clear();
@@ -783,7 +889,7 @@ class _TaskAssignmentFormScreenState extends State<TaskAssignmentFormScreen> {
                 // Store tool names
                 for (final id in ids) {
                   final tool = notifier.tools.firstWhere(
-                    (t) => t.id == id,
+                        (t) => t.id == id,
                     orElse: () => DailyTaskTool(id: id, name: 'Unknown'),
                   );
                   _selectedToolNames.add(tool.name);
@@ -807,7 +913,9 @@ class _TaskAssignmentFormScreenState extends State<TaskAssignmentFormScreen> {
                   .toList();
             },
             selectedIds: _selectedChemicalIds,
-            initialOptions: initialChemicalOptions.isNotEmpty ? initialChemicalOptions : null,
+            initialOptions: initialChemicalOptions.isNotEmpty
+                ? initialChemicalOptions
+                : null,
             onSelectionChanged: (ids) {
               setState(() {
                 _selectedChemicalIds.clear();
@@ -816,7 +924,7 @@ class _TaskAssignmentFormScreenState extends State<TaskAssignmentFormScreen> {
                 // Store chemical names
                 for (final id in ids) {
                   final chemical = notifier.chemicals.firstWhere(
-                    (c) => c.id == id,
+                        (c) => c.id == id,
                     orElse: () => DailyTaskChemical(id: id, name: 'Unknown'),
                   );
                   _selectedChemicalNames.add(chemical.name);
@@ -840,7 +948,9 @@ class _TaskAssignmentFormScreenState extends State<TaskAssignmentFormScreen> {
                   .toList();
             },
             selectedIds: _selectedPpeIds,
-            initialOptions: initialPpeOptions.isNotEmpty ? initialPpeOptions : null,
+            initialOptions: initialPpeOptions.isNotEmpty
+                ? initialPpeOptions
+                : null,
             onSelectionChanged: (ids) {
               setState(() {
                 _selectedPpeIds.clear();
@@ -849,7 +959,7 @@ class _TaskAssignmentFormScreenState extends State<TaskAssignmentFormScreen> {
                 // Store PPE names
                 for (final id in ids) {
                   final ppe = notifier.ppes.firstWhere(
-                    (p) => p.id == id,
+                        (p) => p.id == id,
                     orElse: () => DailyTaskPpe(id: id, name: 'Unknown'),
                   );
                   _selectedPpeNames.add(ppe.name);
@@ -881,7 +991,7 @@ class _TaskAssignmentFormScreenState extends State<TaskAssignmentFormScreen> {
                 // Store machine names
                 for (final id in ids) {
                   final machine = notifier.machines.firstWhere(
-                    (m) => m.id == id,
+                        (m) => m.id == id,
                     orElse: () => DailyTaskMachine(id: id, name: 'Unknown'),
                   );
                   _selectedMachineNames.add(machine.name);
@@ -924,7 +1034,8 @@ class _TaskAssignmentFormScreenState extends State<TaskAssignmentFormScreen> {
               const SizedBox(height: 8),
               _buildKonfirmasiRow('Jenis Tugas', _selectedItemName ?? '-'),
               const SizedBox(height: 8),
-              _buildKonfirmasiRow('Jumlah Karyawan', '${_selectedEmployeeIds.length} orang'),
+              _buildKonfirmasiRow(
+                  'Jumlah Karyawan', '${_selectedEmployeeIds.length} orang'),
               if (_selectedEmployeeNames.isNotEmpty) ...[
                 const SizedBox(height: 4),
                 Wrap(
@@ -932,7 +1043,8 @@ class _TaskAssignmentFormScreenState extends State<TaskAssignmentFormScreen> {
                   runSpacing: 6,
                   children: _selectedEmployeeNames.map((name) {
                     return Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
                         color: AppColors.primary.withAlpha(26),
                         borderRadius: BorderRadius.circular(4),
@@ -949,7 +1061,8 @@ class _TaskAssignmentFormScreenState extends State<TaskAssignmentFormScreen> {
                 ),
               ],
               const SizedBox(height: 8),
-              _buildKonfirmasiRow('Tanggal', DateFormat('dd MMMM yyyy', 'id_ID').format(_selectedDate)),
+              _buildKonfirmasiRow('Tanggal',
+                  DateFormat('dd MMMM yyyy', 'id_ID').format(_selectedDate)),
             ],
           ),
         ),
@@ -975,9 +1088,13 @@ class _TaskAssignmentFormScreenState extends State<TaskAssignmentFormScreen> {
                 ],
               ),
               const Divider(height: 24),
-              _buildKonfirmasiRow('Target Durasi', _targetMinutesController.text.isEmpty ? '-' : '${_targetMinutesController.text} menit'),
+              _buildKonfirmasiRow('Target Durasi',
+                  _targetMinutesController.text.isEmpty
+                      ? '-'
+                      : '${_targetMinutesController.text} menit'),
               const SizedBox(height: 8),
-              _buildKonfirmasiRow('Catatan', _notesController.text.isEmpty ? '-' : _notesController.text),
+              _buildKonfirmasiRow('Catatan',
+                  _notesController.text.isEmpty ? '-' : _notesController.text),
             ],
           ),
         ),
@@ -1016,7 +1133,8 @@ class _TaskAssignmentFormScreenState extends State<TaskAssignmentFormScreen> {
                   runSpacing: 6,
                   children: _selectedToolNames.map((name) {
                     return Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
                         color: AppColors.slate100,
                         borderRadius: BorderRadius.circular(4),
@@ -1047,7 +1165,8 @@ class _TaskAssignmentFormScreenState extends State<TaskAssignmentFormScreen> {
                   runSpacing: 6,
                   children: _selectedChemicalNames.map((name) {
                     return Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
                         color: AppColors.slate100,
                         borderRadius: BorderRadius.circular(4),
@@ -1078,7 +1197,8 @@ class _TaskAssignmentFormScreenState extends State<TaskAssignmentFormScreen> {
                   runSpacing: 6,
                   children: _selectedPpeNames.map((name) {
                     return Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
                         color: AppColors.slate100,
                         borderRadius: BorderRadius.circular(4),
@@ -1109,7 +1229,8 @@ class _TaskAssignmentFormScreenState extends State<TaskAssignmentFormScreen> {
                   runSpacing: 6,
                   children: _selectedMachineNames.map((name) {
                     return Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
                         color: AppColors.slate100,
                         borderRadius: BorderRadius.circular(4),
@@ -1169,7 +1290,8 @@ class _TaskAssignmentFormScreenState extends State<TaskAssignmentFormScreen> {
     return Scaffold(
       backgroundColor: AppColors.slate100,
       appBar: AppBar(
-        title: Text(_isEditMode ? 'Edit Tugas' : 'Step ${_currentStep + 1} dari $_totalSteps'),
+        title: Text(_isEditMode ? 'Edit Tugas' : 'Step ${_currentStep +
+            1} dari $_totalSteps'),
         backgroundColor: Colors.white,
         foregroundColor: AppColors.slate800,
         elevation: 0,
@@ -1200,48 +1322,48 @@ class _TaskAssignmentFormScreenState extends State<TaskAssignmentFormScreen> {
               decoration: const BoxDecoration(
                 color: Colors.white,
                 boxShadow: [
-                BoxShadow(
-                  color: Colors.black12,
-                  blurRadius: 4,
-                  offset: Offset(0, -2),
-                ),
-              ],
-            ),
-            child: Row(
-              children: [
-                if (_currentStep > 0)
+                  BoxShadow(
+                    color: Colors.black12,
+                    blurRadius: 4,
+                    offset: Offset(0, -2),
+                  ),
+                ],
+              ),
+              child: Row(
+                children: [
+                  if (_currentStep > 0)
+                    Expanded(
+                      child: FButton(
+                        onPress: _previousStep,
+                        variant: FButtonVariant.outline,
+                        child: const Text('SEBELUMNYA'),
+                      ),
+                    ),
+                  if (_currentStep > 0) const SizedBox(width: 12),
                   Expanded(
+                    flex: _currentStep == 0 ? 1 : 1,
                     child: FButton(
-                      onPress: _previousStep,
-                      variant: FButtonVariant.outline,
-                      child: const Text('SEBELUMNYA'),
+                      onPress: isSubmitting ? null : _nextStep,
+                      variant: FButtonVariant.primary,
+                      child: isSubmitting
+                          ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
+                      )
+                          : Text(_currentStep == _totalSteps - 1
+                          ? (_isEditMode ? 'SIMPAN' : 'TUGASKAN')
+                          : 'SELANJUTNYA'),
                     ),
                   ),
-                if (_currentStep > 0) const SizedBox(width: 12),
-                Expanded(
-                  flex: _currentStep == 0 ? 1 : 1,
-                  child: FButton(
-                    onPress: isSubmitting ? null : _nextStep,
-                    variant: FButtonVariant.primary,
-                    child: isSubmitting
-                        ? const SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: Colors.white,
-                            ),
-                          )
-                        : Text(_currentStep == _totalSteps - 1
-                            ? (_isEditMode ? 'SIMPAN' : 'TUGASKAN')
-                            : 'SELANJUTNYA'),
-                  ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-        ],
-      ),
+          ],
+        ),
       ),
     );
   }

@@ -247,18 +247,25 @@ class DailyTaskNotifier extends ChangeNotifier {
 
   /// Load positions for daily task assignment
   Future<void> loadPositions() async {
+    debugPrint('PROVIDER: loadPositions called');
     try {
       _positions = await _repository.getPositions();
+      debugPrint('PROVIDER: _positions = $_positions');
       notifyListeners();
     } catch (e) {
+      debugPrint('PROVIDER: loadPositions error = $e');
       // Silently fail, positions are optional
     }
   }
 
   /// Search employees for mobile assign (for async select)
-  Future<List<Map<String, dynamic>>> searchMobileAssignEmployees(String query) async {
+  /// Optionally filter by position_ids
+  Future<List<Map<String, dynamic>>> searchMobileAssignEmployees(String query, {List<int>? positionIds}) async {
     try {
-      return await _repository.getMobileAssignEmployees(query: query.isEmpty ? null : query);
+      return await _repository.getMobileAssignEmployees(
+        query: query.isEmpty ? null : query,
+        positionIds: positionIds,
+      );
     } catch (e) {
       return [];
     }
