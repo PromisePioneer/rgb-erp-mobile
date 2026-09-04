@@ -531,6 +531,127 @@ class LeaveApi {
 
 }
 
+class PurchaseRequestApi {
+  final Dio _dio;
+
+  PurchaseRequestApi(this._dio);
+
+  /// GET /purchase-requests - Get all purchase requests (paginated)
+  Future<Map<String, dynamic>> getPurchaseRequests({
+    String? search,
+    String? status,
+    int page = 1,
+    int perPage = 15,
+  }) async {
+    try {
+      final response = await _dio.get(
+        ApiEndpoints.purchaseRequests,
+        queryParameters: {
+          if (search != null && search.isNotEmpty) 'search': search,
+          if (status != null && status.isNotEmpty) 'status': status,
+          'page': page,
+          'per_page': perPage,
+        },
+      );
+      return response.data as Map<String, dynamic>;
+    } on DioException catch (e) {
+      throw ApiException.fromDioException(e);
+    }
+  }
+
+  /// GET /purchase-requests/{id} - Get purchase request detail
+  Future<Map<String, dynamic>> getPurchaseRequestDetail(int id) async {
+    try {
+      final response = await _dio.get(ApiEndpoints.purchaseRequest(id));
+      return response.data as Map<String, dynamic>;
+    } on DioException catch (e) {
+      throw ApiException.fromDioException(e);
+    }
+  }
+
+  /// POST /purchase-requests - Create a new purchase request
+  Future<Map<String, dynamic>> createPurchaseRequest({
+    required String date,
+    String? supplier,
+    required String notes,
+    required List<Map<String, dynamic>> details,
+  }) async {
+    try {
+      final response = await _dio.post(
+        ApiEndpoints.purchaseRequests,
+        data: {
+          'date': date,
+          if (supplier != null && supplier.isNotEmpty) 'supplier': supplier,
+          'notes': notes,
+          'details': details,
+        },
+      );
+      return response.data as Map<String, dynamic>;
+    } on DioException catch (e) {
+      throw ApiException.fromDioException(e);
+    }
+  }
+
+  /// PUT /purchase-requests/{id} - Update a purchase request
+  Future<Map<String, dynamic>> updatePurchaseRequest({
+    required int id,
+    required String date,
+    String? supplier,
+    required String notes,
+    required List<Map<String, dynamic>> details,
+  }) async {
+    try {
+      final response = await _dio.put(
+        ApiEndpoints.purchaseRequest(id),
+        data: {
+          'date': date,
+          if (supplier != null && supplier.isNotEmpty) 'supplier': supplier,
+          'notes': notes,
+          'details': details,
+        },
+      );
+      return response.data as Map<String, dynamic>;
+    } on DioException catch (e) {
+      throw ApiException.fromDioException(e);
+    }
+  }
+
+  /// DELETE /purchase-requests/{id} - Delete a purchase request
+  Future<Map<String, dynamic>> deletePurchaseRequest(int id) async {
+    try {
+      final response = await _dio.delete(ApiEndpoints.purchaseRequest(id));
+      return response.data as Map<String, dynamic>;
+    } on DioException catch (e) {
+      throw ApiException.fromDioException(e);
+    }
+  }
+
+  /// POST /purchase-requests/{id}/submit - Submit for approval
+  Future<Map<String, dynamic>> submitPurchaseRequest(int id) async {
+    try {
+      final response = await _dio.post(ApiEndpoints.purchaseRequestSubmit(id));
+      return response.data as Map<String, dynamic>;
+    } on DioException catch (e) {
+      throw ApiException.fromDioException(e);
+    }
+  }
+
+  /// GET /purchase-requests/products-select-options - Get products for dropdown
+  Future<Map<String, dynamic>> getProductOptions({String? query}) async {
+    try {
+      final response = await _dio.get(
+        ApiEndpoints.purchaseRequestProducts,
+        queryParameters: {
+          if (query != null && query.isNotEmpty) 'q': query,
+        },
+      );
+      return response.data as Map<String, dynamic>;
+    } on DioException catch (e) {
+      throw ApiException.fromDioException(e);
+    }
+  }
+}
+
 class ViolationReportApi {
   final Dio _dio;
 

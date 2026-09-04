@@ -96,6 +96,14 @@ class ApiEndpoints {
   static const String leave = '/leave';
 
   // ====================
+  // Purchase Request Endpoints
+  // ====================
+  static const String purchaseRequests = '/purchase-requests';
+  static String purchaseRequest(int id) => '/purchase-requests/$id';
+  static String purchaseRequestSubmit(int id) => '/purchase-requests/$id/submit';
+  static const String purchaseRequestProducts = '/purchase-requests/products-select-options';
+
+  // ====================
   // Violation Report Endpoints
   // ====================
   static const String violationReportProjects = '/patrol-violation/projects';

@@ -73,4 +73,7 @@ class IconMap {
   static IconData users = FLucideIcons.users;
   static IconData camera = FLucideIcons.camera;
   static IconData trash = FLucideIcons.trash;
+
+  // Additional icons for Purchase Request
+  static IconData shoppingCart = FLucideIcons.shoppingCart;
 }

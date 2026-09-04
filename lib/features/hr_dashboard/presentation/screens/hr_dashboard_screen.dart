@@ -31,6 +31,7 @@ final _menuItems = <MenuItemData>[
   MenuItemData(label: 'Pendaftaran Wajah', icon: IconMap.face, route: '/face-enrollment', badge: 'NEW'),
   MenuItemData(label: 'Jadwal', icon: IconMap.calendarToday, route: '/schedule'),
   MenuItemData(label: 'Cuti', icon: IconMap.beachAccess, route: '/leave'),
+  MenuItemData(label: 'Purchase Request', icon: IconMap.shoppingCart, route: '/purchase-request'),
   MenuItemData(label: 'Payroll', icon: IconMap.accountBalanceWallet, route: '/payroll'),
   MenuItemData(label: 'Approval', icon: IconMap.checklist),
   MenuItemData(label: 'Patroli', icon: IconMap.security),

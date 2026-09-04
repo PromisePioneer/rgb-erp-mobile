@@ -22,6 +22,7 @@ const Map<String, String> menuPrivilegeMapping = {
   'Pendaftaran Wajah': 'face_enrollment',
   'Jadwal': 'schedule',
   'Cuti': 'leave',
+  'Purchase Request': 'purchase_request',
   'Payroll': 'payroll',
   'Approval': 'approval',
   'Patroli': 'patrol',

@@ -26,6 +26,7 @@ class _EditMenuScreenState extends State<EditMenuScreen> {
     {'label': 'Pendaftaran Wajah', 'icon': IconMap.face, 'route': '/face-enrollment', 'badge': 'NEW'},
     {'label': 'Jadwal', 'icon': IconMap.calendarToday, 'route': '/schedule', 'badge': null},
     {'label': 'Cuti', 'icon': IconMap.beachAccess, 'route': '/leave', 'badge': null},
+    {'label': 'Purchase Request', 'icon': IconMap.shoppingCart, 'route': '/purchase-request', 'badge': null},
     {'label': 'Payroll', 'icon': IconMap.accountBalanceWallet, 'route': '/payroll', 'badge': null},
     {'label': 'Training', 'icon': IconMap.school, 'route': null, 'badge': null},
     {'label': 'Approval', 'icon': IconMap.checklist, 'route': null, 'badge': null},

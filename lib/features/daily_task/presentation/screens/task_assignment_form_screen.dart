@@ -218,6 +218,7 @@ class _TaskAssignmentFormScreenState extends State<TaskAssignmentFormScreen> {
     // Get area_id from selected employee(s) - their stationed area from placement
     if (_selectedEmployeeIds.isNotEmpty) {
       // Find the first selected employee in the loaded employees list
+      final notifier = context.read<DailyTaskNotifier>();
       final selectedEmp = notifier.mobileAssignEmployees.cast<Map<String, dynamic>>().firstWhere(
         (e) => _selectedEmployeeIds.contains(e['id']),
         orElse: () => {},

@@ -98,7 +98,7 @@ class DailyTaskRepository {
         final response = await api.getInventoryByArea(
           areaId: areaId,
           query: query,
-          categoryType: categoryType ?? 'tools',
+          categoryType: 'tools',
         );
         final data = response['data'];
         if (data == null) return [];
@@ -130,7 +130,7 @@ class DailyTaskRepository {
         final response = await api.getInventoryByArea(
           areaId: areaId,
           query: query,
-          categoryType: categoryType ?? 'chemicals',
+          categoryType: 'chemicals',
         );
         final data = response['data'];
         if (data == null) return [];
@@ -162,7 +162,7 @@ class DailyTaskRepository {
         final response = await api.getInventoryByArea(
           areaId: areaId,
           query: query,
-          categoryType: categoryType ?? 'ppes',
+          categoryType: 'ppes',
         );
         final data = response['data'];
         if (data == null) return [];
@@ -194,7 +194,7 @@ class DailyTaskRepository {
         final response = await api.getInventoryByArea(
           areaId: areaId,
           query: query,
-          categoryType: categoryType ?? 'machines',
+          categoryType: 'machines',
         );
         final data = response['data'];
         if (data == null) return [];

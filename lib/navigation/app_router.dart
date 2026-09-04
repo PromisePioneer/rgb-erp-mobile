@@ -35,6 +35,9 @@ import '../features/schedule/presentation/screens/schedule_screen.dart';
 import '../features/payroll/presentation/screens/payroll_screen.dart';
 import '../features/payroll/presentation/screens/payroll_detail_screen.dart';
 import '../features/leave/presentation/screens/leave_screen.dart';
+import '../features/purchase_request/presentation/screens/purchase_request_screen.dart';
+import '../features/purchase_request/presentation/screens/purchase_request_form_screen.dart';
+import '../features/purchase_request/presentation/screens/purchase_request_detail_screen.dart';
 import '../features/violation_report/presentation/screens/violation_report_form_screen.dart';
 import '../features/violation_report/presentation/screens/violation_report_history_screen.dart';
 import '../features/violation_report/presentation/screens/violation_report_detail_screen.dart';
@@ -388,6 +391,44 @@ void initRouter(AuthNotifier authNotifier) {
                 path: '/leave/form',
                 name: 'leave-form',
                 builder: (context, state) => const LeaveFormScreen(),
+              ),
+            ],
+          ),
+          // Branch 24: Purchase Request List
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/purchase-request',
+                name: 'purchase-request',
+                builder: (context, state) => const PurchaseRequestScreen(),
+                routes: [
+                  // Form route MUST be before parameterized route
+                  GoRoute(
+                    path: 'form',
+                    name: 'purchase-request-form',
+                    builder: (context, state) {
+                      final editId = state.uri.queryParameters['edit'];
+                      return PurchaseRequestFormScreen(
+                        editId: editId != null ? int.tryParse(editId) : null,
+                      );
+                    },
+                  ),
+                  // Detail route - only match numeric IDs
+                  GoRoute(
+                    path: ':id',
+                    name: 'purchase-request-detail',
+                    builder: (context, state) {
+                      final idParam = state.pathParameters['id'];
+                      final id = int.tryParse(idParam ?? '');
+                      if (id == null) {
+                        return const Scaffold(
+                          body: Center(child: Text('ID tidak valid')),
+                        );
+                      }
+                      return PurchaseRequestDetailScreen(purchaseRequestId: id);
+                    },
+                  ),
+                ],
               ),
             ],
           ),

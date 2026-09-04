@@ -17,6 +17,7 @@ import 'features/patrol/presentation/providers/patrol_provider.dart';
 import 'features/schedule/presentation/providers/schedule_provider.dart';
 import 'features/payroll/presentation/providers/payroll_provider.dart';
 import 'features/leave/presentation/providers/leave_provider.dart';
+import 'features/purchase_request/presentation/providers/purchase_request_provider.dart';
 import 'features/panic/presentation/providers/panic_provider.dart';
 import 'features/violation_report/presentation/providers/violation_report_provider.dart';
 import 'features/report/presentation/providers/report_provider.dart';
@@ -148,6 +149,13 @@ void main() async {
         ChangeNotifierProvider<LeaveNotifier>(
           create: (_) => LeaveNotifier(
             createLeaveRepository(dio),
+          ),
+        ),
+
+        // Purchase Request Provider (lazy loaded)
+        ChangeNotifierProvider<PurchaseRequestNotifier>(
+          create: (_) => PurchaseRequestNotifier(
+            createPurchaseRequestRepository(dio),
           ),
         ),
 
