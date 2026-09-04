@@ -19,13 +19,13 @@ class FaceEnrollmentCaptureScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return FaceCaptureScreen(
       onCapture: (photoPath) async {
-        print('FACE_ENROLL_SCREEN: Photo captured: $photoPath');
+        
 
         // Submit enrollment
         final notifier = context.read<FaceEnrollmentNotifier>();
-        print('FACE_ENROLL_SCREEN: Calling enrollFace...');
+        
         final result = await notifier.enrollFace(photoPath: photoPath);
-        print('FACE_ENROLL_SCREEN: Result: success=${result?.success}, message=${result?.message}');
+        
 
         if (context.mounted) {
           if (result != null && result.success) {

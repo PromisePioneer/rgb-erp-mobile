@@ -6,7 +6,7 @@ import '../../domain/domain.dart';
 class PatrolRepository {
   final PatrolApi _api;
 
-  PatrolRepository({required PatrolApi api}) : _api = api;
+  PatrolRepository({required this._api});
 
   /// Get today's patrol status
   Future<PatrolTodayStatus> getTodayStatus() async {
@@ -18,11 +18,13 @@ class PatrolRepository {
     }
   }
 
-  /// Scan a checkpoint QR code (OTP validated on mobile)
+  /// Scan a checkpoint QR code
+  /// OTP is validated on backend using checkpoint secret_key
   Future<PatrolScanResult> scan({
     required String qrCode,
     required double latitude,
     required double longitude,
+    String? otp,
     String? deviceId,
     bool? isMockLocation,
     String? scannedAtLocal,
@@ -32,6 +34,7 @@ class PatrolRepository {
         qrCode: qrCode,
         latitude: latitude,
         longitude: longitude,
+        otp: otp,
         deviceId: deviceId,
         isMockLocation: isMockLocation,
         scannedAtLocal: scannedAtLocal,
@@ -42,10 +45,10 @@ class PatrolRepository {
     }
   }
 
-  /// Get current employee OTP code for patrol validation
-  Future<PatrolOtpResponse> getOtp() async {
+  /// Get checkpoint TOTP info after QR scan
+  Future<PatrolOtpResponse> getOtp({String? qrCode}) async {
     try {
-      final response = await _api.getOtp();
+      final response = await _api.getOtp(qrCode: qrCode);
       return PatrolOtpResponse.fromJson(response);
     } on DioException catch (e) {
       throw ApiException.fromDioException(e);

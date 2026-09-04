@@ -172,9 +172,14 @@ class DailyTaskNotifier extends ChangeNotifier {
   // ====================
 
   /// Search tools by name (for async select) and cache results
-  Future<List<DailyTaskTool>> searchTools(String query) async {
+  /// If areaId is provided, fetches from product_areas
+  Future<List<DailyTaskTool>> searchTools(String query, {int? areaId, int? categoryType}) async {
     try {
-      final tools = await _repository.getTools(query: query.isEmpty ? null : query);
+      final tools = await _repository.getTools(
+        query: query.isEmpty ? null : query,
+        areaId: areaId,
+        categoryType: categoryType,
+      );
       // Cache tools for later lookup (avoid duplicates)
       for (final tool in tools) {
         if (!_tools.any((t) => t.id == tool.id)) {
@@ -188,9 +193,14 @@ class DailyTaskNotifier extends ChangeNotifier {
   }
 
   /// Search chemicals by name (for async select) and cache results
-  Future<List<DailyTaskChemical>> searchChemicals(String query) async {
+  /// If areaId is provided, fetches from product_areas
+  Future<List<DailyTaskChemical>> searchChemicals(String query, {int? areaId, int? categoryType}) async {
     try {
-      final chemicals = await _repository.getChemicals(query: query.isEmpty ? null : query);
+      final chemicals = await _repository.getChemicals(
+        query: query.isEmpty ? null : query,
+        areaId: areaId,
+        categoryType: categoryType,
+      );
       // Cache chemicals for later lookup (avoid duplicates)
       for (final chemical in chemicals) {
         if (!_chemicals.any((c) => c.id == chemical.id)) {
@@ -204,9 +214,14 @@ class DailyTaskNotifier extends ChangeNotifier {
   }
 
   /// Search PPEs by name (for async select) and cache results
-  Future<List<DailyTaskPpe>> searchPpes(String query) async {
+  /// If areaId is provided, fetches from product_areas
+  Future<List<DailyTaskPpe>> searchPpes(String query, {int? areaId, int? categoryType}) async {
     try {
-      final ppes = await _repository.getPpes(query: query.isEmpty ? null : query);
+      final ppes = await _repository.getPpes(
+        query: query.isEmpty ? null : query,
+        areaId: areaId,
+        categoryType: categoryType,
+      );
       // Cache ppes for later lookup (avoid duplicates)
       for (final ppe in ppes) {
         if (!_ppes.any((p) => p.id == ppe.id)) {
@@ -220,9 +235,14 @@ class DailyTaskNotifier extends ChangeNotifier {
   }
 
   /// Search machines by name (for async select) and cache results
-  Future<List<DailyTaskMachine>> searchMachines(String query) async {
+  /// If areaId is provided, fetches from product_areas
+  Future<List<DailyTaskMachine>> searchMachines(String query, {int? areaId, int? categoryType}) async {
     try {
-      final machines = await _repository.getMachines(query: query.isEmpty ? null : query);
+      final machines = await _repository.getMachines(
+        query: query.isEmpty ? null : query,
+        areaId: areaId,
+        categoryType: categoryType,
+      );
       // Cache machines for later lookup (avoid duplicates)
       for (final machine in machines) {
         if (!_machines.any((m) => m.id == machine.id)) {
@@ -239,21 +259,27 @@ class DailyTaskNotifier extends ChangeNotifier {
   /// Optional: filter by positionIds
   Future<List<DailyTaskMasterItem>> searchItems(String query, {List<int>? positionIds}) async {
     try {
-      return await _repository.getItems(query: query.isEmpty ? null : query, positionIds: positionIds);
+      final items = await _repository.getItems(query: query.isEmpty ? null : query, positionIds: positionIds);
+
+      // Log for debugging
+      debugPrint('searchItems: query=$query, positionIds=$positionIds, found=${items.length} items');
+
+      return items;
     } catch (e) {
+      debugPrint('searchItems error: $e');
       return [];
     }
   }
 
   /// Load positions for daily task assignment
   Future<void> loadPositions() async {
-    debugPrint('PROVIDER: loadPositions called');
+    
     try {
       _positions = await _repository.getPositions();
-      debugPrint('PROVIDER: _positions = $_positions');
+      
       notifyListeners();
     } catch (e) {
-      debugPrint('PROVIDER: loadPositions error = $e');
+      
       // Silently fail, positions are optional
     }
   }

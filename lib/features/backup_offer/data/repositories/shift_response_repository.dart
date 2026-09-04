@@ -35,7 +35,7 @@ class ShiftResponseRepository {
         endpoint,
         data: {
           'action': action,
-          if (reason != null) 'reason': reason,
+          'reason': ?reason,
         },
       );
       return ShiftRespondResponse.fromJson(response.data);

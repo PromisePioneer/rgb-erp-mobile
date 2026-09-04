@@ -136,8 +136,8 @@ class BiometricSection extends StatelessWidget {
                       }
                     }
                   : null,
-              activeColor: AppColors.primary,
-              activeTrackColor: AppColors.primary.withOpacity(0.5),
+              activeThumbColor: AppColors.primary,
+              activeTrackColor: AppColors.primary.withValues(alpha: 0.5),
               inactiveThumbColor: AppColors.gray400,
               inactiveTrackColor: AppColors.gray200,
             ),

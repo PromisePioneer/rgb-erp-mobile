@@ -11,12 +11,10 @@ class AuthRepository {
   final BiometricService _biometric;
 
   AuthRepository({
-    required AuthApi api,
-    required StorageService storage,
-    required BiometricService biometric,
-  })  : _api = api,
-        _storage = storage,
-        _biometric = biometric;
+    required this._api,
+    required this._storage,
+    required this._biometric,
+  });
 
   /// Expose storage for external access (e.g., client auth check)
   StorageService get storage => _storage;

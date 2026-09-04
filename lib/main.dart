@@ -9,7 +9,6 @@ import 'package:forui/forui.dart';
 import 'core/core.dart';
 import 'core/theme/app_ftheme.dart';
 import 'core/services/notification_dialog_handler.dart';
-import 'core/services/foreground_task_manager.dart';
 import 'features/auth/presentation/providers/auth_provider.dart';
 import 'features/auth/data/repositories/auth_repository.dart';
 import 'features/attendance/presentation/providers/attendance_provider.dart';
@@ -39,7 +38,7 @@ void main() async {
   try {
     await dotenv.load(fileName: '.env');
   } catch (e) {
-    debugPrint('MAIN: .env file not found or error loading, using defaults');
+    
   }
 
   // Initialize environment configuration
@@ -68,12 +67,12 @@ void main() async {
   final notificationApi = NotificationApi(dio);
 
   // Initialize notification service (FCM + local notifications)
-  debugPrint('MAIN: Initializing notification service...');
+  
   await notificationService.init(notificationApi: notificationApi, storage: storageService);
-  debugPrint('MAIN: Notification service initialized');
-  debugPrint('MAIN: Getting FCM token...');
+  
+  
   final fcmToken = await notificationService.getToken();
-  debugPrint('MAIN: FCM Token = $fcmToken');
+  
 
   // Create repositories
   final authRepository = AuthRepository(
@@ -90,7 +89,7 @@ void main() async {
 
   // Setup notification service alarm callback
   notificationService.onPatrolAlarmReceived = (message) {
-    debugPrint('MAIN: notificationService.onPatrolAlarmReceived called with: $message');
+    
     // Trigger patrol provider alarm alert
     // Note: PatrolNotifier will be lazily created, but we use static callback for navigation
   };
@@ -217,23 +216,23 @@ void main() async {
 
 /// Setup global alarm navigation callback
 void _setupAlarmNavigation() {
-  debugPrint('MAIN: Setting up alarm navigation callback');
+  
   // Import PatrolNotifier and set global navigation callback
   // This allows navigation to alarm screen from anywhere
   PatrolNotifier.onAlarmNavigated = (message) {
-    debugPrint('MAIN: onAlarmNavigated called with: $message');
+    
     _navigateToAlarm(message ?? 'Waktunya patroli checkpoint berikutnya!');
   };
 
   // Setup shift reminder notification callback - show dialog
   notificationService.onShiftReminderReceived = (message, scheduleId) {
-    debugPrint('MAIN: onShiftReminderReceived called with: $message, scheduleId: $scheduleId');
+    
     notificationDialogHandler.handleShiftReminderNotification(message: message, scheduleId: scheduleId);
   };
 
   // Setup backup offer notification callback - show dialog
   notificationService.onBackupOfferReceived = (message, offerId, scheduleId) {
-    debugPrint('MAIN: onBackupOfferReceived called with: $message, offerId: $offerId');
+    
     notificationDialogHandler.handleBackupOfferNotification(
       message: message,
       offerId: offerId,
@@ -282,29 +281,29 @@ void _navigateToPatrol() {
 
 /// Navigate to patrol alarm screen
 void _navigateToAlarm(String message) {
-  debugPrint('MAIN: _navigateToAlarm called with: $message');
+  
   try {
     final encodedMsg = Uri.encodeComponent(message);
-    debugPrint('MAIN: Pushing to /patrol/alarm?message=$encodedMsg');
+    
     appRouterProvider.push('/patrol/alarm?message=$encodedMsg');
   } catch (e) {
-    debugPrint('MAIN: Failed to navigate to alarm: $e');
+    
   }
 }
 
 /// Navigate to schedule screen
 void _navigateToSchedule() {
-  debugPrint('MAIN: _navigateToSchedule called');
+  
   try {
     appRouterProvider.go('/schedule');
   } catch (e) {
-    debugPrint('MAIN: Failed to navigate to schedule: $e');
+    
   }
 }
 
 /// Navigate to attendance screen
 void _navigateToAttendance(String? message) {
-  debugPrint('MAIN: _navigateToAttendance called');
+  
   try {
     if (message != null) {
       final encodedMsg = Uri.encodeComponent(message);
@@ -313,7 +312,7 @@ void _navigateToAttendance(String? message) {
       appRouterProvider.go('/attendance');
     }
   } catch (e) {
-    debugPrint('MAIN: Failed to navigate to attendance: $e');
+    
   }
 }
 

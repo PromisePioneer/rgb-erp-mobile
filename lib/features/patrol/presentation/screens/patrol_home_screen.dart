@@ -22,8 +22,6 @@ class PatrolHomeScreen extends StatefulWidget {
 }
 
 class _PatrolHomeScreenState extends State<PatrolHomeScreen> with WidgetsBindingObserver {
-  Timer? _otpTimer;
-
   @override
   void initState() {
     super.initState();
@@ -39,19 +37,10 @@ class _PatrolHomeScreenState extends State<PatrolHomeScreen> with WidgetsBinding
     };
 
     notifier.loadTodayStatus();
-    notifier.fetchOtp();
-
-    // Periodic OTP fetch every 5 seconds
-    _otpTimer = Timer.periodic(const Duration(seconds: 5), (_) {
-      if (mounted) {
-        notifier.fetchOtp();
-      }
-    });
   }
 
   @override
   void dispose() {
-    _otpTimer?.cancel();
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
@@ -63,11 +52,187 @@ class _PatrolHomeScreenState extends State<PatrolHomeScreen> with WidgetsBinding
     final qrCode = await context.push<String>('/patrol/scan');
     if (qrCode == null || !mounted) return;
 
-    // Perform scan (loadTodayStatus is already called inside performScan on success)
-    final result = await notifier.performScan(qrCode);
-    if (result == null || !mounted) return;
+    // Parse QR to check if OTP is needed
+    final qrResult = QRScanResult.fromQRContent(qrCode);
 
-    // Handle result
+    if (qrResult.hasSecretKey) {
+      // Show OTP dialog
+      final otp = await _showOtpDialog(qrResult.code, qrResult.secretKey!);
+      if (otp == null || !mounted) return;
+
+      // Submit OTP and scan
+      final result = await notifier.submitOtpAndScan(qrCode, otp);
+      if (result == null || !mounted) return;
+
+      // Handle result
+      _handleResult(result);
+    } else {
+      // No OTP needed, scan directly
+      final result = await notifier.performScan(qrCode);
+      if (result == null || !mounted) return;
+
+      // Handle result (might be null if OTP is needed but we handle above)
+      if (result.success) {
+        _handleResult(result);
+      }
+    }
+  }
+
+  /// Show dialog to input OTP code
+  Future<String?> _showOtpDialog(String checkpointName, String secretKey) async {
+    final theme = FTheme.of(context);
+    final controller = TextEditingController();
+    final notifier = context.read<PatrolNotifier>();
+
+    // Generate initial TOTP
+    String currentOtp = notifier.generateTOTP(secretKey);
+
+    // Timer for OTP refresh
+    int countdown = 30;
+    Timer? timer;
+
+    return showDialog<String>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) {
+          // Start timer on first build
+          timer ??= Timer.periodic(const Duration(seconds: 1), (t) {
+              setState(() {
+                countdown--;
+                if (countdown <= 0) {
+                  countdown = 30;
+                  currentOtp = notifier.generateTOTP(secretKey);
+                }
+              });
+            });
+
+          return AlertDialog(
+            shape: RoundedRectangleBorder(borderRadius: AppRadius.radiusLg),
+            title: Row(
+              children: [
+                Icon(IconMap.lock, color: theme.colors.primary),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    checkpointName,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
+            ),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // OTP Display
+                Container(
+                  padding: const EdgeInsets.all(AppSpacing.lg),
+                  decoration: BoxDecoration(
+                    color: theme.colors.primary.withAlpha(26),
+                    borderRadius: AppRadius.radiusMd,
+                    border: Border.all(
+                      color: theme.colors.primary.withAlpha(77),
+                    ),
+                  ),
+                  child: Column(
+                    children: [
+                      Text(
+                        'KODE OTP',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: theme.colors.primary,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        currentOtp,
+                        style: TextStyle(
+                          fontSize: 36,
+                          fontWeight: FontWeight.bold,
+                          color: theme.colors.primary,
+                          letterSpacing: 8,
+                          fontFamily: 'monospace',
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: countdown <= 5
+                              ? theme.colors.destructive.withAlpha(51)
+                              : theme.colors.primary.withAlpha(51),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Text(
+                          'Berubah dalam ${countdown}s',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: countdown <= 5
+                                ? theme.colors.destructive
+                                : theme.colors.primary,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.lg),
+                // Input field
+                TextField(
+                  controller: controller,
+                  keyboardType: TextInputType.number,
+                  maxLength: 6,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 8,
+                  ),
+                  decoration: InputDecoration(
+                    hintText: 'Input kode OTP',
+                    counterText: '',
+                    border: OutlineInputBorder(
+                      borderRadius: AppRadius.radiusMd,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                Text(
+                  'Masukkan kode 6 digit di atas',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: theme.colors.mutedForeground,
+                  ),
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  timer?.cancel();
+                  Navigator.pop(context, null);
+                },
+                child: const Text('Batal'),
+              ),
+              FButton(
+                onPress: () {
+                  timer?.cancel();
+                  Navigator.pop(context, controller.text);
+                },
+                child: const Text('Konfirmasi'),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+  void _handleResult(PatrolScanResult result) {
     if (result.success) {
       if (result.valid) {
         // Success with valid location
@@ -92,7 +257,6 @@ class _PatrolHomeScreenState extends State<PatrolHomeScreen> with WidgetsBinding
           ),
         );
       }
-      // Status sudah di-refresh oleh performScan()
     } else {
       // Error
       _handleError(result);
@@ -367,9 +531,6 @@ class _PatrolHomeScreenState extends State<PatrolHomeScreen> with WidgetsBinding
             _buildScheduleCard(status),
             const SizedBox(height: AppSpacing.lg),
 
-            // TOTP countdown card
-            _buildTotpCountdownCard(notifier),
-
             // Progress info
             _buildProgressInfo(status),
             const SizedBox(height: AppSpacing.lg),
@@ -549,96 +710,6 @@ class _PatrolHomeScreenState extends State<PatrolHomeScreen> with WidgetsBinding
 
   String _formatTime(DateTime time) {
     return '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}';
-  }
-
-  /// TOTP countdown card - shown when checkpoint has secret_key
-  Widget _buildTotpCountdownCard(PatrolNotifier notifier) {
-    final theme = FTheme.of(context);
-    final secondsLeft = notifier.state.otpResponse?.secondsUntilExpiry ?? 0;
-    final isExpired = secondsLeft <= 0;
-
-    return Container(
-      margin: const EdgeInsets.only(bottom: AppSpacing.lg),
-      padding: const EdgeInsets.all(AppSpacing.md),
-      decoration: BoxDecoration(
-        color: isExpired
-            ? theme.colors.destructive.withAlpha(26)
-            : theme.colors.secondary.withAlpha(26),
-        borderRadius: AppRadius.radiusMd,
-        border: Border.all(
-          color: isExpired
-              ? theme.colors.destructive.withAlpha(77)
-              : theme.colors.secondary.withAlpha(77),
-          width: 1,
-        ),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 36,
-            height: 36,
-            decoration: BoxDecoration(
-              color: isExpired ? theme.colors.destructive : theme.colors.secondary,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Icon(
-              IconMap.lock,
-              color: isExpired
-                  ? theme.colors.destructiveForeground
-                  : theme.colors.secondaryForeground,
-              size: 20,
-            ),
-          ),
-          const SizedBox(width: AppSpacing.md),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  isExpired ? 'OTP Kadaluarsa' : 'OTP Active',
-                  style: TextStyle(
-                    fontWeight: FontWeight.w600,
-                    color: isExpired
-                        ? theme.colors.destructive
-                        : theme.colors.secondary,
-                    fontSize: 14,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  isExpired
-                      ? 'Kode OTP baru dalam ${-secondsLeft}s'
-                      : 'Kode berubah dalam ${secondsLeft}s',
-                  style: TextStyle(
-                    color: isExpired
-                        ? theme.colors.destructiveForeground
-                        : theme.colors.secondaryForeground,
-                    fontSize: 12,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          // Countdown indicator
-          if (!isExpired)
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              decoration: BoxDecoration(
-                color: theme.colors.secondary,
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Text(
-                '${secondsLeft}s',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  color: theme.colors.secondaryForeground,
-                  fontSize: 16,
-                ),
-              ),
-            ),
-        ],
-      ),
-    );
   }
 
   Widget _buildScheduleCard(PatrolTodayStatus status) {

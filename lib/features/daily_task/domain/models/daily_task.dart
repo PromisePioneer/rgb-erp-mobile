@@ -137,12 +137,19 @@ class DailyTaskTool {
   final String name;
   final String? initialCondition;
   final String? finalCondition;
+  // Current condition from ProductArea
+  final double? currentStock;
+  final String? currentCondition;
+  final String? currentConditionLabel;
 
   DailyTaskTool({
     required this.id,
     required this.name,
     this.initialCondition,
     this.finalCondition,
+    this.currentStock,
+    this.currentCondition,
+    this.currentConditionLabel,
   });
 
   factory DailyTaskTool.fromJson(Map<String, dynamic> json) {
@@ -151,6 +158,9 @@ class DailyTaskTool {
       name: json['name'] as String? ?? '',
       initialCondition: json['initial_condition'] as String?,
       finalCondition: json['final_condition'] as String?,
+      currentStock: (json['current_stock'] as num?)?.toDouble(),
+      currentCondition: json['current_condition'] as String?,
+      currentConditionLabel: json['current_condition_label'] as String?,
     );
   }
 }
@@ -160,12 +170,19 @@ class DailyTaskChemical {
   final String name;
   final String? initialCondition;
   final String? finalCondition;
+  // Current condition from ProductArea
+  final double? currentStock;
+  final String? currentCondition;
+  final String? currentConditionLabel;
 
   DailyTaskChemical({
     required this.id,
     required this.name,
     this.initialCondition,
     this.finalCondition,
+    this.currentStock,
+    this.currentCondition,
+    this.currentConditionLabel,
   });
 
   factory DailyTaskChemical.fromJson(Map<String, dynamic> json) {
@@ -174,6 +191,9 @@ class DailyTaskChemical {
       name: json['name'] as String? ?? '',
       initialCondition: json['initial_condition'] as String?,
       finalCondition: json['final_condition'] as String?,
+      currentStock: (json['current_stock'] as num?)?.toDouble(),
+      currentCondition: json['current_condition'] as String?,
+      currentConditionLabel: json['current_condition_label'] as String?,
     );
   }
 }
@@ -183,12 +203,19 @@ class DailyTaskPpe {
   final String name;
   final String? initialCondition;
   final String? finalCondition;
+  // Current condition from ProductArea
+  final double? currentStock;
+  final String? currentCondition;
+  final String? currentConditionLabel;
 
   DailyTaskPpe({
     required this.id,
     required this.name,
     this.initialCondition,
     this.finalCondition,
+    this.currentStock,
+    this.currentCondition,
+    this.currentConditionLabel,
   });
 
   factory DailyTaskPpe.fromJson(Map<String, dynamic> json) {
@@ -197,6 +224,9 @@ class DailyTaskPpe {
       name: json['name'] as String? ?? '',
       initialCondition: json['initial_condition'] as String?,
       finalCondition: json['final_condition'] as String?,
+      currentStock: (json['current_stock'] as num?)?.toDouble(),
+      currentCondition: json['current_condition'] as String?,
+      currentConditionLabel: json['current_condition_label'] as String?,
     );
   }
 }
@@ -262,12 +292,19 @@ class DailyTaskMachine {
   final String name;
   final String? initialCondition;
   final String? finalCondition;
+  // Current condition from ProductArea
+  final double? currentStock;
+  final String? currentCondition;
+  final String? currentConditionLabel;
 
   DailyTaskMachine({
     required this.id,
     required this.name,
     this.initialCondition,
     this.finalCondition,
+    this.currentStock,
+    this.currentCondition,
+    this.currentConditionLabel,
   });
 
   factory DailyTaskMachine.fromJson(Map<String, dynamic> json) {
@@ -276,6 +313,9 @@ class DailyTaskMachine {
       name: json['name'] as String? ?? '',
       initialCondition: json['initial_condition'] as String?,
       finalCondition: json['final_condition'] as String?,
+      currentStock: (json['current_stock'] as num?)?.toDouble(),
+      currentCondition: json['current_condition'] as String?,
+      currentConditionLabel: json['current_condition_label'] as String?,
     );
   }
 }

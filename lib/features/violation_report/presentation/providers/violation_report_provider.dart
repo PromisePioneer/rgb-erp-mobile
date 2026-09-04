@@ -380,7 +380,7 @@ class ViolationReportNotifier extends ChangeNotifier {
         notifyListeners();
       }
     } catch (e) {
-      debugPrint('Error picking photo: $e');
+      
     }
   }
 
@@ -398,7 +398,7 @@ class ViolationReportNotifier extends ChangeNotifier {
         notifyListeners();
       }
     } catch (e) {
-      debugPrint('Error picking photo from gallery: $e');
+      
     }
   }
 

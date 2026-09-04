@@ -102,7 +102,7 @@ class _LoginScreenState extends State<LoginScreen> {
         );
       }
     } catch (e) {
-      print('LOGIN CATCH ERROR: $e');
+      
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -123,24 +123,24 @@ class _LoginScreenState extends State<LoginScreen> {
 
   Future<void> _handleBiometricLogin() async {
     try {
-      print('BIOMETRIC LOGIN START');
+      
       await context.read<AuthNotifier>().loginWithBiometric();
-      print('BIOMETRIC LOGIN SUCCESS');
+      
 
       if (mounted) {
-        print('NAVIGATING TO DASHBOARD (BIOMETRIC)');
+        
         // Biometric is only for employees
         context.go('/dashboard');
       }
     } on ApiException catch (e) {
-      print('BIOMETRIC LOGIN API ERROR: ${e.message}');
+      
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(e.message), backgroundColor: AppColors.danger),
         );
       }
     } catch (e) {
-      print('BIOMETRIC LOGIN ERROR: $e');
+      
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(

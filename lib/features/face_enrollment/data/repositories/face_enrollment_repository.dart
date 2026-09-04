@@ -8,7 +8,7 @@ import '../../domain/domain.dart';
 class FaceEnrollmentRepository {
   final FaceApi _api;
 
-  FaceEnrollmentRepository({required FaceApi api}) : _api = api;
+  FaceEnrollmentRepository({required this._api});
 
   /// Get face enrollment status
   Future<FaceEnrollmentStatus> getEnrollmentStatus() async {
@@ -22,17 +22,17 @@ class FaceEnrollmentRepository {
 
   /// Enroll face with photos (multipart upload)
   Future<FaceEnrollmentResult> enrollFace(List<String> photoPaths) async {
-    print('FACE_ENROLL_REPO: Starting enrollFace with ${photoPaths.length} photos');
+    
     try {
-      print('FACE_ENROLL_REPO: Calling API...');
+      
       final response = await _api.enrollFace(photoPaths);
-      print('FACE_ENROLL_REPO: Response: $response');
+      
       return FaceEnrollmentResult.fromJson(response);
     } on DioException catch (e) {
-      print('FACE_ENROLL_REPO: DioException: ${e.message}');
+      
       throw ApiException.fromDioException(e);
     } catch (e) {
-      print('FACE_ENROLL_REPO: Error: $e');
+      
       rethrow;
     }
   }

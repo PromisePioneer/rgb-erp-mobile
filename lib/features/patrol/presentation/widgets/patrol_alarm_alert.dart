@@ -64,7 +64,7 @@ class _PatrolAlarmAlertState extends State<PatrolAlarmAlert>
           borderRadius: BorderRadius.circular(AppRadius.lg),
           boxShadow: [
             BoxShadow(
-              color: const Color(0xFFDC2626).withOpacity(0.4),
+              color: const Color(0xFFDC2626).withValues(alpha: 0.4),
               blurRadius: 20,
               spreadRadius: 2,
               offset: const Offset(0, 4),
@@ -80,7 +80,7 @@ class _PatrolAlarmAlertState extends State<PatrolAlarmAlert>
               child: Container(
                 padding: const EdgeInsets.all(AppSpacing.md),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.2),
+                  color: Colors.white.withValues(alpha: 0.2),
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(

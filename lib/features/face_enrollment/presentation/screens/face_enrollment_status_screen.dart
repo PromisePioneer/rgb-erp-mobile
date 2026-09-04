@@ -5,7 +5,6 @@ import 'package:forui/forui.dart';
 
 import '../../../../core/core.dart';
 import '../../../../shared/widgets/buttons/primary_button.dart';
-import '../../../../shared/widgets/dialogs/confirm_dialog.dart';
 import '../../../../shared/widgets/feedback/loading_indicator.dart';
 import '../../../../shared/widgets/icons/forui_icon_map.dart';
 import '../../../../shared/widgets/layout/top_gradient_background.dart';

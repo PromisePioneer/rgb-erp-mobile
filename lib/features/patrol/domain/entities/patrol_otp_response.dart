@@ -1,44 +1,52 @@
 import 'package:equatable/equatable.dart';
 
-/// Response from GET /patrol/otp
+/// Response from GET /patrol/otp - checkpoint TOTP info
 class PatrolOtpResponse extends Equatable {
-  final String? otpCode;
-  final DateTime? otpExpiresAt;
-  final bool hasOtp;
+  /// Whether this checkpoint requires TOTP
+  final bool hasTotp;
+
+  /// Checkpoint name (from QR scan)
+  final String? checkpointName;
+
+  /// Checkpoint code (from QR scan)
+  final String? checkpointCode;
+
+  /// Has schedule for today
+  final bool hasSchedule;
+
+  /// Area name
+  final String? areaName;
+
+  /// Error message if any
+  final String? message;
 
   const PatrolOtpResponse({
-    this.otpCode,
-    this.otpExpiresAt,
-    this.hasOtp = false,
+    this.hasTotp = false,
+    this.checkpointName,
+    this.checkpointCode,
+    this.hasSchedule = false,
+    this.areaName,
+    this.message,
   });
 
   factory PatrolOtpResponse.fromJson(Map<String, dynamic> json) {
-    DateTime? parseDateTime(dynamic value) {
-      if (value == null) return null;
-      if (value is DateTime) return value;
-      if (value is String) return DateTime.tryParse(value);
-      return null;
-    }
-
     return PatrolOtpResponse(
-      otpCode: json['otp_code']?.toString(),
-      otpExpiresAt: parseDateTime(json['otp_expires_at']),
-      hasOtp: json['has_otp'] == true || json['has_otp'] == 'true',
+      hasTotp: json['has_totp'] == true || json['has_totp'] == 'true',
+      checkpointName: json['checkpoint_name']?.toString(),
+      checkpointCode: json['checkpoint_code']?.toString(),
+      hasSchedule: json['has_schedule'] == true || json['has_schedule'] == 'true',
+      areaName: json['area_name']?.toString(),
+      message: json['message']?.toString(),
     );
   }
 
-  /// Get seconds until OTP expires (negative if expired)
-  int get secondsUntilExpiry {
-    if (otpExpiresAt == null) return 0;
-    return otpExpiresAt!.difference(DateTime.now()).inSeconds;
-  }
-
-  /// Check if OTP is expired
-  bool get isExpired {
-    if (otpExpiresAt == null) return true;
-    return DateTime.now().isAfter(otpExpiresAt!);
-  }
-
   @override
-  List<Object?> get props => [otpCode, otpExpiresAt, hasOtp];
+  List<Object?> get props => [
+        hasTotp,
+        checkpointName,
+        checkpointCode,
+        hasSchedule,
+        areaName,
+        message,
+      ];
 }

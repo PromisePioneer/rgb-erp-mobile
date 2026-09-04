@@ -124,7 +124,7 @@ class _ClientAttendanceScreenState extends State<ClientAttendanceScreen> with Si
   }
 
   Widget _buildTodayTab(ClientAttendanceState state) {
-    final todayData = state.attendanceData?.where((e) {
+    final todayData = state.attendanceData.where((e) {
       final today = DateFormat('yyyy-MM-dd').format(DateTime.now());
       return e.capturedAt?.startsWith(today) ?? false;
     }).toList() ?? [];

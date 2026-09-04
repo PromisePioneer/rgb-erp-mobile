@@ -37,7 +37,7 @@ class EnvironmentConfig {
       await dotenv.load(fileName: '.env');
     } catch (e) {
       // If loading fails, dotenv will use empty values
-      debugPrint('EnvironmentConfig: Failed to load .env file: $e');
+      
     }
 
     // Determine which .env file to load based on environment
@@ -55,8 +55,8 @@ class EnvironmentConfig {
     }
 
     if (kDebugMode) {
-      debugPrint('EnvironmentConfig: App Environment: ${_currentEnvironment!.displayName}');
-      debugPrint('EnvironmentConfig: API Base URL: $apiBaseUrl');
+      
+      
     }
   }
 

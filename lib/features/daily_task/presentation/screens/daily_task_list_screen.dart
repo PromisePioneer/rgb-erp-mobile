@@ -53,7 +53,7 @@ class _DailyTaskListScreenState extends State<DailyTaskListScreen>
         await notifier.getMyAssignments();
       } catch (e) {
         // Handle error silently or show a non-blocking notification
-        debugPrint('Failed to load assignments: $e');
+        
       }
     }
   }
@@ -657,7 +657,7 @@ class _AssignedTaskCard extends StatelessWidget {
                   children: [
                     GestureDetector(
                       onTap: () => _showFullScreenPhoto(context, photo['url'] as String),
-                      child: Container(
+                      child: SizedBox(
                         width: 80,
                         height: 80,
                         child: ClipRRect(

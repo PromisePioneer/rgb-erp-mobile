@@ -195,7 +195,7 @@ class AuthNotifier extends ChangeNotifier {
     required String password,
     String? fcmToken,
   }) async {
-    print('AUTH_PROVIDER: Starting login for code: $code');
+    
     _state = _state.copyWith(isLoading: true, clearError: true);
     notifyListeners();
 
@@ -206,9 +206,9 @@ class AuthNotifier extends ChangeNotifier {
         fcmToken: fcmToken,
       );
 
-      print('AUTH_PROVIDER: Calling repository.login()');
+      
       final response = await _repository.login(credentials);
-      print('AUTH_PROVIDER: Repository login succeeded, userType=${response.userType}');
+      
 
       _state = _state.copyWith(
         user: response.user,
@@ -218,7 +218,7 @@ class AuthNotifier extends ChangeNotifier {
         savedNik: code,
         userType: response.userType,
       );
-      print('AUTH_PROVIDER: State updated, isAuthenticated=true, userType=${response.userType}');
+      
       notifyListeners();
 
       // Register FCM token after successful login (only for employees)
@@ -228,7 +228,7 @@ class AuthNotifier extends ChangeNotifier {
 
       return response.user!;
     } on ApiException catch (e) {
-      print('AUTH_PROVIDER: ApiException - ${e.message}');
+      
       _state = _state.copyWith(
         isLoading: false,
         error: e.message,
@@ -288,9 +288,9 @@ class AuthNotifier extends ChangeNotifier {
       // Access the singleton notification service
       final notifService = globalNotificationService;
       await notifService.registerCurrentToken();
-      print('AUTH_PROVIDER: FCM token registered');
+      
     } catch (e) {
-      print('AUTH_PROVIDER: Failed to register FCM token: $e');
+      
     }
   }
 
@@ -327,9 +327,9 @@ class AuthNotifier extends ChangeNotifier {
     try {
       final notifService = globalNotificationService;
       await notifService.unregisterToken();
-      print('AUTH_PROVIDER: FCM token unregistered');
+      
     } catch (e) {
-      print('AUTH_PROVIDER: Failed to unregister FCM token: $e');
+      
     }
   }
 

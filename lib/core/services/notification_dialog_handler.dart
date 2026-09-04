@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 import '../../navigation/app_router.dart';
 import '../../features/backup_offer/domain/models/backup_offer.dart';
 import '../../features/backup_offer/domain/models/shift_response.dart';
@@ -39,27 +38,27 @@ class NotificationDialogHandler {
     String? message,
     String? scheduleId,
   }) async {
-    debugPrint('NotificationDialogHandler: Handling shift reminder notification');
+    
 
     if (scheduleId != null && scheduleId.isNotEmpty) {
       // Navigate directly with scheduleId from FCM payload
-      debugPrint('NotificationDialogHandler: Direct navigate to shift $scheduleId');
+      
       _navigateToShiftResponseById(scheduleId);
     } else {
       // Fallback: fetch from API
-      debugPrint('NotificationDialogHandler: No scheduleId, fetching from API');
+      
       if (!_initialized) init();
 
       await _shiftNotifier?.loadPendingResponses();
       final shifts = _shiftNotifier?.state.pendingShifts;
-      debugPrint('NotificationDialogHandler: Pending shifts: ${shifts?.length ?? 0}');
+      
 
       if (shifts != null && shifts.isNotEmpty) {
         final shift = shifts.first;
-        debugPrint('NotificationDialogHandler: Found shift ${shift.id}, navigating...');
+        
         _navigateToShiftResponse(shift);
       } else {
-        debugPrint('NotificationDialogHandler: No pending shifts found');
+        
       }
     }
   }
@@ -70,20 +69,20 @@ class NotificationDialogHandler {
     String? offerId,
     String? scheduleId,
   }) async {
-    debugPrint('NotificationDialogHandler: Handling backup offer notification');
+    
 
     if (!_initialized) init();
 
     await _backupNotifier?.loadPendingOffers();
     final offers = _backupNotifier?.state.offers;
-    debugPrint('NotificationDialogHandler: Pending offers: ${offers?.length ?? 0}');
+    
 
     if (offers != null && offers.isNotEmpty) {
       final offer = offers.first;
-      debugPrint('NotificationDialogHandler: Found offer ${offer.id}, navigating...');
+      
       _navigateToBackupOffer(offer);
     } else {
-      debugPrint('NotificationDialogHandler: No pending offers found');
+      
     }
   }
 
@@ -97,7 +96,7 @@ class NotificationDialogHandler {
         appRouterProvider.push('/attendance/shift-response?shiftId=${shift.id}');
       });
     } catch (e) {
-      debugPrint('NotificationDialogHandler: Error navigating to shift response: $e');
+      
     }
   }
 
@@ -111,7 +110,7 @@ class NotificationDialogHandler {
         appRouterProvider.push('/attendance/shift-response?shiftId=$scheduleId');
       });
     } catch (e) {
-      debugPrint('NotificationDialogHandler: Error navigating to shift response by id: $e');
+      
     }
   }
 
@@ -125,7 +124,7 @@ class NotificationDialogHandler {
         appRouterProvider.push('/attendance/backup-offer?offerId=${offer.id}');
       });
     } catch (e) {
-      debugPrint('NotificationDialogHandler: Error navigating to backup offer: $e');
+      
     }
   }
 }

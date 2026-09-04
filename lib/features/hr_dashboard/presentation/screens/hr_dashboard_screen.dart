@@ -7,7 +7,6 @@ import 'package:forui/forui.dart';
 import '../../../../core/core.dart';
 import '../../../../core/services/notification_service.dart';
 import '../../../../shared/widgets/banners/banner_carousel.dart';
-import '../../../../shared/widgets/feedback/loading_indicator.dart';
 import '../../../../shared/widgets/icons/forui_icon_map.dart';
 import '../../../../shared/widgets/layout/top_gradient_background.dart';
 import '../../../../shared/utils/tutorial_keys.dart';
@@ -86,7 +85,7 @@ class _HRDashboardScreenState extends State<HRDashboardScreen> {
   }
 
   void _startPanicHold() {
-    print('PANIC: _startPanicHold called');
+    
     setState(() {
       _panicHolding = true;
       _panicProgress = 0;
@@ -156,7 +155,7 @@ class _HRDashboardScreenState extends State<HRDashboardScreen> {
   }
 
   void _showPanicTypeSheet() {
-    print('PANIC: _showPanicTypeSheet called');
+    
     // Show error if location failed
     if (_panicError != null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -262,7 +261,7 @@ class _HRDashboardScreenState extends State<HRDashboardScreen> {
   void _submitPanic(String type) async {
     if (_panicLocation == null) return;
 
-    print('PANIC: Submitting alert - type=$type, lat=${_panicLocation!.latitude}, lng=${_panicLocation!.longitude}');
+    
 
     final notifier = context.read<PanicNotifier>();
     final success = await notifier.sendPanicAlert(
@@ -271,7 +270,7 @@ class _HRDashboardScreenState extends State<HRDashboardScreen> {
       longitude: _panicLocation!.longitude,
     );
 
-    print('PANIC: Result - success=$success, error=${notifier.state.sendError}');
+    
 
     if (!mounted) return;
 
@@ -412,7 +411,7 @@ class _HRDashboardScreenState extends State<HRDashboardScreen> {
           ChangeNotifierProvider(
             create: (_) => _NotificationRebuildNotifier(),
             child: Consumer<_NotificationRebuildNotifier>(
-              builder: (context, _, __) => _NotificationButton(key: TutorialKeys.notificationKey),
+              builder: (context, _, _) => _NotificationButton(key: TutorialKeys.notificationKey),
             ),
           ),
         ]),
@@ -614,11 +613,11 @@ class _HRDashboardScreenState extends State<HRDashboardScreen> {
           key: TutorialKeys.panicButtonKey,
           behavior: HitTestBehavior.opaque,
           onLongPressStart: (_) {
-            print('PANIC: onLongPressStart triggered');
+            
             _startPanicHold();
           },
           onLongPressEnd: (_) {
-            print('PANIC: onLongPressEnd triggered');
+            
             _cancelPanicHold();
           },
           child: Stack(
@@ -1001,7 +1000,7 @@ class _NotificationButton extends StatelessWidget {
                               controller: scrollController,
                               padding: const EdgeInsets.symmetric(vertical: 8),
                               itemCount: notifService.notifications.length,
-                              separatorBuilder: (_, __) => const Divider(height: 1, indent: 72),
+                              separatorBuilder: (_, _) => const Divider(height: 1, indent: 72),
                               itemBuilder: (context, index) {
                                 final notif = notifService.notifications[index];
                                 return _NotificationItem(

@@ -72,7 +72,10 @@ class PatrolState extends ChangeNotifier {
 
   /// Get OTP countdown seconds
   int get otpCountdownSeconds {
-    return otpResponse?.secondsUntilExpiry ?? 0;
+    // TOTP changes every 30 seconds, calculate from current time
+    final now = DateTime.now().millisecondsSinceEpoch ~/ 1000;
+    final period = 30;
+    return period - (now % period);
   }
 
   PatrolState copyWith({
@@ -121,8 +124,8 @@ class PatrolNotifier extends ChangeNotifier {
   PatrolNotifier(
     this._repository,
     this._locationService, {
-    NotificationService? notificationService,
-  }) : _notificationService = notificationService {
+    this._notificationService,
+  }) {
     // Set up alarm callback
     _setupAlarmCallback();
   }
@@ -166,7 +169,7 @@ class PatrolNotifier extends ChangeNotifier {
 
   /// Show alarm alert (called when patrol alarm is triggered)
   void showAlarmAlert({String? message}) {
-    debugPrint('PATROL_PROVIDER: showAlarmAlert called with: $message');
+    
     final alarmMessage = message ?? 'Waktunya patroli checkpoint berikutnya!';
     _state = _state.copyWith(
       showAlarmAlert: true,
@@ -175,7 +178,7 @@ class PatrolNotifier extends ChangeNotifier {
     notifyListeners();
 
     // Navigate to alarm screen via static callback (works from anywhere)
-    debugPrint('PATROL_PROVIDER: Calling static callback');
+    
     PatrolNotifier.onAlarmNavigated?.call(alarmMessage);
   }
 
@@ -191,34 +194,34 @@ class PatrolNotifier extends ChangeNotifier {
 
   /// Load today's patrol status
   Future<void> loadTodayStatus() async {
-    print('PATROL: loadTodayStatus called');
+    
     _state = _state.copyWith(isLoading: true, clearError: true);
     notifyListeners();
 
     try {
-      print('PATROL: Calling repository.getTodayStatus...');
+      
       final status = await _repository.getTodayStatus();
-      print('PATROL: Got status - stats: ${status.stats?.totalCheckpoints}, sessions: ${status.sessions.length}');
+      
 
       _state = _state.copyWith(
         todayStatus: status,
         isLoading: false,
       );
 
-      print('PATROL: State updated, notifying listeners');
+      
       notifyListeners();
 
       // Schedule/cancel patrol alarm based on new status
       await _updatePatrolAlarm(status);
     } on ApiException catch (e) {
-      print('PATROL: ApiException - ${e.message}');
+      
       _state = _state.copyWith(
         isLoading: false,
         error: e.message,
       );
       notifyListeners();
     } catch (e) {
-      print('PATROL: Exception - $e');
+      
       _state = _state.copyWith(
         isLoading: false,
         error: 'Gagal memuat status patroli: $e',
@@ -290,21 +293,21 @@ class PatrolNotifier extends ChangeNotifier {
     });
   }
 
-  /// Fetch current OTP from server
-  Future<void> fetchOtp() async {
+  /// Fetch current OTP/checkpoint info from server
+  Future<void> fetchOtp({String? qrCode}) async {
     try {
-      final otp = await _repository.getOtp();
+      final otp = await _repository.getOtp(qrCode: qrCode);
       _state = _state.copyWith(
         otpResponse: otp,
-        isOtpExpired: otp.isExpired,
+        isOtpExpired: !otp.hasTotp,
       );
       notifyListeners();
     } catch (e) {
-      debugPrint('PATROL: Failed to fetch OTP: $e');
+      
     }
   }
 
-  /// Perform a scan - validate OTP, get location, then scan
+  /// Perform a scan - get OTP, display it, then user inputs and submits
   Future<PatrolScanResult?> performScan(String qrContent) async {
     if (_state.isScanning) return null;
 
@@ -312,97 +315,43 @@ class PatrolNotifier extends ChangeNotifier {
     notifyListeners();
 
     try {
-      // Parse QR content (supports both old format and new JSON format)
+      // Parse QR content
       final qrResult = QRScanResult.fromQRContent(qrContent);
+      
 
-      // Check if checkpoint has secret_key for OTP validation
-      if (qrResult.hasSecretKey) {
-        // Fetch employee's OTP from server
-        await fetchOtp();
-        final otp = _state.otpResponse;
+      // Fetch checkpoint info to check if TOTP is needed
+      await fetchOtp(qrCode: qrContent);
+      final otpInfo = _state.otpResponse;
 
-        if (otp == null || !otp.hasOtp || otp.isExpired) {
-          _state = _state.copyWith(
-            isScanning: false,
-            error: 'Kode OTP belum tersedia atau sudah kadaluarsa. Tunggu beberapa detik dan coba lagi.',
-          );
-          notifyListeners();
-          return null;
-        }
-
-        // Generate TOTP from checkpoint secret_key
-        final generatedOtp = _generateTOTP(qrResult.secretKey!);
-        debugPrint('PATROL: Generated TOTP: $generatedOtp, Server OTP: ${otp.otpCode}');
-
-        // Compare generated OTP with server OTP
-        if (generatedOtp != otp.otpCode) {
-          _state = _state.copyWith(
-            isScanning: false,
-            error: 'Kode OTP tidak valid. Pastikan waktu perangkat Anda sudah sinkron.',
-          );
-          notifyListeners();
-          return null;
-        }
-
-        debugPrint('PATROL: OTP validated successfully!');
-      }
-
-      // Get current location
-      LocationData? location;
-      bool isMockLocation = false;
-      try {
-        location = await _locationService.getCurrentLocation();
-        // Check mock location (only reliable on Android)
-        // ignore: avoid_types_on_closure_parameters
-        if (defaultTargetPlatform == TargetPlatform.android) {
-          // isMocked check would be done via Position.isMocked in Geolocator
-          // For now we pass false as we need Position object, not LocationData
-          isMockLocation = false;
-        }
-      } on LocationException catch (e) {
+      // If checkpoint has TOTP but no secret key, we can't proceed
+      if (otpInfo != null && otpInfo.hasTotp && qrResult.secretKey == null) {
         _state = _state.copyWith(
           isScanning: false,
-          error: e.message,
+          error: 'Checkpoint memerlukan OTP. QR code tidak valid atau corrupt.',
         );
         notifyListeners();
         return null;
       }
 
-      // Perform scan (OTP already validated on mobile)
-      final result = await _repository.scan(
-        qrCode: qrResult.code,
-        latitude: location.latitude,
-        longitude: location.longitude,
-        isMockLocation: isMockLocation,
-        scannedAtLocal: DateTime.now().toIso8601String(),
-      );
+      // If no secret key, skip OTP and scan directly
+      if (qrResult.secretKey == null) {
+        
+        return await _doScan(qrResult.code, null);
+      }
 
+      // Generate TOTP locally and return it for user to input
+      final generatedOtp = generateTOTP(qrResult.secretKey!);
+      
+
+      // Store the generated OTP for validation
       _state = _state.copyWith(
         isScanning: false,
-        lastScanResult: result,
+        // Return null to indicate we need user input
+        // The UI should show the generated OTP and ask for input
       );
       notifyListeners();
 
-      // If TOO_FAST, start countdown
-      if (!result.success &&
-          result.errorCode == 'TOO_FAST' &&
-          result.minGapRemainingSeconds != null) {
-        _startCountdown(result.minGapRemainingSeconds!);
-      }
-
-      // If scan was successful, reload status to update alarm
-      if (result.success) {
-        await loadTodayStatus();
-      }
-
-      return result;
-    } on ApiException catch (e) {
-      _state = _state.copyWith(
-        isScanning: false,
-        error: e.message,
-      );
-      notifyListeners();
-      return null;
+      return null; // Caller should show OTP input dialog
     } catch (e) {
       _state = _state.copyWith(
         isScanning: false,
@@ -413,9 +362,85 @@ class PatrolNotifier extends ChangeNotifier {
     }
   }
 
+  /// Submit OTP and complete the scan
+  Future<PatrolScanResult?> submitOtpAndScan(
+    String qrContent,
+    String otp,
+  ) async {
+    if (_state.isScanning) return null;
+
+    _state = _state.copyWith(isScanning: true, clearError: true);
+    notifyListeners();
+
+    try {
+      // Parse QR content
+      final qrResult = QRScanResult.fromQRContent(qrContent);
+
+      // Perform scan with OTP (backend will validate)
+      return await _doScan(qrResult.code, otp);
+    } catch (e) {
+      _state = _state.copyWith(
+        isScanning: false,
+        error: 'Scan gagal: $e',
+      );
+      notifyListeners();
+      return null;
+    }
+  }
+
+  /// Internal method to perform the actual scan API call
+  Future<PatrolScanResult?> _doScan(String qrCode, String? otp) async {
+    // Get current location
+    LocationData? location;
+    bool isMockLocation = false;
+    try {
+      location = await _locationService.getCurrentLocation();
+      if (defaultTargetPlatform == TargetPlatform.android) {
+        isMockLocation = false;
+      }
+    } on LocationException catch (e) {
+      _state = _state.copyWith(
+        isScanning: false,
+        error: e.message,
+      );
+      notifyListeners();
+      return null;
+    }
+
+    // Perform scan
+    final result = await _repository.scan(
+      qrCode: qrCode,
+      latitude: location.latitude,
+      longitude: location.longitude,
+      otp: otp,
+      isMockLocation: isMockLocation,
+      scannedAtLocal: DateTime.now().toIso8601String(),
+    );
+
+    _state = _state.copyWith(
+      isScanning: false,
+      lastScanResult: result,
+    );
+    notifyListeners();
+
+    // If TOO_FAST, start countdown
+    if (!result.success &&
+        result.errorCode == 'TOO_FAST' &&
+        result.minGapRemainingSeconds != null) {
+      _startCountdown(result.minGapRemainingSeconds!);
+    }
+
+    // If scan was successful, reload status
+    if (result.success) {
+      await loadTodayStatus();
+    }
+
+    return result;
+  }
+
   /// Generate TOTP code from secret key
   /// Uses SHA1 algorithm, 6 digits, 30-second interval (Google Authenticator standard)
-  String _generateTOTP(String secretKey) {
+  String generateTOTP(String secretKey) {
     try {
       // Clean the secret key (remove spaces, uppercase)
       final cleanSecret = secretKey.replaceAll(' ', '').toUpperCase();
@@ -432,8 +457,7 @@ class PatrolNotifier extends ChangeNotifier {
 
       return code;
     } catch (e) {
-      debugPrint('PATROL: Error generating TOTP: $e');
-      // Return empty string on error - backend will handle validation
+      
       return '';
     }
   }

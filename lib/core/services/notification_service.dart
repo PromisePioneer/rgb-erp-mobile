@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:io';
 import 'package:audioplayers/audioplayers.dart';
-import 'package:flutter/foundation.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/timezone.dart' as tz;
@@ -182,7 +181,7 @@ class NotificationService {
     );
 
     if (settings.authorizationStatus == AuthorizationStatus.denied) {
-      debugPrint('NotificationService: FCM permission denied');
+      
       // Permission denied - could show explanation in Settings screen
     }
 
@@ -204,9 +203,9 @@ class NotificationService {
 
   /// Handle foreground FCM message
   Future<void> _handleForegroundMessage(RemoteMessage message) async {
-    debugPrint('NOTIF: _handleForegroundMessage called');
-    debugPrint('NOTIF: data=${message.data}');
-    debugPrint('NOTIF: notification title=${message.notification?.title}');
+    
+    
+    
 
     final data = message.data;
     final title = message.notification?.title ?? 'Notifikasi';
@@ -218,52 +217,44 @@ class NotificationService {
 
     // Check if this is a patrol alarm
     if (isPatrolAlarm && !_isAlarmDismissed) {
-      debugPrint('NOTIF: This is a patrol_alarm!');
+      
       _isAlarmPlaying = true;
       // Play looping alarm sound
       try {
         await _alarmPlayer.stop();
         await _alarmPlayer.play(AssetSource('sounds/alarm.mp3'));
-        debugPrint('NotificationService: Alarm sound started (looping)');
+        
       } catch (e) {
-        debugPrint('NotificationService: Failed to play alarm sound: $e');
+        
       }
 
       // Navigate to alarm screen via static callback
       final alarmMessage = message.notification?.body ??
           'Waktunya patroli checkpoint berikutnya!';
-      debugPrint(
-          'NOTIF: Calling PatrolNotifier.onAlarmNavigated with: $alarmMessage');
       PatrolNotifier.onAlarmNavigated?.call(alarmMessage);
     }
 
     // Check if this is a shift reminder - play alarm like patrol
     if (isShiftReminder && !_isAlarmDismissed) {
-      debugPrint('NOTIF: This is a shift_reminder!');
+      
       _isAlarmPlaying = true;
       // Play looping alarm sound
       try {
         await _alarmPlayer.stop();
         await _alarmPlayer.play(AssetSource('sounds/alarm.mp3'));
-        debugPrint(
-            'NotificationService: Shift reminder alarm sound started (looping)');
       } catch (e) {
-        debugPrint(
-            'NotificationService: Failed to play shift reminder alarm sound: $e');
       }
 
       // Navigate to attendance screen via static callback
       final reminderMessage = message.notification?.body ??
           'Waktunya absen shift!';
       final scheduleId = data['schedule_id'];
-      debugPrint(
-          'NOTIF: Calling onShiftReminderReceived with: $reminderMessage, scheduleId: $scheduleId');
       onShiftReminderReceived?.call(reminderMessage, scheduleId);
     }
 
     // Check if this is a backup offer notification
     if (isBackupOffer) {
-      debugPrint('NOTIF: This is a backup_offer!');
+      
       final offerId = data['backup_offer_id'];
       final scheduleId = data['schedule_id'];
       final offerMessage = message.notification?.body ??
@@ -363,7 +354,7 @@ class NotificationService {
 
   /// Handle notification tap (FCM - background/terminated)
   void _handleFcmTap(RemoteMessage message) {
-    debugPrint('NotificationService: FCM notification tapped: ${message.data}');
+    
 
     final type = message.data['type'];
 
@@ -383,9 +374,6 @@ class NotificationService {
 
   /// Handle local notification tap
   void _handleLocalNotificationTap(NotificationResponse response) {
-    debugPrint(
-        'NotificationService: Local notification tapped: ${response.payload}');
-
     final payload = response.payload;
     if (payload == 'patrol_alarm') {
       // Stop alarm sound and navigate to patrol screen
@@ -413,7 +401,7 @@ class NotificationService {
       _alarmPlayer.stop();
       _isAlarmPlaying = false;
       _isAlarmDismissed = false; // Reset for next alarm
-      debugPrint('NotificationService: Alarm sound stopped');
+      
     }
   }
 
@@ -426,44 +414,42 @@ class NotificationService {
   void _navigateToPatrol() {
     // This will be called from main.dart which handles actual navigation
     // We use a callback mechanism instead of directly accessing router
-    debugPrint('NotificationService: Should navigate to /patrol');
+    
   }
 
   /// Navigate to schedule screen
   void _navigateToSchedule() {
     // This will be called from main.dart which handles actual navigation
     // We use a callback mechanism instead of directly accessing router
-    debugPrint('NotificationService: Should navigate to /schedule');
+    
   }
 
   /// Navigate to attendance screen
   void _navigateToAttendance() {
     // This will be called from main.dart which handles actual navigation
     // We use a callback mechanism instead of directly accessing router
-    debugPrint('NotificationService: Should navigate to /attendance');
+    
   }
 
   /// Navigate to backup offer screen
   void _navigateToBackupOffer() {
     // This will be called from main.dart which handles actual navigation
     // We use a callback mechanism instead of directly accessing router
-    debugPrint('NotificationService: Should navigate to /backup-offers');
+    
   }
 
   /// Register FCM token with backend
   Future<void> _registerToken(String token) async {
-    debugPrint('NOTIF_DEBUG: FCM Token = $token');
+    
 
     // Prevent multiple simultaneous registrations
     if (_isRegisteringToken) {
-      debugPrint(
-          'NotificationService: Token registration already in progress, skipping');
       return;
     }
     _isRegisteringToken = true;
 
     if (_notificationApi == null || _storage == null) {
-      debugPrint('NotificationService: API or storage not initialized');
+      
       _isRegisteringToken = false;
       return;
     }
@@ -471,14 +457,14 @@ class NotificationService {
     try {
       // Get or generate device ID
       String? deviceId = await _storage!.deviceId;
-      debugPrint('NOTIF_DEBUG: deviceId from storage = $deviceId');
+      
 
       if (deviceId == null || deviceId.isEmpty) {
         deviceId = _generateDeviceId();
         await _storage!.setDeviceId(deviceId);
-        debugPrint('NOTIF_DEBUG: Generated new deviceId = $deviceId');
+        
       } else {
-        debugPrint('NOTIF_DEBUG: Using existing deviceId = $deviceId');
+        
       }
 
       // Determine platform
@@ -494,9 +480,7 @@ class NotificationService {
       // Store token locally
       await _storage!.setFcmToken(token);
 
-      debugPrint('NotificationService: Token registered successfully');
-    } catch (e) {
-      debugPrint('NotificationService: Failed to register token: $e');
+      
     } finally {
       _isRegisteringToken = false;
     }
@@ -524,7 +508,7 @@ class NotificationService {
         await _registerToken(token);
       }
     } catch (e) {
-      debugPrint('NotificationService: Failed to register current token: $e');
+      
     }
   }
 
@@ -541,7 +525,7 @@ class NotificationService {
         }
       }
     } catch (e) {
-      debugPrint('NotificationService: Failed to unregister token: $e');
+      
     }
   }
 
@@ -551,7 +535,7 @@ class NotificationService {
     String? roundInfo,
   }) async {
     if (!_isInitialized) {
-      debugPrint('NotificationService: Not initialized, cannot schedule alarm');
+      
       return;
     }
 
@@ -560,8 +544,6 @@ class NotificationService {
 
     // Don't schedule if time is in the past
     if (scheduledTime.isBefore(DateTime.now())) {
-      debugPrint(
-          'NotificationService: Scheduled time is in the past, skipping');
       return;
     }
 
@@ -606,13 +588,13 @@ class NotificationService {
       payload: 'patrol_alarm',
     );
 
-    debugPrint('NotificationService: Scheduled patrol alarm at $scheduledTime');
+    
   }
 
   /// Cancel patrol alarm notification
   Future<void> cancelPatrolAlarm() async {
     await _localNotif.cancel(AppConstants.patrolAlarmNotificationId);
-    debugPrint('NotificationService: Cancelled patrol alarm notification');
+    
   }
 
   /// Show immediate patrol alarm notification
@@ -764,28 +746,25 @@ class NotificationService {
 Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   // If Firebase is not yet initialized, initialize it
   // This is called when app is in background/terminated
-  debugPrint(
-      'NotificationService: Handling background message: ${message.data}');
-
   final type = message.data['type'];
 
   // Handle patrol alarm if it's a patrol notification
   if (type == 'patrol_alarm') {
-    debugPrint('NotificationService: Background patrol alarm received');
+    
     // Background handler - notification will be shown by system
     // Just log for now
   }
 
   // Handle shift reminder - also shows as alarm notification
   if (type == 'shift_reminder') {
-    debugPrint('NotificationService: Background shift reminder received');
+    
     // Background handler - notification will be shown by system
     // Just log for now
   }
 
   // Handle backup offer
   if (type == 'backup_offer') {
-    debugPrint('NotificationService: Background backup offer received');
+    
     // Background handler - notification will be shown by system
     // Just log for now
   }

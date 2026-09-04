@@ -6,17 +6,17 @@ import '../../domain/domain.dart';
 class AttendanceRepository {
   final AttendanceApi _api;
 
-  AttendanceRepository({required AttendanceApi api}) : _api = api;
+  AttendanceRepository({required this._api});
 
   /// Get today's attendance data (records, next action, location, shift)
   Future<AttendanceData> getTodayAttendance() async {
     try {
-      print('REPO: Calling GET /attendance/today');
+      
       final response = await _api.getTodayAttendance();
-      print('REPO: Response received: $response');
+      
       return AttendanceData.fromJson(response);
     } on DioException catch (e) {
-      print('REPO: DioException - ${e.message}, type: ${e.type}');
+      
       throw ApiException.fromDioException(e);
     }
   }
@@ -35,10 +35,10 @@ class AttendanceRepository {
     double? textureScore,
     String? earlyLeaveNotes,
   }) async {
-    print('ATT_REPO: Recording attendance - type: ${type.value}');
-    print('ATT_REPO: Photo size: ${photoBase64.length} chars (base64)');
-    print('ATT_REPO: Location: lat=$lat, lng=$lng');
-    print('ATT_REPO: capturedAt: $capturedAt');
+    
+    
+    
+    
     try {
       final response = await _api.recordAttendance(
         type: type.value,
@@ -53,7 +53,7 @@ class AttendanceRepository {
         earlyLeaveNotes: earlyLeaveNotes,
         capturedAt: capturedAt,
       );
-      print('ATT_REPO: Response: $response');
+      
 
       final attendance = response['attendance'] as Map<String, dynamic>?;
       if (attendance != null) {
@@ -62,10 +62,10 @@ class AttendanceRepository {
 
       throw ApiException(message: 'Invalid attendance response');
     } on DioException catch (e) {
-      print('ATT_REPO: DioException: ${e.message}, status: ${e.response?.statusCode}');
+      
       throw ApiException.fromDioException(e);
     } catch (e) {
-      print('ATT_REPO: Error: $e');
+      
       rethrow;
     }
   }
@@ -79,8 +79,8 @@ class AttendanceRepository {
     String? type,
     String? notes,
   }) async {
-    print('ATT_REPO: Face verify starting...');
-    print('ATT_REPO: Photo size: ${photoBase64.length} chars (base64)');
+    
+    
     try {
       final response = await _api.faceVerify(
         photo: photoBase64,
@@ -90,24 +90,24 @@ class AttendanceRepository {
         type: type,
         notes: notes,
       );
-      print('ATT_REPO: Face verify response: $response');
+      
       return FaceVerifyResult.fromJson(response);
     } on DioException catch (e) {
-      print('ATT_REPO: Face verify DioException: ${e.message}');
+      
       throw ApiException.fromDioException(e);
     }
   }
 
   /// Check attendance job status (for polling)
   Future<AttendanceJobStatusResult> checkJobStatus(String jobUuid) async {
-    print('POLL_API: Calling GET /attendance/status/$jobUuid');
+    
     try {
       final response = await _api.getAttendanceStatus(jobUuid);
-      print('POLL_API: Raw response: $response');
+      
       return AttendanceJobStatusResult.fromJson(response);
     } on DioException catch (e) {
-      print('POLL_API: DioException - ${e.message}, type: ${e.type}, statusCode: ${e.response?.statusCode}');
-      print('POLL_API: Response data: ${e.response?.data}');
+      
+      
       throw ApiException.fromDioException(e);
     }
   }
@@ -119,27 +119,27 @@ class AttendanceRepository {
     Duration initialInterval = const Duration(seconds: 2),
     Duration maxInterval = const Duration(seconds: 5),
   }) async {
-    print('POLL: Starting poll for job $jobUuid (max $maxAttempts attempts)');
+    
     Duration currentInterval = initialInterval;
 
     for (int i = 0; i < maxAttempts; i++) {
-      print('POLL: Attempt ${i + 1}/$maxAttempts (interval: ${currentInterval.inSeconds}s)');
+      
       try {
         final status = await checkJobStatus(jobUuid);
-        print('POLL: Status response - status: ${status.status}, message: ${status.message}, isCompleted: ${status.isCompleted}, isFailed: ${status.isFailed}');
+        
 
         if (status.isCompleted || status.isFailed) {
-          print('POLL: Job finished with status: ${status.status}');
+          
           return status;
         }
 
         // Show progress to user (update every 5 attempts)
         if (i > 0 && i % 5 == 0) {
-          print('POLL: Still processing... (${i * currentInterval.inSeconds}s elapsed)');
+          
         }
-      } catch (e, stackTrace) {
-        print('POLL: Error on attempt ${i + 1}: $e');
-        print('POLL: Stack trace: $stackTrace');
+      } catch (e) {
+        
+        
         // Continue polling on error, don't fail immediately
       }
 
@@ -156,7 +156,7 @@ class AttendanceRepository {
     }
 
     // Timeout - return as failed
-    print('POLL: Timeout after $maxAttempts attempts');
+    
     return AttendanceJobStatusResult(
       status: AttendanceJobStatus.failed,
       message: 'Verifikasi wajah timeout, silakan coba lagi',

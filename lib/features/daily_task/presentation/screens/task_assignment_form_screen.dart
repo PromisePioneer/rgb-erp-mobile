@@ -209,6 +209,26 @@ class _TaskAssignmentFormScreenState extends State<TaskAssignmentFormScreen> {
     }
   }
 
+  /// Get areaId from selected employee (employee's stationed area)
+  int? get _currentAreaId {
+    // For edit mode, use area_id from edit data
+    if (_isEditMode && widget.editData != null) {
+      return widget.editData!['area_id'] as int?;
+    }
+    // Get area_id from selected employee(s) - their stationed area from placement
+    if (_selectedEmployeeIds.isNotEmpty) {
+      // Find the first selected employee in the loaded employees list
+      final selectedEmp = notifier.mobileAssignEmployees.cast<Map<String, dynamic>>().firstWhere(
+        (e) => _selectedEmployeeIds.contains(e['id']),
+        orElse: () => {},
+      );
+      if (selectedEmp.containsKey('area_id') && selectedEmp['area_id'] != null) {
+        return selectedEmp['area_id'] as int;
+      }
+    }
+    return null;
+  }
+
   void _prefillFromEditData() {
     final data = widget.editData!;
 
@@ -866,13 +886,45 @@ class _TaskAssignmentFormScreenState extends State<TaskAssignmentFormScreen> {
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       children: [
+        // Info text - area stock
+        if (_currentAreaId != null)
+          Container(
+            margin: const EdgeInsets.only(bottom: 16),
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: AppColors.primary.withAlpha(13),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: AppColors.primary.withAlpha(51)),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.inventory_2, size: 18, color: AppColors.primary),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'Stok diambil dari stok produk di area ini',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: AppColors.primary,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+
         // Alat - AsyncSelectField
         FormFieldCard(
           child: AsyncSelectField(
             label: 'ALAT YANG DIGUNAKAN',
             placeholder: 'Ketik untuk mencari alat...',
             loadOptions: (query) async {
-              final tools = await notifier.searchTools(query);
+              final areaId = _currentAreaId;
+              final tools = await notifier.searchTools(
+                query,
+                areaId: areaId,
+                categoryType: areaId != null ? 1 : null, // Tools category
+              );
               return tools
                   .map((t) => AsyncSelectOption(id: t.id, name: t.name))
                   .toList();
@@ -907,7 +959,12 @@ class _TaskAssignmentFormScreenState extends State<TaskAssignmentFormScreen> {
             label: 'CHEMICAL YANG DIGUNAKAN',
             placeholder: 'Ketik untuk mencari chemical...',
             loadOptions: (query) async {
-              final chemicals = await notifier.searchChemicals(query);
+              final areaId = _currentAreaId;
+              final chemicals = await notifier.searchChemicals(
+                query,
+                areaId: areaId,
+                categoryType: areaId != null ? 2 : null, // Chemicals category
+              );
               return chemicals
                   .map((c) => AsyncSelectOption(id: c.id, name: c.name))
                   .toList();
@@ -942,7 +999,12 @@ class _TaskAssignmentFormScreenState extends State<TaskAssignmentFormScreen> {
             label: 'ALAT PELINDUNG DIRI',
             placeholder: 'Ketik untuk mencari APD...',
             loadOptions: (query) async {
-              final ppes = await notifier.searchPpes(query);
+              final areaId = _currentAreaId;
+              final ppes = await notifier.searchPpes(
+                query,
+                areaId: areaId,
+                categoryType: areaId != null ? 3 : null, // PPEs category
+              );
               return ppes
                   .map((p) => AsyncSelectOption(id: p.id, name: p.name))
                   .toList();
@@ -977,7 +1039,12 @@ class _TaskAssignmentFormScreenState extends State<TaskAssignmentFormScreen> {
             label: 'MESIN (OPSIONAL)',
             placeholder: 'Ketik untuk mencari mesin...',
             loadOptions: (query) async {
-              final machines = await notifier.searchMachines(query);
+              final areaId = _currentAreaId;
+              final machines = await notifier.searchMachines(
+                query,
+                areaId: areaId,
+                categoryType: areaId != null ? 4 : null, // Machines category
+              );
               return machines
                   .map((m) => AsyncSelectOption(id: m.id, name: m.name))
                   .toList();

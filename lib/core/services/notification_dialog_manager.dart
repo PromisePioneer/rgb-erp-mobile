@@ -1,10 +1,14 @@
 import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
-import '../core/core.dart';
-import '../core/di/injection.dart';
-import '../features/backup_offer/domain/models/backup_offer.dart';
-import '../features/backup_offer/domain/models/shift_response.dart';
+import '../core.dart';
+import '../di/injection.dart';
+import '../../features/backup_offer/domain/models/backup_offer.dart';
+import '../../features/backup_offer/domain/models/shift_response.dart';
+import '../../features/backup_offer/data/repositories/backup_offer_repository.dart';
+import '../../features/backup_offer/data/repositories/shift_response_repository.dart';
+import '../../features/backup_offer/presentation/providers/backup_offer_provider.dart';
+import '../../features/backup_offer/presentation/providers/shift_response_provider.dart';
 
 /// Simple notification dialog overlay manager
 class NotificationDialogManager {
@@ -20,7 +24,7 @@ class NotificationDialogManager {
     required String shiftName,
     required String shiftTime,
   }) async {
-    final repository = ShiftResponseRepository(ApiClientFactory(StorageService()).create());
+    final repository = ShiftResponseRepository(ApiClientFactory(storage: StorageService()).create());
     final notifier = ShiftResponseNotifier(repository);
 
     await showDialog(
@@ -48,7 +52,7 @@ class NotificationDialogManager {
     required BuildContext context,
     required String offerId,
   }) async {
-    final repository = BackupOfferRepository(ApiClientFactory(StorageService()).create());
+    final repository = BackupOfferRepository(ApiClientFactory(storage: StorageService()).create());
     final notifier = BackupOfferNotifier(repository);
 
     // Load offer first
@@ -56,7 +60,7 @@ class NotificationDialogManager {
     final offer = notifier.state.offers.where((o) => o.id == offerId).firstOrNull;
 
     if (offer == null) {
-      debugPrint('NotificationDialogManager: Offer not found: $offerId');
+      
       return;
     }
 
@@ -148,7 +152,7 @@ class _ShiftConfirmDialogContentState extends State<_ShiftConfirmDialogContent> 
                 Expanded(
                   child: Text(
                     'Jika ditolak, sistem akan cari backup otomatis.',
-                    style: TextStyle(fontSize: 12, color: AppColors.amber800),
+                    style: TextStyle(fontSize: 12, color: AppColors.amber600),
                   ),
                 ),
               ],
@@ -334,7 +338,7 @@ class _BackupOfferDialogContentState extends State<_BackupOfferDialogContent> {
                 Expanded(
                   child: Text(
                     'Menjadi backup berarti menggantikan petugas original.',
-                    style: TextStyle(fontSize: 12, color: AppColors.amber800),
+                    style: TextStyle(fontSize: 12, color: AppColors.amber600),
                   ),
                 ),
               ],

@@ -1,6 +1,4 @@
-import 'dart:convert';
 
-import 'package:dio/dio.dart';
 import '../../../../core/network/api_exception.dart';
 import '../../../../core/di/injection.dart';
 import '../../domain/domain.dart';

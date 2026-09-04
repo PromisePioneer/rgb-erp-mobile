@@ -26,7 +26,7 @@ class AuthApi {
         data: {
           'email': code, // Backend expects 'email' field, can be NIK or email
           'password': password,
-          if (fcmToken != null) 'fcm_token': fcmToken,
+          'fcm_token': ?fcmToken,
         },
       );
       return response.data;
@@ -60,7 +60,7 @@ class AuthApi {
         ApiEndpoints.biometricLogin,
         data: {
           'code': code,
-          if (biometricToken != null) 'biometric_token': biometricToken,
+          'biometric_token': ?biometricToken,
         },
       );
       return response.data;
@@ -114,10 +114,10 @@ class AttendanceApi {
 
   /// GET /attendance/today - Get today's attendance data
   Future<Map<String, dynamic>> getTodayAttendance() async {
-    print('API: GET ${ApiEndpoints.attendanceToday}');
+    
     final response = await _dio.get(ApiEndpoints.attendanceToday);
-    print('API: Response status: ${response.statusCode}');
-    print('API: Response data: ${response.data}');
+    
+    
     return response.data as Map<String, dynamic>;
   }
 
@@ -142,29 +142,29 @@ class AttendanceApi {
     String? earlyLeaveNotes,
     String? capturedAt,
   }) async {
-    print('ATT_API: Recording attendance - type: $type');
-    print('ATT_API: Photo length: ${photo.length} chars');
+    
+    
     try {
       final response = await _dio.post(
         ApiEndpoints.attendance,
         data: {
           'type': type,
           'photo': photo,
-          if (lat != null) 'lat': lat,
-          if (lng != null) 'lng': lng,
-          if (notes != null) 'notes': notes,
-          if (livenessPassed != null) 'liveness_passed': livenessPassed,
-          if (faceMatchScore != null) 'face_match_score': faceMatchScore,
-          if (freqRatio != null) 'freq_ratio': freqRatio,
-          if (textureScore != null) 'texture_score': textureScore,
-          if (earlyLeaveNotes != null) 'early_leave_notes': earlyLeaveNotes,
-          if (capturedAt != null) 'captured_at': capturedAt,
+          'lat': ?lat,
+          'lng': ?lng,
+          'notes': ?notes,
+          'liveness_passed': ?livenessPassed,
+          'face_match_score': ?faceMatchScore,
+          'freq_ratio': ?freqRatio,
+          'texture_score': ?textureScore,
+          'early_leave_notes': ?earlyLeaveNotes,
+          'captured_at': ?capturedAt,
         },
       );
-      print('ATT_API: Record attendance response: ${response.data}');
+      
       return response.data as Map<String, dynamic>;
     } on DioException catch (e) {
-      print('ATT_API: Record attendance error: ${e.message}, status: ${e.response?.statusCode}');
+      
       throw ApiException.fromDioException(e);
     }
   }
@@ -181,41 +181,41 @@ class AttendanceApi {
     String? notes,
     String? idempotencyKey,
   }) async {
-    print('ATT_API: Face verify - photo length: ${photo.length} chars');
-    print('ATT_API: captured_at: $capturedAt');
+    
+    
     try {
       final response = await _dio.post(
         ApiEndpoints.attendanceFaceVerify,
         data: {
           'photo': photo,
           'captured_at': capturedAt,
-          if (lat != null) 'lat': lat,
-          if (lng != null) 'lng': lng,
-          if (type != null) 'type': type,
-          if (notes != null) 'notes': notes,
-          if (idempotencyKey != null) 'idempotency_key': idempotencyKey,
+          'lat': ?lat,
+          'lng': ?lng,
+          'type': ?type,
+          'notes': ?notes,
+          'idempotency_key': ?idempotencyKey,
         },
       );
-      print('ATT_API: Face verify response: ${response.data}');
+      
       return response.data as Map<String, dynamic>;
     } on DioException catch (e) {
-      print('ATT_API: Face verify error: ${e.message}');
+      
       throw ApiException.fromDioException(e);
     }
   }
 
   /// GET /attendance/status/{jobUuid} - Check attendance job status
   Future<Map<String, dynamic>> getAttendanceStatus(String jobUuid) async {
-    print('ATT_API: Calling GET /attendance/status/$jobUuid');
+    
     try {
       final response = await _dio.get(ApiEndpoints.attendanceStatus(jobUuid));
-      print('ATT_API: Status response - statusCode: ${response.statusCode}, data: ${response.data}');
+      
       return response.data as Map<String, dynamic>;
-    } on DioException catch (e) {
-      print('ATT_API: DioException - message: ${e.message}, type: ${e.type}');
-      print('ATT_API: Response statusCode: ${e.response?.statusCode}');
-      print('ATT_API: Response data: ${e.response?.data}');
-      throw e;
+    } on DioException {
+      
+      
+      
+      rethrow;
     }
   }
 }
@@ -234,19 +234,19 @@ class FaceApi {
   /// POST /face-enrollment - Enroll face (multipart upload)
   /// Body: photos[] (1-4 files)
   Future<Map<String, dynamic>> enrollFace(List<String> photoPaths) async {
-    print('FACE_API: Starting enrollFace with ${photoPaths.length} files');
+    
     try {
       final formData = FormData();
       for (int i = 0; i < photoPaths.length; i++) {
         final path = photoPaths[i];
-        print('FACE_API: Adding file $i: $path');
+        
         formData.files.add(MapEntry(
           'photos[]',
           await MultipartFile.fromFile(path, filename: 'face_$i.jpg'),
         ));
       }
 
-      print('FACE_API: Sending request to ${ApiEndpoints.faceEnrollment}');
+      
       final response = await _dio.post(
         ApiEndpoints.faceEnrollment,
         data: formData,
@@ -254,11 +254,11 @@ class FaceApi {
           contentType: 'multipart/form-data',
         ),
       );
-      print('FACE_API: Response status: ${response.statusCode}');
-      print('FACE_API: Response data: ${response.data}');
+      
+      
       return response.data as Map<String, dynamic>;
     } on DioException catch (e) {
-      print('FACE_API: DioException: ${e.message}, type: ${e.type}');
+      
       throw ApiException.fromDioException(e);
     }
   }
@@ -334,11 +334,13 @@ class PatrolApi {
 
   PatrolApi(this._dio);
 
-  /// POST /patrol/scan - Scan a checkpoint QR code (OTP validated on mobile)
+  /// POST /patrol/scan - Scan a checkpoint QR code
+  /// OTP is validated on backend using checkpoint secret_key
   Future<Map<String, dynamic>> scan({
     required String qrCode,
     required double latitude,
     required double longitude,
+    String? otp,
     String? deviceId,
     bool? isMockLocation,
     String? scannedAtLocal,
@@ -350,9 +352,10 @@ class PatrolApi {
           'qr_code': qrCode,
           'latitude': latitude,
           'longitude': longitude,
-          if (deviceId != null) 'device_id': deviceId,
-          if (isMockLocation != null) 'is_mock_location': isMockLocation,
-          if (scannedAtLocal != null) 'scanned_at_local': scannedAtLocal,
+          'otp': ?otp,
+          'device_id': ?deviceId,
+          'is_mock_location': ?isMockLocation,
+          'scanned_at_local': ?scannedAtLocal,
         },
       );
       return response.data as Map<String, dynamic>;
@@ -371,10 +374,13 @@ class PatrolApi {
     }
   }
 
-  /// GET /patrol/otp - Get current employee OTP code
-  Future<Map<String, dynamic>> getOtp() async {
+  /// GET /patrol/otp - Get checkpoint TOTP info after QR scan
+  Future<Map<String, dynamic>> getOtp({String? qrCode}) async {
     try {
-      final response = await _dio.get(ApiEndpoints.patrolOtp);
+      final response = await _dio.get(
+        ApiEndpoints.patrolOtp,
+        queryParameters: qrCode != null ? {'qr_code': qrCode} : null,
+      );
       return response.data as Map<String, dynamic>;
     } on DioException catch (e) {
       throw ApiException.fromDioException(e);
@@ -393,17 +399,17 @@ class PanicApi {
     required double longitude,
     String? description,
   }) async {
-    print('PANIC_API: POST ${ApiEndpoints.panicAlert} - type=$type, lat=$latitude, lng=$longitude');
+    
     final response = await _dio.post(
       ApiEndpoints.panicAlert,
       data: {
         'type': type,
         'latitude': latitude,
         'longitude': longitude,
-        if (description != null) 'description': description,
+        'description': ?description,
       },
     );
-    print('PANIC_API: Response - ${response.data}');
+    
     return response.data;
   }
 
@@ -671,7 +677,7 @@ class ReportApi {
           'note': description,
           'lat': latitude,
           'lng': longitude,
-          if (location != null) 'location': location,
+          'location': ?location,
         },
       );
       return response.data as Map<String, dynamic>;
@@ -749,7 +755,7 @@ class ShiftResponseApi {
         endpoint,
         data: {
           'action': action,
-          if (reason != null) 'reason': reason,
+          'reason': ?reason,
         },
       );
       return response.data as Map<String, dynamic>;
@@ -803,9 +809,17 @@ class DailyTaskApi {
    final queryString = queryParts.isNotEmpty ? '?${queryParts.join('&')}' : '';
    final url = '${ApiEndpoints.dailyTaskItems}$queryString';
 
+   // Debug: log the URL being called
+   debugPrint('DailyTaskApi.getItems: calling $url');
+
    final response = await _dio.get(url);
+
+   // Debug: log the response status
+   debugPrint('DailyTaskApi.getItems: response status = ${response.statusCode}');
+
    return response.data as Map<String, dynamic>;
   } on DioException catch (e) {
+   debugPrint('DailyTaskApi.getItems: DioException - $e');
    throw ApiException.fromDioException(e);
   }
  }
@@ -874,6 +888,145 @@ class DailyTaskApi {
   } on DioException catch (e) {
    throw ApiException.fromDioException(e);
   }
+ }
+
+ /// GET /product-areas/area/{areaId} - Get products from product_areas by area
+ /// Used for mobile task assignment to show available tools/chemicals/ppes/machines from area stock
+ Future<Map<String, dynamic>> getProductsByArea({
+   required int areaId,
+   String? query,
+   int? categoryType,
+ }) async {
+   try {
+     final queryParts = <String>[];
+     if (query != null && query.isNotEmpty) {
+       queryParts.add('q=${Uri.encodeComponent(query)}');
+     }
+     if (categoryType != null) {
+       queryParts.add('category_type=$categoryType');
+     }
+
+     final queryString = queryParts.isNotEmpty ? '?${queryParts.join('&')}' : '';
+     final url = '${ApiEndpoints.productAreasByArea}/$areaId$queryString';
+
+     debugPrint('DailyTaskApi.getProductsByArea: calling $url');
+
+     final response = await _dio.get(url);
+     return response.data as Map<String, dynamic>;
+   } on DioException catch (e) {
+     debugPrint('DailyTaskApi.getProductsByArea: DioException - $e');
+     throw ApiException.fromDioException(e);
+   }
+ }
+
+ // ====================
+ // Unified Inventory API Methods
+ // These use the new /inventory-items endpoint which combines warehouse + area tracking
+ // ====================
+
+ /// GET /inventory-items/by-area/{areaId} - Get inventory items by area (unified)
+ /// This is the new unified endpoint for mobile daily task
+ Future<Map<String, dynamic>> getInventoryByArea({
+   required int areaId,
+   String? query,
+   String? categoryType,
+ }) async {
+   try {
+     final queryParts = <String>[];
+     if (query != null && query.isNotEmpty) {
+       queryParts.add('query=${Uri.encodeComponent(query)}');
+     }
+     if (categoryType != null && categoryType.isNotEmpty) {
+       queryParts.add('category_type=$categoryType');
+     }
+
+     final queryString = queryParts.isNotEmpty ? '?${queryParts.join('&')}' : '';
+     final url = '${ApiEndpoints.inventoryByArea}/$areaId$queryString';
+
+     debugPrint('DailyTaskApi.getInventoryByArea: calling $url');
+
+     final response = await _dio.get(url);
+     return response.data as Map<String, dynamic>;
+   } on DioException catch (e) {
+     debugPrint('DailyTaskApi.getInventoryByArea: DioException - $e');
+     throw ApiException.fromDioException(e);
+   }
+ }
+
+ /// GET /inventory-items/scan/{qrCode} - Scan QR code for quick lookup
+ Future<Map<String, dynamic>> scanInventoryItem(String qrCode) async {
+   try {
+     final url = '${ApiEndpoints.inventoryScan}/${Uri.encodeComponent(qrCode)}';
+     debugPrint('DailyTaskApi.scanInventoryItem: calling $url');
+     final response = await _dio.get(url);
+     return response.data as Map<String, dynamic>;
+   } on DioException catch (e) {
+     debugPrint('DailyTaskApi.scanInventoryItem: DioException - $e');
+     throw ApiException.fromDioException(e);
+   }
+ }
+
+ /// GET /inventory-items/{qrCode}/movements - Get movement history for an item
+ Future<Map<String, dynamic>> getInventoryMovements(String qrCode) async {
+   try {
+     final url = '${ApiEndpoints.inventoryMovements}/${Uri.encodeComponent(qrCode)}/movements';
+     debugPrint('DailyTaskApi.getInventoryMovements: calling $url');
+     final response = await _dio.get(url);
+     return response.data as Map<String, dynamic>;
+   } on DioException catch (e) {
+     debugPrint('DailyTaskApi.getInventoryMovements: DioException - $e');
+     throw ApiException.fromDioException(e);
+   }
+ }
+
+ /// POST /inventory-items/condition - Update item condition from daily task
+ Future<Map<String, dynamic>> updateInventoryCondition({
+   required String qrCode,
+   required String condition,
+   double? currentStock,
+   String? notes,
+ }) async {
+   try {
+     final response = await _dio.post(
+       ApiEndpoints.inventoryCondition,
+       data: {
+         'qr_code': qrCode,
+         'condition': condition,
+         if (currentStock != null) 'current_stock': currentStock,
+         if (notes != null) 'notes': notes,
+       },
+     );
+     return response.data as Map<String, dynamic>;
+   } on DioException catch (e) {
+     debugPrint('DailyTaskApi.updateInventoryCondition: DioException - $e');
+     throw ApiException.fromDioException(e);
+   }
+ }
+
+ /// POST /inventory-items/transfer - Transfer item between locations
+ Future<Map<String, dynamic>> transferInventoryItem({
+   required String qrCode,
+   required String locationType,
+   required int locationId,
+   String? condition,
+   String? notes,
+ }) async {
+   try {
+     final response = await _dio.post(
+       ApiEndpoints.inventoryTransfer,
+       data: {
+         'qr_code': qrCode,
+         'location_type': locationType,
+         'location_id': locationId,
+         if (condition != null) 'condition': condition,
+         if (notes != null) 'notes': notes,
+       },
+     );
+     return response.data as Map<String, dynamic>;
+   } on DioException catch (e) {
+     debugPrint('DailyTaskApi.transferInventoryItem: DioException - $e');
+     throw ApiException.fromDioException(e);
+   }
  }
 
  /// GET /daily-task/history - Get task history
@@ -1101,7 +1254,7 @@ class DailyTaskApi {
         queryParameters: {
           'page': page,
           'per_page': perPage,
-          if (status != null) 'status': status,
+          'status': ?status,
         },
       );
       return response.data as Map<String, dynamic>;
@@ -1132,9 +1285,9 @@ class DailyTaskApi {
         ApiEndpoints.dailyTaskAssignments,
         data: {
           'employee_id': employeeId,
-          if (targetMinutes != null) 'target_minutes': targetMinutes,
-          if (assignedDate != null) 'assigned_date': assignedDate,
-          if (notes != null) 'notes': notes,
+          'target_minutes': ?targetMinutes,
+          'assigned_date': ?assignedDate,
+          'notes': ?notes,
         },
       );
       return response.data as Map<String, dynamic>;
@@ -1218,7 +1371,7 @@ class DailyTaskApi {
       final queryString = queryParts.isNotEmpty ? '?${queryParts.join('&')}' : '';
       final url = '${ApiEndpoints.dailyTaskMobileAssignEmployees}$queryString';
 
-      debugPrint('API: getMobileAssignEmployees url = $url');
+      
       final response = await _dio.get(url);
       return response.data as Map<String, dynamic>;
     } on DioException catch (e) {
@@ -1245,12 +1398,12 @@ class DailyTaskApi {
         ApiEndpoints.dailyTaskMobileAssign,
         data: {
           'employee_ids': employeeIds,
-          if (itemId != null) 'item_id': itemId,
-          if (areaId != null) 'area_id': areaId,
-          if (targetMinutes != null) 'target_minutes': targetMinutes,
-          if (targetNote != null) 'target_note': targetNote,
-          if (notes != null) 'notes': notes,
-          if (assignedDate != null) 'assigned_date': assignedDate,
+          'item_id': ?itemId,
+          'area_id': ?areaId,
+          'target_minutes': ?targetMinutes,
+          'target_note': ?targetNote,
+          'notes': ?notes,
+          'assigned_date': ?assignedDate,
           if (toolIds != null && toolIds.isNotEmpty) 'tool_ids': toolIds,
           if (chemicalIds != null && chemicalIds.isNotEmpty) 'chemical_ids': chemicalIds,
           if (ppeIds != null && ppeIds.isNotEmpty) 'ppe_ids': ppeIds,
@@ -1294,7 +1447,7 @@ class DailyTaskApi {
         '${ApiEndpoints.dailyTask}/$taskId/review',
         data: {
           'scores': scores,
-          if (notes != null) 'notes': notes,
+          'notes': ?notes,
         },
       );
       return response.data as Map<String, dynamic>;
@@ -1360,9 +1513,9 @@ class ClientApi {
       final response = await _dio.get(
         ApiEndpoints.clientAttendance,
         queryParameters: {
-          if (fromDate != null) 'from_date': fromDate,
-          if (toDate != null) 'to_date': toDate,
-          if (employeeId != null) 'employee_id': employeeId,
+          'from_date': ?fromDate,
+          'to_date': ?toDate,
+          'employee_id': ?employeeId,
         },
       );
       return response.data as Map<String, dynamic>;
@@ -1380,8 +1533,8 @@ class ClientApi {
       final response = await _dio.get(
         ApiEndpoints.clientDailyTasks,
         queryParameters: {
-          if (fromDate != null) 'from_date': fromDate,
-          if (toDate != null) 'to_date': toDate,
+          'from_date': ?fromDate,
+          'to_date': ?toDate,
         },
       );
       return response.data as Map<String, dynamic>;
@@ -1399,8 +1552,8 @@ class ClientApi {
       final response = await _dio.get(
         ApiEndpoints.clientPatrolReports,
         queryParameters: {
-          if (fromDate != null) 'from_date': fromDate,
-          if (toDate != null) 'to_date': toDate,
+          'from_date': ?fromDate,
+          'to_date': ?toDate,
         },
       );
       return response.data as Map<String, dynamic>;
@@ -1418,8 +1571,8 @@ class ClientApi {
       final response = await _dio.get(
         ApiEndpoints.clientFieldReports,
         queryParameters: {
-          if (fromDate != null) 'from_date': fromDate,
-          if (toDate != null) 'to_date': toDate,
+          'from_date': ?fromDate,
+          'to_date': ?toDate,
         },
       );
       return response.data as Map<String, dynamic>;

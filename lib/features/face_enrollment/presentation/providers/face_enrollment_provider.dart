@@ -172,20 +172,20 @@ class FaceEnrollmentNotifier extends ChangeNotifier {
     final path = photoPath ?? _state.capturedPhotoPath;
 
     if (path == null) {
-      print('FACE_PROVIDER: No photo path provided');
+      
       _state = _state.copyWith(error: 'Ambil foto terlebih dahulu');
       notifyListeners();
       return null;
     }
 
-    print('FACE_PROVIDER: Starting enrollment with path: $path');
+    
     _state = _state.copyWith(isEnrolling: true, clearError: true, clearResult: true);
     notifyListeners();
 
     try {
-      print('FACE_PROVIDER: Calling repository.enrollFace...');
+      
       final result = await _repository.enrollFace([path]);
-      print('FACE_PROVIDER: Result - success: ${result.success}, message: ${result.message}');
+      
 
       _state = _state.copyWith(
         isEnrolling: false,
@@ -200,7 +200,7 @@ class FaceEnrollmentNotifier extends ChangeNotifier {
 
       return result;
     } on ApiException catch (e) {
-      print('FACE_PROVIDER: ApiException - ${e.message}, status: ${e.statusCode}');
+      
       _state = _state.copyWith(
         isEnrolling: false,
         error: e.message,
@@ -208,7 +208,7 @@ class FaceEnrollmentNotifier extends ChangeNotifier {
       notifyListeners();
       return null;
     } catch (e) {
-      print('FACE_PROVIDER: Exception - $e');
+      
       _state = _state.copyWith(
         isEnrolling: false,
         error: 'Gagal mendaftarkan wajah: $e',

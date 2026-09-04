@@ -51,12 +51,17 @@ class DailyTaskRepository {
     try {
       final response = await api.getItems(query: query, positionIds: positionIds);
       final data = response['data'];
+
+      // Debug logging
+      debugPrint('getItems API response: success=${response['success']}, dataType=${data?.runtimeType}, dataLength=${data is List ? data.length : "not a list"}');
+
       if (data == null) return [];
       final list = data is List ? data : [];
       return list.map((json) => DailyTaskMasterItem.fromJson(_toMap(json))).toList();
     } on ApiException {
       rethrow;
     } catch (e) {
+      debugPrint('getItems error: $e');
       throw ApiException(
         message: 'Gagal memuat daftar item: $e',
         statusCode: 500,
@@ -67,14 +72,14 @@ class DailyTaskRepository {
   Future<List<DailyTaskPosition>> getPositions() async {
     try {
       final response = await api.getPositions();
-      debugPrint('REPO: getPositions response = $response');
+      
       final data = response['data'];
-      debugPrint('REPO: data = $data');
+      
       if (data == null) return [];
       final list = data is List ? data : [];
-      debugPrint('REPO: list = $list');
+      
       final result = list.map((json) => DailyTaskPosition.fromJson(_toMap(json))).toList();
-      debugPrint('REPO: result = $result');
+      
       return result;
     } on ApiException {
       rethrow;
@@ -86,8 +91,23 @@ class DailyTaskRepository {
     }
   }
 
-  Future<List<DailyTaskTool>> getTools({String? query}) async {
+  Future<List<DailyTaskTool>> getTools({String? query, int? areaId, int? categoryType}) async {
     try {
+      // If areaId is provided, fetch from unified inventory API
+      if (areaId != null) {
+        final response = await api.getInventoryByArea(
+          areaId: areaId,
+          query: query,
+          categoryType: categoryType ?? 'tools',
+        );
+        final data = response['data'];
+        if (data == null) return [];
+        final list = data is List ? data : [];
+        return list
+            .map((json) => DailyTaskTool.fromJson(_toMap(json)))
+            .toList();
+      }
+      // Otherwise, use original endpoint
       final response = await api.getTools(query: query);
       final data = response['data'];
       if (data == null) return [];
@@ -103,8 +123,23 @@ class DailyTaskRepository {
     }
   }
 
-  Future<List<DailyTaskChemical>> getChemicals({String? query}) async {
+  Future<List<DailyTaskChemical>> getChemicals({String? query, int? areaId, int? categoryType}) async {
     try {
+      // If areaId is provided, fetch from unified inventory API
+      if (areaId != null) {
+        final response = await api.getInventoryByArea(
+          areaId: areaId,
+          query: query,
+          categoryType: categoryType ?? 'chemicals',
+        );
+        final data = response['data'];
+        if (data == null) return [];
+        final list = data is List ? data : [];
+        return list
+            .map((json) => DailyTaskChemical.fromJson(_toMap(json)))
+            .toList();
+      }
+      // Otherwise, use original endpoint
       final response = await api.getChemicals(query: query);
       final data = response['data'];
       if (data == null) return [];
@@ -120,8 +155,23 @@ class DailyTaskRepository {
     }
   }
 
-  Future<List<DailyTaskPpe>> getPpes({String? query}) async {
+  Future<List<DailyTaskPpe>> getPpes({String? query, int? areaId, int? categoryType}) async {
     try {
+      // If areaId is provided, fetch from unified inventory API
+      if (areaId != null) {
+        final response = await api.getInventoryByArea(
+          areaId: areaId,
+          query: query,
+          categoryType: categoryType ?? 'ppes',
+        );
+        final data = response['data'];
+        if (data == null) return [];
+        final list = data is List ? data : [];
+        return list
+            .map((json) => DailyTaskPpe.fromJson(_toMap(json)))
+            .toList();
+      }
+      // Otherwise, use original endpoint
       final response = await api.getPpes(query: query);
       final data = response['data'];
       if (data == null) return [];
@@ -137,8 +187,23 @@ class DailyTaskRepository {
     }
   }
 
-  Future<List<DailyTaskMachine>> getMachines({String? query}) async {
+  Future<List<DailyTaskMachine>> getMachines({String? query, int? areaId, int? categoryType}) async {
     try {
+      // If areaId is provided, fetch from unified inventory API
+      if (areaId != null) {
+        final response = await api.getInventoryByArea(
+          areaId: areaId,
+          query: query,
+          categoryType: categoryType ?? 'machines',
+        );
+        final data = response['data'];
+        if (data == null) return [];
+        final list = data is List ? data : [];
+        return list
+            .map((json) => DailyTaskMachine.fromJson(_toMap(json)))
+            .toList();
+      }
+      // Otherwise, use original endpoint
       final response = await api.getMachines(query: query);
       final data = response['data'];
       if (data == null) return [];
@@ -371,17 +436,17 @@ class DailyTaskRepository {
   /// GET /daily-task/assign/employees - Get employees for mobile assignment
   /// Supports filtering by position_ids
   Future<List<Map<String, dynamic>>> getMobileAssignEmployees({String? query, List<int>? positionIds}) async {
-    debugPrint('REPO: getMobileAssignEmployees called with query=$query, positionIds=$positionIds');
+    
     try {
       final response = await api.getMobileAssignEmployees(query: query, positionIds: positionIds);
       final data = response['data'];
-      debugPrint('REPO: response data = $data');
+      
       if (data == null) return [];
       return (data is List ? data : []).map((json) => _toMap(json)).toList();
     } on ApiException {
       rethrow;
     } catch (e) {
-      debugPrint('REPO: getMobileAssignEmployees error = $e');
+      
       throw ApiException(
         message: 'Gagal memuat daftar karyawan: $e',
         statusCode: 500,

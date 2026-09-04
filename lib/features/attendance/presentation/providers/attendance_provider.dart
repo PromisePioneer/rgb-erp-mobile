@@ -95,23 +95,23 @@ class AttendanceNotifier extends ChangeNotifier {
     notifyListeners();
 
     try {
-      print('ATTENDANCE: Loading today attendance...');
+      
       final data = await _repository.getTodayAttendance();
-      print('ATTENDANCE: Success! Records: ${data.records.length}');
+      
       _state = _state.copyWith(
         todayData: data,
         isLoading: false,
       );
       notifyListeners();
     } on ApiException catch (e) {
-      print('ATTENDANCE: ApiException - ${e.message} (status: ${e.statusCode})');
+      
       _state = _state.copyWith(
         isLoading: false,
         error: e.message,
       );
       notifyListeners();
     } catch (e) {
-      print('ATTENDANCE: Unknown error - $e');
+      
       _state = _state.copyWith(
         isLoading: false,
         error: 'Gagal memuat data absensi: $e',
@@ -165,19 +165,19 @@ class AttendanceNotifier extends ChangeNotifier {
     notifyListeners();
 
     try {
-      print('ATT_PROVIDER: Starting faceVerify...');
-      print('ATT_PROVIDER: Photo path: $photoPath');
-      print('ATT_PROVIDER: Location: lat=$lat, lng=$lng');
-      print('ATT_PROVIDER: Type: $type');
-      print('ATT_PROVIDER: capturedAt: $capturedAt');
+      
+      
+      
+      
+      
 
       // Convert photo to base64
       final file = File(photoPath);
       final bytes = await file.readAsBytes();
       final base64Photo = base64Encode(bytes);
-      print('ATT_PROVIDER: Photo base64 length: ${base64Photo.length}');
+      
 
-      print('ATT_PROVIDER: Calling repository.faceVerify()...');
+      
       final result = await _repository.faceVerify(
         photoBase64: base64Photo,
         capturedAt: capturedAt,
@@ -186,8 +186,8 @@ class AttendanceNotifier extends ChangeNotifier {
         type: type,
       );
 
-      print('ATT_PROVIDER: faceVerify result - success: ${result.success}, match: ${result.match}, message: ${result.message}');
-      print('ATT_PROVIDER: jobId: ${result.jobId}, score: ${result.score}');
+      
+      
 
       _state = _state.copyWith(
         isVerifying: false,
@@ -219,9 +219,9 @@ class AttendanceNotifier extends ChangeNotifier {
     notifyListeners();
 
     try {
-      print('ATT_POLL: Starting poll for job $jobUuid');
+      
       final status = await _repository.pollJobStatus(jobUuid);
-      print('ATT_POLL: Final status - ${status.status}, isCompleted: ${status.isCompleted}, isFailed: ${status.isFailed}');
+      
 
       _state = _state.copyWith(
         isVerifying: false,
@@ -230,9 +230,9 @@ class AttendanceNotifier extends ChangeNotifier {
       notifyListeners();
 
       return status;
-    } catch (e, stackTrace) {
-      print('ATT_POLL: Exception - $e');
-      print('ATT_POLL: Stack trace: $stackTrace');
+    } catch (e) {
+      
+      
       _state = _state.copyWith(
         isVerifying: false,
         error: 'Gagal memeriksa status: $e',
@@ -257,25 +257,25 @@ class AttendanceNotifier extends ChangeNotifier {
     notifyListeners();
 
     try {
-      print('ATT_PROVIDER: Starting recordAttendance...');
-      print('ATT_PROVIDER: Photo path: $photoPath');
-      print('ATT_PROVIDER: Location: lat=$lat, lng=$lng');
-      print('ATT_PROVIDER: hasCheckedIn: ${_state.hasCheckedIn}');
-      print('ATT_PROVIDER: earlyLeaveNotes: ${earlyLeaveNotes != null ? "provided" : "null"}');
-      print('ATT_PROVIDER: capturedAt: $capturedAt');
+      
+      
+      
+      
+      
+      
 
       // Convert photo to base64
       final file = File(photoPath);
       final bytes = await file.readAsBytes();
       final base64Photo = base64Encode(bytes);
-      print('ATT_PROVIDER: Photo base64 length: ${base64Photo.length}');
+      
 
       final type = _state.hasCheckedIn
           ? AttendanceType.checkOut
           : AttendanceType.checkIn;
-      print('ATT_PROVIDER: Attendance type: ${type.value}');
+      
 
-      print('ATT_PROVIDER: Calling repository.recordAttendance()...');
+      
       final record = await _repository.recordAttendance(
         type: type,
         photoBase64: base64Photo,
@@ -286,7 +286,7 @@ class AttendanceNotifier extends ChangeNotifier {
         earlyLeaveNotes: earlyLeaveNotes,
         capturedAt: capturedAt,
       );
-      print('ATT_PROVIDER: recordAttendance success! ID: ${record.id}');
+      
 
       // Refresh today's data
       await loadTodayAttendance();
@@ -301,7 +301,7 @@ class AttendanceNotifier extends ChangeNotifier {
 
       return record;
     } on ApiException catch (e) {
-      print('ATT_PROVIDER: ApiException - ${e.message}');
+      
       _state = _state.copyWith(
         isRecording: false,
         error: e.message,
@@ -309,7 +309,7 @@ class AttendanceNotifier extends ChangeNotifier {
       notifyListeners();
       return null;
     } catch (e) {
-      print('ATT_PROVIDER: Unknown error - $e');
+      
       _state = _state.copyWith(
         isRecording: false,
         error: 'Gagal mencatat absensi',

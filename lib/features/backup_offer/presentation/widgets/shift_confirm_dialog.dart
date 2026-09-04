@@ -3,7 +3,6 @@ import 'package:forui/forui.dart';
 
 import '../../../../core/core.dart';
 import '../../../../shared/widgets/buttons/primary_button.dart';
-import '../../../../shared/widgets/feedback/loading_indicator.dart';
 import '../../../../shared/widgets/icons/forui_icon_map.dart';
 
 /// Simple confirm dialog for shift reminder
@@ -30,7 +29,7 @@ class ShiftConfirmDialog extends StatefulWidget {
 }
 
 class _ShiftConfirmDialogState extends State<ShiftConfirmDialog> {
-  bool _isLoading = false;
+  final bool _isLoading = false;
 
   @override
   Widget build(BuildContext context) {
@@ -93,10 +92,10 @@ class _ShiftConfirmDialogState extends State<ShiftConfirmDialog> {
                   children: [
                     Icon(IconMap.infoOutline, color: AppColors.amber600, size: 20),
                     const SizedBox(width: 8),
-                    const Expanded(
+                    Expanded(
                       child: Text(
                         'Jika ditolak, sistem akan cari backup.',
-                        style: TextStyle(fontSize: 12, color: AppColors.amber800),
+                        style: TextStyle(fontSize: 12, color: AppColors.amber600),
                       ),
                     ),
                   ],

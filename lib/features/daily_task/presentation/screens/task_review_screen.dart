@@ -99,7 +99,7 @@ class TaskReviewScreen extends StatefulWidget {
 
 class _TaskReviewScreenState extends State<TaskReviewScreen> {
   List<ReviewCriteria> _criteria = [];
-  Map<int, int> _scores = {}; // criteriaId -> score (1-5)
+  final Map<int, int> _scores = {}; // criteriaId -> score (1-5)
   final _notesController = TextEditingController();
   bool _isLoading = true;
   bool _isSubmitting = false;

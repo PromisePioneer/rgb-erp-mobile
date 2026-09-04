@@ -85,11 +85,11 @@ class AttendanceJobStatusResult extends Equatable {
   bool get isProcessing => status == AttendanceJobStatus.processing;
 
   factory AttendanceJobStatusResult.fromJson(Map<String, dynamic> json) {
-    print('JOB_STATUS: Parsing from JSON: $json');
+    
     final statusStr = json['status'] as String? ?? 'processing';
-    print('JOB_STATUS: Raw status string: "$statusStr"');
+    
     final status = AttendanceJobStatus.fromString(statusStr);
-    print('JOB_STATUS: Parsed status enum: $status');
+    
     return AttendanceJobStatusResult(
       status: status,
       attendanceId: json['attendance_id'] as int?,
