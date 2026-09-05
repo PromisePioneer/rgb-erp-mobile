@@ -47,9 +47,9 @@ class DailyTaskRepository {
     }
   }
 
-  Future<List<DailyTaskMasterItem>> getItems({String? query, List<int>? positionIds}) async {
+  Future<List<DailyTaskMasterItem>> getItems({String? query, List<int>? roleIds}) async {
     try {
-      final response = await api.getItems(query: query, positionIds: positionIds);
+      final response = await api.getItems(query: query, roleIds: roleIds);
       final data = response['data'];
 
       // Debug logging
@@ -69,23 +69,23 @@ class DailyTaskRepository {
     }
   }
 
-  Future<List<DailyTaskPosition>> getPositions() async {
+  Future<List<DailyTaskRole>> getRoles() async {
     try {
-      final response = await api.getPositions();
-      
+      final response = await api.getRoles();
+
       final data = response['data'];
-      
+
       if (data == null) return [];
       final list = data is List ? data : [];
-      
-      final result = list.map((json) => DailyTaskPosition.fromJson(_toMap(json))).toList();
-      
+
+      final result = list.map((json) => DailyTaskRole.fromJson(_toMap(json))).toList();
+
       return result;
     } on ApiException {
       rethrow;
     } catch (e) {
       throw ApiException(
-        message: 'Gagal memuat daftar posisi: $e',
+        message: 'Gagal memuat daftar role: $e',
         statusCode: 500,
       );
     }
@@ -434,19 +434,19 @@ class DailyTaskRepository {
   // ====================
 
   /// GET /daily-task/assign/employees - Get employees for mobile assignment
-  /// Supports filtering by position_ids
-  Future<List<Map<String, dynamic>>> getMobileAssignEmployees({String? query, List<int>? positionIds}) async {
-    
+  /// Supports filtering by role_ids
+  Future<List<Map<String, dynamic>>> getMobileAssignEmployees({String? query, List<int>? roleIds}) async {
+
     try {
-      final response = await api.getMobileAssignEmployees(query: query, positionIds: positionIds);
+      final response = await api.getMobileAssignEmployees(query: query, roleIds: roleIds);
       final data = response['data'];
-      
+
       if (data == null) return [];
       return (data is List ? data : []).map((json) => _toMap(json)).toList();
     } on ApiException {
       rethrow;
     } catch (e) {
-      
+
       throw ApiException(
         message: 'Gagal memuat daftar karyawan: $e',
         statusCode: 500,

@@ -27,6 +27,9 @@ import 'features/client/presentation/providers/client_dashboard_provider.dart';
 import 'features/client/presentation/providers/client_attendance_provider.dart';
 import 'features/client/presentation/providers/client_reports_provider.dart';
 import 'features/client/presentation/providers/client_schedule_provider.dart';
+import 'features/approval/presentation/providers/approval_provider.dart';
+import 'features/notification/data/repositories/notification_repository.dart';
+import 'features/notification/presentation/providers/notification_provider.dart';
 import 'navigation/app_router.dart';
 
 /// Global notification service instance
@@ -216,6 +219,20 @@ void main() async {
             ClientApi(dio),
           ),
         ),
+
+        // Approval Provider (lazy loaded)
+        ChangeNotifierProvider<ApprovalNotifier>(
+          create: (_) => ApprovalNotifier(
+            createApprovalRepository(dio),
+          ),
+        ),
+
+        // Notification Provider (lazy loaded)
+        ChangeNotifierProvider<NotificationProvider>(
+          create: (_) => NotificationProvider(
+            NotificationRepository(dio),
+          ),
+        ),
       ],
       child: const RGBERPApp(),
     ),
@@ -234,48 +251,53 @@ void _setupAlarmNavigation() {
 
   // Setup shift reminder notification callback - show dialog
   notificationService.onShiftReminderReceived = (message, scheduleId) {
-    
+
     notificationDialogHandler.handleShiftReminderNotification(message: message, scheduleId: scheduleId);
   };
 
   // Setup backup offer notification callback - show dialog
   notificationService.onBackupOfferReceived = (message, offerId, scheduleId) {
-    
+
     notificationDialogHandler.handleBackupOfferNotification(
       message: message,
       offerId: offerId,
       scheduleId: scheduleId,
     );
   };
+
+  // Setup approval request notification callback
+  notificationService.onApprovalRequestReceived = (message, approvalId, requestType) {
+
+    _navigateToApproval(approvalId);
+  };
 }
 
-/// Setup notification tap navigation
+// Setup notification tap navigation
 void _setupNotificationNavigation() {
   // Handle when app is opened from terminated state via notification
   FirebaseMessaging.instance.getInitialMessage().then((message) {
     if (message != null) {
-      final type = message.data['type'];
-      if (type == 'patrol_alarm') {
-        _navigateToPatrol();
-      } else if (type == 'shift_reminder') {
-        _navigateToAttendance(null);
-      } else {
-        _navigateToSchedule();
-      }
+      _handleNotificationNavigation(message.data);
     }
   });
 
   // Handle when app is opened from background via notification tap
   FirebaseMessaging.onMessageOpenedApp.listen((message) {
-    final type = message.data['type'];
-    if (type == 'patrol_alarm') {
-      _navigateToPatrol();
-    } else if (type == 'shift_reminder') {
-      _navigateToAttendance(null);
-    } else {
-      _navigateToSchedule();
-    }
+    _handleNotificationNavigation(message.data);
   });
+}
+
+void _handleNotificationNavigation(Map<String, dynamic> data) {
+  final type = data['type'];
+  if (type == 'patrol_alarm') {
+    _navigateToPatrol();
+  } else if (type == 'shift_reminder') {
+    _navigateToAttendance(null);
+  } else if (type == 'approval_request' || type == 'request_approved' || type == 'request_rejected') {
+    _navigateToApproval(data['approval_id']);
+  } else {
+    _navigateToSchedule();
+  }
 }
 
 /// Navigate to patrol screen
@@ -311,7 +333,7 @@ void _navigateToSchedule() {
 
 /// Navigate to attendance screen
 void _navigateToAttendance(String? message) {
-  
+
   try {
     if (message != null) {
       final encodedMsg = Uri.encodeComponent(message);
@@ -320,7 +342,23 @@ void _navigateToAttendance(String? message) {
       appRouterProvider.go('/attendance');
     }
   } catch (e) {
-    
+
+  }
+}
+
+/// Navigate to approval screen
+void _navigateToApproval(String? approvalId) {
+
+  try {
+    if (approvalId != null) {
+      // Navigate to approval detail
+      appRouterProvider.push('/approval/$approvalId');
+    } else {
+      // Navigate to approval list
+      appRouterProvider.go('/approval');
+    }
+  } catch (e) {
+
   }
 }
 

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:dio/dio.dart';
 import 'package:image_picker/image_picker.dart';
@@ -84,7 +85,27 @@ class AttendanceNotifier extends ChangeNotifier {
   final LocationService _locationService;
   final ImagePicker _imagePicker = ImagePicker();
 
-  AttendanceNotifier(this._repository, this._locationService) : super();
+  // Auto-refresh timer for instant updates
+  Timer? _autoRefreshTimer;
+
+  AttendanceNotifier(this._repository, this._locationService) : super() {
+    _startAutoRefresh();
+  }
+
+  void _startAutoRefresh() {
+    // Refresh attendance data every 3 seconds for instant updates
+    _autoRefreshTimer?.cancel();
+    _autoRefreshTimer = Timer.periodic(Duration(seconds: 3), (_) {
+      if (_state.isRecording || _state.isVerifying) return; // Skip if busy
+      loadTodayAttendance();
+    });
+  }
+
+  @override
+  void dispose() {
+    _autoRefreshTimer?.cancel();
+    super.dispose();
+  }
 
   AttendanceState _state = AttendanceState();
   AttendanceState get state => _state;

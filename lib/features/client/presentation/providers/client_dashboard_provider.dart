@@ -230,14 +230,14 @@ class ClientEmployee {
   final String code;
   final String name;
   final String? photoUrl;
-  final String? position;
+  final String? role;
 
   const ClientEmployee({
     required this.id,
     required this.code,
     required this.name,
     this.photoUrl,
-    this.position,
+    this.role,
   });
 
   factory ClientEmployee.fromJson(Map<String, dynamic> json) {
@@ -246,7 +246,7 @@ class ClientEmployee {
       code: json['code'] ?? '',
       name: json['name'] ?? '',
       photoUrl: json['photo'],
-      position: json['position'],
+      role: json['role'],
     );
   }
 }

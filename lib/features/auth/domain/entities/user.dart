@@ -9,7 +9,7 @@ class User extends Equatable {
   final String? username;
   final String? nik;
   final String? department;
-  final String? position;
+  final String? role;
   final String? photo;
   final String? division; // RGB (Satpam) or RBM (Crew)
   final String? siteId;
@@ -27,7 +27,7 @@ class User extends Equatable {
     this.username,
     this.nik,
     this.department,
-    this.position,
+    this.role,
     this.photo,
     this.division,
     this.siteId,
@@ -45,10 +45,10 @@ class User extends Equatable {
   bool get isRbm => division?.toLowerCase() == 'rbm' || department?.toLowerCase() == 'crew';
 
   /// Check if user is Super Admin
-  bool get isSuperAdmin => position?.toLowerCase() == 'super admin';
+  bool get isSuperAdmin => role?.toLowerCase() == 'super admin';
 
   /// Check if user is Team Leader (can assign tasks)
-  bool get isTeamLeader => position?.toLowerCase() == 'team leader';
+  bool get isTeamLeader => role?.toLowerCase() == 'team leader';
 
   /// Check if user has a specific privilege
   bool hasPrivilege(String key) => privileges.contains(key);
@@ -62,7 +62,7 @@ class User extends Equatable {
       username: json['username'] as String?,
       nik: json['nik'] as String?,
       department: json['department'] as String?,
-      position: json['position'] as String?,
+      role: json['role'] as String?,
       photo: json['photo'] as String?,
       division: json['division'] as String?,
       siteId: json['site_id'] as String?,
@@ -86,7 +86,7 @@ class User extends Equatable {
       'username': username,
       'nik': nik,
       'department': department,
-      'position': position,
+      'role': role,
       'photo': photo,
       'division': division,
       'site_id': siteId,
@@ -107,7 +107,7 @@ class User extends Equatable {
         username,
         nik,
         department,
-        position,
+        role,
         photo,
         division,
         siteId,

@@ -456,6 +456,56 @@ class NotificationApi {
       throw ApiException.fromDioException(e);
     }
   }
+
+  /// GET /notifications - Get notifications list
+  Future<Map<String, dynamic>> getNotifications({
+    int limit = 20,
+    int offset = 0,
+  }) async {
+    try {
+      final response = await _dio.get(
+        ApiEndpoints.notifications,
+        queryParameters: {
+          'limit': limit,
+          'offset': offset,
+        },
+      );
+      return response.data as Map<String, dynamic>;
+    } on DioException catch (e) {
+      throw ApiException.fromDioException(e);
+    }
+  }
+
+  /// GET /notifications/unread-count - Get unread notification count
+  Future<int> getUnreadCount() async {
+    try {
+      final response = await _dio.get(ApiEndpoints.notificationsUnreadCount);
+      final data = response.data as Map<String, dynamic>;
+      return data['unread_count'] as int;
+    } on DioException catch (e) {
+      throw ApiException.fromDioException(e);
+    }
+  }
+
+  /// POST /notifications/{id}/read - Mark notification as read
+  Future<void> markAsRead(int notificationId) async {
+    try {
+      await _dio.post(ApiEndpoints.notificationRead(notificationId));
+    } on DioException catch (e) {
+      throw ApiException.fromDioException(e);
+    }
+  }
+
+  /// POST /notifications/read-all - Mark all notifications as read
+  Future<int> markAllAsRead() async {
+    try {
+      final response = await _dio.post(ApiEndpoints.notificationsMarkAllRead);
+      final data = response.data as Map<String, dynamic>;
+      return data['count'] as int;
+    } on DioException catch (e) {
+      throw ApiException.fromDioException(e);
+    }
+  }
 }
 
 class ScheduleApi {
@@ -913,17 +963,17 @@ class DailyTaskApi {
  }
 
  /// GET /daily-task/items - Get available task items
- /// Optional: pass q parameter for search, position_ids[] for filtering by positions
- Future<Map<String, dynamic>> getItems({String? query, List<int>? positionIds}) async {
+ /// Optional: pass q parameter for search, role_ids[] for filtering by roles
+ Future<Map<String, dynamic>> getItems({String? query, List<int>? roleIds}) async {
   try {
    // Build query string manually for reliable Laravel array binding
    final queryParts = <String>[];
    if (query != null && query.isNotEmpty) {
     queryParts.add('q=${Uri.encodeComponent(query)}');
    }
-   if (positionIds != null && positionIds.isNotEmpty) {
-    for (var id in positionIds) {
-     queryParts.add('position_ids[]=$id');
+   if (roleIds != null && roleIds.isNotEmpty) {
+    for (var id in roleIds) {
+     queryParts.add('role_ids[]=$id');
     }
    }
 
@@ -945,10 +995,10 @@ class DailyTaskApi {
   }
  }
 
- /// GET /daily-task/positions - Get available positions for daily task items
- Future<Map<String, dynamic>> getPositions() async {
+ /// GET /daily-task/roles - Get available roles for daily task items
+ Future<Map<String, dynamic>> getRoles() async {
   try {
-   final response = await _dio.get(ApiEndpoints.dailyTaskPositions);
+   final response = await _dio.get(ApiEndpoints.dailyTaskRoles);
    return response.data as Map<String, dynamic>;
   } on DioException catch (e) {
    throw ApiException.fromDioException(e);
@@ -1475,24 +1525,24 @@ class DailyTaskApi {
   // ====================
 
   /// GET /daily-task/assign/employees - Get employees that can be assigned tasks
-  /// Optional: pass q parameter for search, position_ids[] for filtering by positions
-  Future<Map<String, dynamic>> getMobileAssignEmployees({String? query, List<int>? positionIds}) async {
+  /// Optional: pass q parameter for search, role_ids[] for filtering by roles
+  Future<Map<String, dynamic>> getMobileAssignEmployees({String? query, List<int>? roleIds}) async {
     try {
       // Build query string manually for reliable Laravel array binding
       final queryParts = <String>[];
       if (query != null && query.isNotEmpty) {
         queryParts.add('q=${Uri.encodeComponent(query)}');
       }
-      if (positionIds != null && positionIds.isNotEmpty) {
-        for (var id in positionIds) {
-          queryParts.add('position_ids[]=$id');
+      if (roleIds != null && roleIds.isNotEmpty) {
+        for (var id in roleIds) {
+          queryParts.add('role_ids[]=$id');
         }
       }
 
       final queryString = queryParts.isNotEmpty ? '?${queryParts.join('&')}' : '';
       final url = '${ApiEndpoints.dailyTaskMobileAssignEmployees}$queryString';
 
-      
+
       final response = await _dio.get(url);
       return response.data as Map<String, dynamic>;
     } on DioException catch (e) {

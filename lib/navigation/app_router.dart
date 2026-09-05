@@ -49,6 +49,9 @@ import '../features/daily_task/presentation/screens/task_detail_leader_screen.da
 import '../features/daily_task/presentation/screens/task_review_screen.dart';
 import '../features/daily_task/presentation/screens/task_assignment_list_screen.dart';
 import '../features/daily_task/presentation/screens/task_assignment_form_screen.dart';
+import '../features/approval/presentation/screens/approval_list_screen.dart';
+import '../features/approval/presentation/screens/approval_detail_screen.dart';
+import '../features/notification/presentation/screens/notification_screen.dart';
 
 // Navigation imports
 import '../shared/widgets/navigation/app_bottom_nav.dart';
@@ -433,6 +436,35 @@ void initRouter(AuthNotifier authNotifier) {
             ],
           ),
         ],
+      ),
+
+      // Approval routes (outside shell - full screen)
+      GoRoute(
+        path: '/approval',
+        name: 'approval-list',
+        builder: (context, state) => const ApprovalListScreen(),
+        routes: [
+          GoRoute(
+            path: ':id',
+            name: 'approval-detail',
+            builder: (context, state) {
+              final approval = state.extra as dynamic;
+              if (approval == null) {
+                return const Scaffold(
+                  body: Center(child: Text('Data approval tidak ditemukan')),
+                );
+              }
+              return ApprovalDetailScreen(approval: approval);
+            },
+          ),
+        ],
+      ),
+
+      // Notification route (outside shell - full screen)
+      GoRoute(
+        path: '/notifications',
+        name: 'notifications',
+        builder: (context, state) => const NotificationScreen(),
       ),
 
       // Immersive/Modal routes (outside shell, full-screen without bottom nav)

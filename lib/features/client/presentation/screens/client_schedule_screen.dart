@@ -428,7 +428,7 @@ class _EmployeeScheduleCard extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 2),
-                if (employee.position != null && employee.position!.isNotEmpty && employee.position != '-')
+                if (employee.role != null && employee.role!.isNotEmpty && employee.role != '-')
                   Container(
                     margin: const EdgeInsets.only(bottom: 4),
                     padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
@@ -437,7 +437,7 @@ class _EmployeeScheduleCard extends StatelessWidget {
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text(
-                      employee.position!,
+                      employee.role!,
                       style: const TextStyle(
                         color: AppColors.primary,
                         fontSize: 11,

@@ -324,15 +324,15 @@ class DailyTaskMasterItem {
   final int id;
   final String name;
   final String? description;
-  final int? positionId;
-  final String? positionName;
+  final int? roleId;
+  final String? roleName;
 
   DailyTaskMasterItem({
     required this.id,
     required this.name,
     this.description,
-    this.positionId,
-    this.positionName,
+    this.roleId,
+    this.roleName,
   });
 
   factory DailyTaskMasterItem.fromJson(Map<String, dynamic> json) {
@@ -340,29 +340,29 @@ class DailyTaskMasterItem {
       id: int.tryParse(json['id']?.toString() ?? '') ?? 0,
       name: json['name'] as String? ?? '',
       description: json['description'] as String?,
-      positionId: json['position_id'] as int?,
-      positionName: json['position_name'] as String?,
+      roleId: json['role_id'] as int?,
+      roleName: json['role_name'] as String?,
     );
   }
 }
 
-class DailyTaskPosition {
+class DailyTaskRole {
   final int id;
   final String name;
-  final int? parentPositionId;
+  final int? parentRoleId;
 
-  DailyTaskPosition({
+  DailyTaskRole({
     required this.id,
     required this.name,
-    this.parentPositionId,
+    this.parentRoleId,
   });
 
-  factory DailyTaskPosition.fromJson(Map<String, dynamic> json) {
-    return DailyTaskPosition(
+  factory DailyTaskRole.fromJson(Map<String, dynamic> json) {
+    return DailyTaskRole(
       id: int.tryParse(json['id']?.toString() ?? '') ?? 0,
       name: json['name'] as String? ?? '',
-      parentPositionId: json['parent_position_id'] != null
-          ? int.tryParse(json['parent_position_id'].toString())
+      parentRoleId: json['parent_role_id'] != null
+          ? int.tryParse(json['parent_role_id'].toString())
           : null,
     );
   }

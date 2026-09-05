@@ -147,8 +147,8 @@ class _TaskAssignmentFormScreenState extends State<TaskAssignmentFormScreen> {
   int? _editTaskId;
 
   // Form data
-  final Set<int> _selectedPositionIds = {};
-  String? _selectedPositionName;
+  final Set<int> _selectedRoleIds = {};
+  String? _selectedRoleName;
   final Set<int> _selectedEmployeeIds = {};
   final Set<String> _selectedEmployeeNames = {};
   int? _selectedItemId;
@@ -199,7 +199,7 @@ class _TaskAssignmentFormScreenState extends State<TaskAssignmentFormScreen> {
 
     // Load master data
     notifier.loadMobileAssignEmployees();
-    notifier.loadPositions(); // Load positions first
+    notifier.loadRoles(); // Load roles first
     notifier.loadItems();
     notifier.loadMasterData();
 
@@ -341,8 +341,8 @@ class _TaskAssignmentFormScreenState extends State<TaskAssignmentFormScreen> {
   bool _canProceed() {
     switch (_currentStep) {
       case 0:
-      // Step 1: Posisi dan jenis tugas wajib, minimal 1 karyawan wajib
-        return _selectedPositionIds.isNotEmpty &&
+      // Step 1: Role dan jenis tugas wajib, minimal 1 karyawan wajib
+        return _selectedRoleIds.isNotEmpty &&
             _selectedEmployeeIds.isNotEmpty &&
             _selectedItemId != null;
       case 1:
@@ -558,36 +558,36 @@ class _TaskAssignmentFormScreenState extends State<TaskAssignmentFormScreen> {
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       children: [
-        // Posisi - AsyncSelectField (Single-select) - Select first to filter items
+        // Role - AsyncSelectField (Single-select) - Select first to filter items
         FormFieldCard(
           child: AsyncSelectField(
-            label: 'POSISI',
-            placeholder: 'Pilih posisi untuk filter tugas',
+            label: 'ROLE/JABATAN',
+            placeholder: 'Pilih role untuk filter tugas',
             loadOptions: (query) async {
-              final positions = notifier.positions;
+              final roles = notifier.roles;
 
               // Calculate hierarchy levels
-              final positionMap = {for (var p in positions) p.id: p};
+              final roleMap = {for (var r in roles) r.id: r};
               List<({int id, String name, int level})> buildHierarchy() {
                 final result = <({int id, String name, int level})>[];
 
                 void addWithLevel(int id, int level) {
-                  final pos = positionMap[id];
-                  if (pos == null) return;
+                  final role = roleMap[id];
+                  if (role == null) return;
                   // Avoid infinite loop for circular references
                   if (result.any((r) => r.id == id)) return;
 
-                  result.add((id: pos.id, name: pos.name, level: level));
+                  result.add((id: role.id, name: role.name, level: level));
 
-                  // Add children (positions that have this as parent)
-                  for (final child in positions.where((p) => p.parentPositionId == id)) {
+                  // Add children (roles that have this as parent)
+                  for (final child in roles.where((r) => r.parentRoleId == id)) {
                     addWithLevel(child.id, level + 1);
                   }
                 }
 
-                // Start with root positions (no parent)
-                for (final pos in positions.where((p) => p.parentPositionId == null)) {
-                  addWithLevel(pos.id, 0);
+                // Start with root roles (no parent)
+                for (final role in roles.where((r) => r.parentRoleId == null)) {
+                  addWithLevel(role.id, 0);
                 }
 
                 return result;
@@ -595,56 +595,56 @@ class _TaskAssignmentFormScreenState extends State<TaskAssignmentFormScreen> {
 
               final hierarchy = buildHierarchy();
 
-              // If no hierarchy (all positions have parents), use flat list
-              final displayPositions = hierarchy.isNotEmpty ? hierarchy : positions
-                  .map((p) => (id: p.id, name: p.name, level: 0))
+              // If no hierarchy (all roles have parents), use flat list
+              final displayRoles = hierarchy.isNotEmpty ? hierarchy : roles
+                  .map((r) => (id: r.id, name: r.name, level: 0))
                   .toList();
 
               // Filter by query if needed
               final filtered = query.isEmpty
-                  ? displayPositions
-                  : displayPositions.where((p) => p.name.toLowerCase().contains(query.toLowerCase())).toList();
+                  ? displayRoles
+                  : displayRoles.where((r) => r.name.toLowerCase().contains(query.toLowerCase())).toList();
 
-              return filtered.map((p) {
-                final indent = '  ' * p.level + (p.level > 0 ? '└─ ' : '');
-                return AsyncSelectOption(id: p.id, name: '$indent${p.name}');
+              return filtered.map((r) {
+                final indent = '  ' * r.level + (r.level > 0 ? '└─ ' : '');
+                return AsyncSelectOption(id: r.id, name: '$indent${r.name}');
               }).toList();
             },
-            selectedIds: _selectedPositionIds,
-            initialOptions: _selectedPositionIds.isNotEmpty
-                ? _selectedPositionIds.map((id) {
+            selectedIds: _selectedRoleIds,
+            initialOptions: _selectedRoleIds.isNotEmpty
+                ? _selectedRoleIds.map((id) {
               return AsyncSelectOption(
-                  id: id, name: _selectedPositionName ?? 'Memuat...');
+                  id: id, name: _selectedRoleName ?? 'Memuat...');
             }).toList()
                 : null,
             onSelectionChanged: (ids) {
-              final previousPositionId = _selectedPositionIds.isNotEmpty
-                  ? _selectedPositionIds.first
+              final previousRoleId = _selectedRoleIds.isNotEmpty
+                  ? _selectedRoleIds.first
                   : null;
 
               setState(() {
-                _selectedPositionIds.clear();
+                _selectedRoleIds.clear();
                 if (ids.isNotEmpty) {
-                  final positionId = ids.first;
-                  _selectedPositionIds.add(positionId);
-                  // Store position name
-                  final pos = notifier.positions.firstWhere(
-                        (p) => p.id == positionId,
+                  final roleId = ids.first;
+                  _selectedRoleIds.add(roleId);
+                  // Store role name
+                  final role = notifier.roles.firstWhere(
+                        (r) => r.id == roleId,
                     orElse: () =>
-                        DailyTaskPosition(id: positionId, name: 'Unknown'),
+                        DailyTaskRole(id: roleId, name: 'Unknown'),
                   );
-                  _selectedPositionName = pos.name;
+                  _selectedRoleName = role.name;
                 } else {
-                  _selectedPositionName = null;
+                  _selectedRoleName = null;
                 }
 
-                // Reset Jenis Tugas when position changes
+                // Reset Jenis Tugas when role changes
                 _selectedItemId = null;
                 _selectedItemName = null;
 
-                // Reset Karyawan when position changes (different position = different employees)
-                if (previousPositionId != null && ids.isNotEmpty &&
-                    ids.first != previousPositionId) {
+                // Reset Karyawan when role changes (different role = different employees)
+                if (previousRoleId != null && ids.isNotEmpty &&
+                    ids.first != previousRoleId) {
                   _selectedEmployeeIds.clear();
                   _selectedEmployeeNames.clear();
                 }
@@ -660,16 +660,16 @@ class _TaskAssignmentFormScreenState extends State<TaskAssignmentFormScreen> {
         FormFieldCard(
           child: AsyncSelectField(
             label: 'KARYAWAN (TIM)',
-            placeholder: _selectedPositionIds.isEmpty
-                ? 'Pilih posisi terlebih dahulu'
+            placeholder: _selectedRoleIds.isEmpty
+                ? 'Pilih role terlebih dahulu'
                 : 'Pilih karyawan untuk tugas tim',
             loadOptions: (query) async {
-              // Filter by selected position if any
-              final positionIds = _selectedPositionIds.isNotEmpty
-                  ? _selectedPositionIds.toList()
+              // Filter by selected role if any
+              final roleIds = _selectedRoleIds.isNotEmpty
+                  ? _selectedRoleIds.toList()
                   : null;
               final employees = await notifier.searchMobileAssignEmployees(
-                  query, positionIds: positionIds);
+                  query, roleIds: roleIds);
               return employees
                   .map((emp) =>
                   AsyncSelectOption(
@@ -698,7 +698,7 @@ class _TaskAssignmentFormScreenState extends State<TaskAssignmentFormScreen> {
               });
             },
             multiSelect: true,
-            disabled: isSubmitting || _selectedPositionIds.isEmpty,
+            disabled: isSubmitting || _selectedRoleIds.isEmpty,
           ),
         ),
         const SizedBox(height: 16),
@@ -707,15 +707,15 @@ class _TaskAssignmentFormScreenState extends State<TaskAssignmentFormScreen> {
         FormFieldCard(
           child: AsyncSelectField(
             label: 'JENIS TUGAS',
-            placeholder: _selectedPositionIds.isEmpty
-                ? 'Pilih posisi terlebih dahulu'
+            placeholder: _selectedRoleIds.isEmpty
+                ? 'Pilih role terlebih dahulu'
                 : 'Pilih Jenis Tugas',
             loadOptions: (query) async {
-              final positionIds = _selectedPositionIds.isNotEmpty
-                  ? _selectedPositionIds.toList()
+              final roleIds = _selectedRoleIds.isNotEmpty
+                  ? _selectedRoleIds.toList()
                   : null;
               final items = await notifier.searchItems(
-                  query, positionIds: positionIds);
+                  query, roleIds: roleIds);
               return items
                   .map((item) =>
                   AsyncSelectOption(id: item.id, name: item.name))
@@ -736,7 +736,7 @@ class _TaskAssignmentFormScreenState extends State<TaskAssignmentFormScreen> {
               });
             },
             multiSelect: false,
-            disabled: isSubmitting || _selectedPositionIds.isEmpty,
+            disabled: isSubmitting || _selectedRoleIds.isEmpty,
           ),
         ),
         const SizedBox(height: 16),
@@ -1098,7 +1098,7 @@ class _TaskAssignmentFormScreenState extends State<TaskAssignmentFormScreen> {
                 ],
               ),
               const Divider(height: 24),
-              _buildKonfirmasiRow('Posisi', _selectedPositionName ?? '-'),
+              _buildKonfirmasiRow('Role/Jabatan', _selectedRoleName ?? '-'),
               const SizedBox(height: 8),
               _buildKonfirmasiRow('Jenis Tugas', _selectedItemName ?? '-'),
               const SizedBox(height: 8),

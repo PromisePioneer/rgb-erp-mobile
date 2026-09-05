@@ -33,7 +33,7 @@ final _menuItems = <MenuItemData>[
   MenuItemData(label: 'Cuti', icon: IconMap.beachAccess, route: '/leave'),
   MenuItemData(label: 'Purchase Request', icon: IconMap.shoppingCart, route: '/purchase-request'),
   MenuItemData(label: 'Payroll', icon: IconMap.accountBalanceWallet, route: '/payroll'),
-  MenuItemData(label: 'Approval', icon: IconMap.checklist),
+  MenuItemData(label: 'Approval', icon: IconMap.checklist, route: '/approval'),
   MenuItemData(label: 'Patroli', icon: IconMap.security),
   MenuItemData(label: 'Laporan Patroli', icon: IconMap.reportProblem, route: '/violation-report'),
   MenuItemData(label: 'Laporan Mutasi', icon: IconMap.editNote, route: '/report'),
@@ -373,7 +373,7 @@ class _HRDashboardScreenState extends State<HRDashboardScreen> {
   Widget _buildHeader() {
     final authNotifier = context.read<AuthNotifier>();
     final userName = authNotifier.state.user?.name ?? 'User';
-    final userPosition = authNotifier.state.user?.position ?? '';
+    final userRole = authNotifier.state.user?.role ?? '';
     final theme = FTheme.of(context);
 
     return Row(
@@ -395,10 +395,10 @@ class _HRDashboardScreenState extends State<HRDashboardScreen> {
                 color: AppColors.slate800,
               ),
             ),
-            if (userPosition.isNotEmpty) ...[
+            if (userRole.isNotEmpty) ...[
               const SizedBox(height: 2),
               Text(
-                userPosition,
+                userRole,
                 style: TextStyle(
                   fontSize: 12,
                   color: theme.colors.primary,

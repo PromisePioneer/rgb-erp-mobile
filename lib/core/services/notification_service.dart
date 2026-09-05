@@ -65,6 +65,9 @@ class NotificationService {
   /// Callback when backup offer is received (foreground only)
   void Function(String? message, String? offerId, String? scheduleId)? onBackupOfferReceived;
 
+  /// Callback when approval request is received (foreground only)
+  void Function(String? message, String? approvalId, String? requestType)? onApprovalRequestReceived;
+
   /// Callback when new notification is received
   void Function(NotificationItem)? onNotificationReceived;
 
@@ -164,6 +167,21 @@ class NotificationService {
             AndroidFlutterLocalNotificationsPlugin>()
             ?.createNotificationChannel(shiftReminderChannel);
       }
+
+      // Create approval notification channel
+      const approvalChannel = AndroidNotificationChannel(
+        'approval',
+        'Persetujuan',
+        description: 'Notifikasi permintaan persetujuan',
+        importance: Importance.high,
+        playSound: true,
+        enableVibration: true,
+      );
+
+      await _localNotif
+          .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin>()
+          ?.createNotificationChannel(approvalChannel);
     }
   }
 
@@ -214,6 +232,9 @@ class NotificationService {
     final isPatrolAlarm = data['type'] == 'patrol_alarm';
     final isShiftReminder = data['type'] == 'shift_reminder';
     final isBackupOffer = data['type'] == 'backup_offer';
+    final isApprovalRequest = data['type'] == 'approval_request' ||
+        data['type'] == 'request_approved' ||
+        data['type'] == 'request_rejected';
 
     // Check if this is a patrol alarm
     if (isPatrolAlarm && !_isAlarmDismissed) {
@@ -267,6 +288,20 @@ class NotificationService {
       onBackupOfferReceived?.call(offerMessage, offerId, scheduleId);
     }
 
+    // Check if this is an approval request notification
+    if (isApprovalRequest) {
+      final approvalId = data['approval_id'];
+      final requestType = data['request_type'];
+      final approvalMessage = message.notification?.body ??
+          'Ada persetujuan yang perlu ditinjau!';
+
+      // Stop alarm if playing
+      _stopAlarmSound();
+
+      // Trigger callback for approval request
+      onApprovalRequestReceived?.call(approvalMessage, approvalId, requestType);
+    }
+
     await _showLocalNotification(
       title: title,
       body: body,
@@ -276,7 +311,7 @@ class NotificationService {
           ? 'patrol_alarm'
           : (isShiftReminder ? 'shift_reminder' : (isBackupOffer
           ? 'backup_offer'
-          : 'default')),
+          : (isApprovalRequest ? 'approval' : 'default'))),
     );
 
     // Add to notification list
@@ -354,7 +389,7 @@ class NotificationService {
 
   /// Handle notification tap (FCM - background/terminated)
   void _handleFcmTap(RemoteMessage message) {
-    
+
 
     final type = message.data['type'];
 
@@ -369,6 +404,10 @@ class NotificationService {
     } else if (type == 'backup_offer') {
       // Navigate to backup offer screen
       _navigateToBackupOffer();
+    } else if (type == 'approval_request' || type == 'request_approved' || type == 'request_rejected') {
+      // Navigate to approval screen
+      final approvalId = message.data['approval_id'];
+      onApprovalRequestReceived?.call(null, approvalId, message.data['request_type']);
     }
   }
 
@@ -389,6 +428,9 @@ class NotificationService {
       _stopAlarmSound();
       // Call the callback to load data and navigate
       onBackupOfferReceived?.call(null, null, null);
+    } else if (payload == 'approval_request' || payload == 'request_approved' || payload == 'request_rejected') {
+      // Call the callback for approval notification
+      onApprovalRequestReceived?.call(null, null, null);
     } else {
       // Navigate to schedule screen for other notifications
       _navigateToSchedule();

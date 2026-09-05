@@ -135,7 +135,7 @@ class _EmployeeCard extends StatelessWidget {
                     fontSize: 13,
                   ),
                 ),
-                if (employee.position != null) ...[
+                if (employee.role != null) ...[
                   const SizedBox(height: 4),
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
@@ -144,7 +144,7 @@ class _EmployeeCard extends StatelessWidget {
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Text(
-                      employee.position!,
+                      employee.role!,
                       style: const TextStyle(
                         color: AppColors.primary,
                         fontSize: 11,

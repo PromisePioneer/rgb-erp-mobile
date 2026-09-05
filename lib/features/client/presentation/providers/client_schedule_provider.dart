@@ -78,7 +78,7 @@ class ScheduledEmployee {
   final int employeeId;
   final String employeeName;
   final String employeeCode;
-  final String? position;
+  final String? role;
   final String shiftName;
   final String shiftStart;
   final String shiftEnd;
@@ -91,7 +91,7 @@ class ScheduledEmployee {
     required this.employeeId,
     required this.employeeName,
     required this.employeeCode,
-    this.position,
+    this.role,
     required this.shiftName,
     required this.shiftStart,
     required this.shiftEnd,
@@ -106,7 +106,7 @@ class ScheduledEmployee {
       employeeId: json['employee_id'] ?? 0,
       employeeName: json['employee_name'] ?? '-',
       employeeCode: json['employee_code'] ?? '-',
-      position: json['position'],
+      role: json['role'],
       shiftName: json['shift_name'] ?? '-',
       shiftStart: json['shift_start'] ?? '',
       shiftEnd: json['shift_end'] ?? '',

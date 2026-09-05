@@ -11,7 +11,6 @@ class PurchaseRequest extends Equatable {
   final String? notes;
   final double total;
   final String status;
-  final int currentLevel;
   final bool canEdit;
   final bool canSubmit;
   final List<PurchaseRequestDetail> details;
@@ -27,7 +26,6 @@ class PurchaseRequest extends Equatable {
     this.notes,
     required this.total,
     required this.status,
-    required this.currentLevel,
     required this.canEdit,
     required this.canSubmit,
     this.details = const [],
@@ -61,18 +59,18 @@ class PurchaseRequest extends Equatable {
   String get formattedDate {
     try {
       final parts = date.split('-');
-      if (parts.length != 3) return date ?? '';
+      if (parts.length != 3) return date;
       final months = [
         'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun',
         'Jul', 'Agt', 'Sep', 'Okt', 'Nov', 'Des'
       ];
       final monthStr = parts[1].trim();
-      if (monthStr.isEmpty) return date ?? '';
+      if (monthStr.isEmpty) return date;
       final monthIndex = int.tryParse(monthStr);
-      if (monthIndex == null || monthIndex < 1 || monthIndex > 12) return date ?? '';
+      if (monthIndex == null || monthIndex < 1 || monthIndex > 12) return date;
       return '${parts[2].trim()} ${months[monthIndex - 1]} ${parts[0].trim()}';
     } catch (_) {
-      return date ?? '';
+      return date;
     }
   }
 
@@ -85,15 +83,14 @@ class PurchaseRequest extends Equatable {
       notes: json['notes'] as String?,
       total: (json['total'] as num).toDouble(),
       status: json['status'] as String? ?? 'draft',
-      currentLevel: json['current_level'] as int? ?? 0,
       canEdit: json['can_edit'] as bool? ?? false,
       canSubmit: json['can_submit'] as bool? ?? false,
       details: (json['details'] as List<dynamic>?)
-              ?.map((d) => PurchaseRequestDetail.fromJson(d))
+              ?.map((d) => PurchaseRequestDetail.fromJson(d as Map<String, dynamic>))
               .toList() ??
           [],
       approvals: (json['approvals'] as List<dynamic>?)
-              ?.map((a) => PurchaseRequestApproval.fromJson(a))
+              ?.map((a) => PurchaseRequestApproval.fromJson(a as Map<String, dynamic>))
               .toList() ??
           [],
       createdAt: json['created_at'] as String?,
@@ -110,7 +107,6 @@ class PurchaseRequest extends Equatable {
       'notes': notes,
       'total': total,
       'status': status,
-      'current_level': currentLevel,
       'can_edit': canEdit,
       'can_submit': canSubmit,
       'details': details.map((d) => d.toJson()).toList(),
@@ -128,7 +124,6 @@ class PurchaseRequest extends Equatable {
     String? notes,
     double? total,
     String? status,
-    int? currentLevel,
     bool? canEdit,
     bool? canSubmit,
     List<PurchaseRequestDetail>? details,
@@ -144,7 +139,6 @@ class PurchaseRequest extends Equatable {
       notes: notes ?? this.notes,
       total: total ?? this.total,
       status: status ?? this.status,
-      currentLevel: currentLevel ?? this.currentLevel,
       canEdit: canEdit ?? this.canEdit,
       canSubmit: canSubmit ?? this.canSubmit,
       details: details ?? this.details,
@@ -163,7 +157,6 @@ class PurchaseRequest extends Equatable {
         notes,
         total,
         status,
-        currentLevel,
         canEdit,
         canSubmit,
         details,

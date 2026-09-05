@@ -15,7 +15,7 @@ class DailyTaskNotifier extends ChangeNotifier {
   List<DailyTaskChemical> _chemicals = [];
   List<DailyTaskPpe> _ppes = [];
   List<DailyTaskMachine> _machines = [];
-  List<DailyTaskPosition> _positions = [];
+  List<DailyTaskRole> _roles = [];
 
   // Supervisor assignment state
   List<Map<String, dynamic>> _assignments = [];
@@ -44,7 +44,7 @@ class DailyTaskNotifier extends ChangeNotifier {
   List<DailyTaskChemical> get chemicals => _chemicals;
   List<DailyTaskPpe> get ppes => _ppes;
   List<DailyTaskMachine> get machines => _machines;
-  List<DailyTaskPosition> get positions => _positions;
+  List<DailyTaskRole> get roles => _roles;
 
   // Getters - Assignments
   List<Map<String, dynamic>> get assignments => _assignments;
@@ -256,13 +256,13 @@ class DailyTaskNotifier extends ChangeNotifier {
   }
 
   /// Search items by name (for async select)
-  /// Optional: filter by positionIds
-  Future<List<DailyTaskMasterItem>> searchItems(String query, {List<int>? positionIds}) async {
+  /// Optional: filter by roleIds
+  Future<List<DailyTaskMasterItem>> searchItems(String query, {List<int>? roleIds}) async {
     try {
-      final items = await _repository.getItems(query: query.isEmpty ? null : query, positionIds: positionIds);
+      final items = await _repository.getItems(query: query.isEmpty ? null : query, roleIds: roleIds);
 
       // Log for debugging
-      debugPrint('searchItems: query=$query, positionIds=$positionIds, found=${items.length} items');
+      debugPrint('searchItems: query=$query, roleIds=$roleIds, found=${items.length} items');
 
       return items;
     } catch (e) {
@@ -271,26 +271,26 @@ class DailyTaskNotifier extends ChangeNotifier {
     }
   }
 
-  /// Load positions for daily task assignment
-  Future<void> loadPositions() async {
-    
+  /// Load roles for daily task assignment
+  Future<void> loadRoles() async {
+
     try {
-      _positions = await _repository.getPositions();
-      
+      _roles = await _repository.getRoles();
+
       notifyListeners();
     } catch (e) {
-      
-      // Silently fail, positions are optional
+
+      // Silently fail, roles are optional
     }
   }
 
   /// Search employees for mobile assign (for async select)
-  /// Optionally filter by position_ids
-  Future<List<Map<String, dynamic>>> searchMobileAssignEmployees(String query, {List<int>? positionIds}) async {
+  /// Optionally filter by role_ids
+  Future<List<Map<String, dynamic>>> searchMobileAssignEmployees(String query, {List<int>? roleIds}) async {
     try {
       return await _repository.getMobileAssignEmployees(
         query: query.isEmpty ? null : query,
-        positionIds: positionIds,
+        roleIds: roleIds,
       );
     } catch (e) {
       return [];

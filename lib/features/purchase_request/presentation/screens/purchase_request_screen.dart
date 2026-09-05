@@ -131,7 +131,7 @@ class _PurchaseRequestScreenState extends State<PurchaseRequestScreen> {
                   scrollDirection: Axis.horizontal,
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   itemCount: _statusOptions.length,
-                  separatorBuilder: (_, _a) => const SizedBox(width: 8),
+                  separatorBuilder: (_, sep) => const SizedBox(width: 8),
                   itemBuilder: (context, index) {
                     final option = _statusOptions[index];
                     final isSelected = _selectedStatus == option['value'];

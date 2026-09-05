@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/core.dart';
+import '../../../../shared/widgets/inputs/async_select_field.dart';
 import '../providers/purchase_request_provider.dart';
 
 /// Purchase Request form screen for create/edit
@@ -19,13 +20,9 @@ class _PurchaseRequestFormScreenState extends State<PurchaseRequestFormScreen> {
   final _formKey = GlobalKey<FormState>();
   final _supplierController = TextEditingController();
   final _notesController = TextEditingController();
-  final _searchController = TextEditingController();
 
   DateTime? _selectedDate;
   List<_LineItem> _lineItems = [_LineItem()];
-  bool _isLoadingProducts = false;
-  List<ProductOption> _productOptions = [];
-  Timer? _debounce;
   String? _formError;
   bool _isInitialized = false;
 
@@ -51,14 +48,12 @@ class _PurchaseRequestFormScreenState extends State<PurchaseRequestFormScreen> {
   void dispose() {
     _supplierController.dispose();
     _notesController.dispose();
-    _searchController.dispose();
-    _debounce?.cancel();
     super.dispose();
   }
 
   Future<void> _loadForEdit() async {
     if (_isInitialized) return;
-    setState(() => _isLoadingProducts = true);
+    setState(() {});
 
     final notifier = context.read<PurchaseRequestNotifier>();
     await notifier.loadDetail(widget.editId!);
@@ -74,43 +69,21 @@ class _PurchaseRequestFormScreenState extends State<PurchaseRequestFormScreen> {
           productName: d.productName,
           qty: d.qty,
           price: d.qty > 0 ? d.total / d.qty : 0,
-          total: d.total,
         )).toList();
         if (_lineItems.isEmpty) _lineItems.add(_LineItem());
         _isInitialized = true;
-        _isLoadingProducts = false;
       });
-    } else {
-      setState(() => _isLoadingProducts = false);
     }
   }
 
-  Future<void> _loadProducts(String query) async {
-    _debounce?.cancel();
-    if (query.isEmpty) {
-      setState(() => _productOptions = []);
-      return;
+  Future<List<AsyncSelectOption>> _loadProducts(String query) async {
+    try {
+      final notifier = context.read<PurchaseRequestNotifier>();
+      final options = await notifier.repository.getProductOptions(query: query);
+      return options.map((p) => AsyncSelectOption(id: p.id, name: p.name)).toList();
+    } catch (e) {
+      return [];
     }
-
-    _debounce = Timer(const Duration(milliseconds: 300), () async {
-      if (!mounted) return;
-      setState(() => _isLoadingProducts = true);
-
-      try {
-        final notifier = context.read<PurchaseRequestNotifier>();
-        final options = await notifier.repository.getProductOptions(query: query);
-        if (mounted) {
-          setState(() {
-            _productOptions = options;
-            _isLoadingProducts = false;
-          });
-        }
-      } catch (e) {
-        if (mounted) {
-          setState(() => _isLoadingProducts = false);
-        }
-      }
-    });
   }
 
   String _formatDate(DateTime date) {
@@ -245,118 +218,116 @@ class _PurchaseRequestFormScreenState extends State<PurchaseRequestFormScreen> {
         foregroundColor: AppColors.slate800,
         elevation: 0,
       ),
-      body: _isLoadingProducts && _isEditing && !_isInitialized
-          ? const Center(child: CircularProgressIndicator())
-          : Form(
-              key: _formKey,
-              child: Column(
+      body: Form(
+        key: _formKey,
+        child: Column(
+          children: [
+            Expanded(
+              child: ListView(
+                padding: const EdgeInsets.all(16),
                 children: [
-                  Expanded(
-                    child: ListView(
-                      padding: const EdgeInsets.all(16),
-                      children: [
-                        // Date field
-                        _buildDateField(),
-                        const SizedBox(height: 16),
+                  // Date field
+                  _buildDateField(),
+                  const SizedBox(height: 16),
 
-                        // Supplier field
-                        _buildSupplierField(),
-                        const SizedBox(height: 16),
+                  // Supplier field
+                  _buildSupplierField(),
+                  const SizedBox(height: 16),
 
-                        // Notes field
-                        _buildNotesField(),
-                        const SizedBox(height: 24),
+                  // Notes field
+                  _buildNotesField(),
+                  const SizedBox(height: 24),
 
-                        // Products section header
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            const Text(
-                              'Produk',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
-                                color: AppColors.slate800,
-                              ),
-                            ),
-                            TextButton.icon(
-                              onPressed: _addLineItem,
-                              icon: const Icon(Icons.add, size: 18),
-                              label: const Text('Tambah'),
-                              style: TextButton.styleFrom(
-                                foregroundColor: AppColors.primary,
-                              ),
-                            ),
-                          ],
+                  // Products section header
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        'Produk',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.slate800,
                         ),
-                        const SizedBox(height: 8),
+                      ),
+                      TextButton.icon(
+                        onPressed: _addLineItem,
+                        icon: const Icon(Icons.add, size: 18),
+                        label: const Text('Tambah'),
+                        style: TextButton.styleFrom(
+                          foregroundColor: AppColors.primary,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
 
-                        // Line items
-                        ...List.generate(_lineItems.length, (index) {
-                          return _buildLineItemCard(index);
-                        }),
+                  // Line items
+                  ...List.generate(_lineItems.length, (index) {
+                    return _buildLineItemCard(index);
+                  }),
 
-                        if (_formError != null) ...[
-                          const SizedBox(height: 16),
-                          Container(
-                            padding: const EdgeInsets.all(12),
-                            decoration: BoxDecoration(
-                              color: AppColors.dangerBg,
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Row(
-                              children: [
-                                const Icon(Icons.error_outline, color: AppColors.danger, size: 20),
-                                const SizedBox(width: 8),
-                                Expanded(
-                                  child: Text(
-                                    _formError!,
-                                    style: const TextStyle(color: AppColors.danger, fontSize: 14),
-                                  ),
-                                ),
-                              ],
+                  if (_formError != null) ...[
+                    const SizedBox(height: 16),
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: AppColors.dangerBg,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.error_outline, color: AppColors.danger, size: 20),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              _formError!,
+                              style: const TextStyle(color: AppColors.danger, fontSize: 14),
                             ),
                           ),
                         ],
+                      ),
+                    ),
+                  ],
 
-                        // Grand total
-                        const SizedBox(height: 24),
-                        Container(
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            color: AppColors.primary.withAlpha(26),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              const Text(
-                                'Total',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w600,
-                                  color: AppColors.slate800,
-                                ),
-                              ),
-                              Text(
-                                _formatCurrency(_grandTotal),
-                                style: const TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                  color: AppColors.primary,
-                                ),
-                              ),
-                            ],
+                  // Grand total
+                  const SizedBox(height: 24),
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withAlpha(26),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          'Total',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.slate800,
                           ),
                         ),
-
-                        const SizedBox(height: 100), // Bottom padding for FAB
+                        Text(
+                          _formatCurrency(_grandTotal),
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.primary,
+                          ),
+                        ),
                       ],
                     ),
                   ),
+
+                  const SizedBox(height: 100),
                 ],
               ),
             ),
+          ],
+        ),
+      ),
       bottomNavigationBar: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
@@ -599,88 +570,31 @@ class _PurchaseRequestFormScreenState extends State<PurchaseRequestFormScreen> {
           style: TextStyle(fontSize: 11, color: AppColors.slate400),
         ),
         const SizedBox(height: 4),
-        Autocomplete<ProductOption>(
-          initialValue: TextEditingValue(text: item.productName ?? ''),
-          optionsBuilder: (textEditingValue) async {
-            if (textEditingValue.text.isEmpty) {
-              return const Iterable<ProductOption>.empty();
+        AsyncSelectField(
+          label: null,
+          placeholder: 'Cari produk...',
+          loadOptions: _loadProducts,
+          selectedIds: item.productId != null ? {item.productId!} : {},
+          onSelectionChanged: (ids) {
+            final selectedId = ids.isNotEmpty ? ids.first : null;
+            // Find the selected option name
+            final options = _lineItems[index].selectedOptions;
+            String? selectedName;
+            for (final opt in options) {
+              if (opt.id == selectedId) {
+                selectedName = opt.name;
+                break;
+              }
             }
-            _loadProducts(textEditingValue.text);
-            return _productOptions;
-          },
-          displayStringForOption: (option) => option.name,
-          optionsViewBuilder: (context, onSelected, options) {
-            return Align(
-              alignment: Alignment.topLeft,
-              child: Material(
-                elevation: 4,
-                borderRadius: BorderRadius.circular(8),
-                child: Container(
-                  constraints: const BoxConstraints(maxHeight: 200, maxWidth: 300),
-                  child: ListView.builder(
-                    shrinkWrap: true,
-                    padding: EdgeInsets.zero,
-                    itemCount: options.length,
-                    itemBuilder: (context, idx) {
-                      final option = options.elementAt(idx);
-                      return ListTile(
-                        dense: true,
-                        title: Text(option.name, style: const TextStyle(fontSize: 14)),
-                        onTap: () => onSelected(option),
-                      );
-                    },
-                  ),
-                ),
-              ),
-            );
-          },
-          fieldViewBuilder: (context, controller, focusNode, onFieldSubmitted) {
-            // Sync controller with item state
-            if (controller.text != item.productName) {
-              controller.text = item.productName ?? '';
-            }
-            return TextFormField(
-              controller: controller,
-              focusNode: focusNode,
-              decoration: InputDecoration(
-                hintText: 'Cari produk...',
-                isDense: true,
-                filled: true,
-                fillColor: AppColors.slate50,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide: BorderSide.none,
-                ),
-                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                suffixIcon: _isLoadingProducts
-                    ? const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: Padding(
-                          padding: EdgeInsets.all(8),
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        ),
-                      )
-                    : null,
-              ),
-              onChanged: (value) {
-                // Find matching product
-                final selected = _productOptions.where((p) => p.name == value).toList();
-                if (selected.isNotEmpty) {
-                  _updateLineItem(index, item.copyWith(
-                    productId: selected.first.id,
-                    productName: selected.first.name,
-                  ));
-                }
-              },
-            );
-          },
-          onSelected: (option) {
-            _updateLineItem(index, item.copyWith(
-              productId: option.id,
-              productName: option.name,
+            _updateLineItem(index, _LineItem(
+              productId: selectedId,
+              productName: selectedName,
+              qty: item.qty,
+              price: item.price,
+              selectedOptions: item.selectedOptions,
             ));
           },
+          multiSelect: false,
         ),
       ],
     );
@@ -755,30 +669,31 @@ class _LineItem {
   final String? productName;
   final double qty;
   final double price;
-  final double total;
+  final List<AsyncSelectOption> selectedOptions;
 
   const _LineItem({
     this.productId,
     this.productName,
     this.qty = 0,
     this.price = 0,
-    this.total = 0,
+    this.selectedOptions = const [],
   });
+
+  double get total => qty * price;
 
   _LineItem copyWith({
     int? productId,
     String? productName,
     double? qty,
     double? price,
+    List<AsyncSelectOption>? selectedOptions,
   }) {
-    final newQty = qty ?? this.qty;
-    final newPrice = price ?? this.price;
     return _LineItem(
       productId: productId ?? this.productId,
       productName: productName ?? this.productName,
-      qty: newQty,
-      price: newPrice,
-      total: newQty * newPrice,
+      qty: qty ?? this.qty,
+      price: price ?? this.price,
+      selectedOptions: selectedOptions ?? this.selectedOptions,
     );
   }
 }

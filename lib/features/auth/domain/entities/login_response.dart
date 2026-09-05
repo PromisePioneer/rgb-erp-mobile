@@ -47,7 +47,7 @@ class LoginResponse extends Equatable {
           'username': null,
           'nik': null,
           'department': null,
-          'position': 'Client',
+          'role': 'Client',
           'photo': null,
           'division': null,
           'siteId': null,

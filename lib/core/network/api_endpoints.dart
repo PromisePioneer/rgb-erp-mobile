@@ -62,7 +62,9 @@ class ApiEndpoints {
   // Notification Endpoints
   // ====================
   static const String notifications = '/notifications';
-  static const String notificationRead = '/notifications/read';
+  static const String notificationsUnreadCount = '/notifications/unread-count';
+  static const String notificationsMarkAllRead = '/notifications/read-all';
+  static String notificationRead(int id) => '/notifications/$id/read';
   static const String deviceTokens = '/device-tokens';
 
   // ====================
@@ -119,7 +121,7 @@ class ApiEndpoints {
   static const String dailyTaskToday = '/daily-task/today';
   static const String dailyTask = '/daily-task';
   static const String dailyTaskItems = '/daily-task/items';
-  static const String dailyTaskPositions = '/daily-task/positions';
+  static const String dailyTaskRoles = '/daily-task/roles';
   static const String dailyTaskTools = '/daily-task/tools';
   static const String dailyTaskChemicals = '/daily-task/chemicals';
   static const String dailyTaskPpes = '/daily-task/ppes';
@@ -169,4 +171,18 @@ class ApiEndpoints {
   static const String clientChangePassword = '/client/password';
   static const String clientScheduleDates = '/client/schedules/dates';
   static const String clientScheduleEmployees = '/client/schedules/employees';
+
+  // ====================
+  // Approval Endpoints (Mobile)
+  // ====================
+  static const String approvals = '/approvals';
+  static String approval(int id) => '/approvals/$id';
+  static String approvalAct(int id) => '/approvals/$id/act';
+
+  // ====================
+  // Admin Approval Endpoints (Web/Admin)
+  // ====================
+  static const String adminApprovals = '/admin/approvals';
+  static String adminApproval(int id) => '/admin/approvals/$id';
+  static String adminApprovalAct(int id) => '/admin/approvals/$id/act';
 }
