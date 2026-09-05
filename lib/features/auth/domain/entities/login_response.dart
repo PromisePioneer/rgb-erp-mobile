@@ -19,6 +19,10 @@ class LoginResponse extends Equatable {
     final userType = json['user_type'] as String? ?? 'user';
     final accessToken = json['access_token'] as String?;
 
+    print('LOGIN_RESPONSE: user_type = $userType');
+    print('LOGIN_RESPONSE: user field = ${json['user']}');
+    print('LOGIN_RESPONSE: employee field = ${json['employee']}');
+
     if (accessToken == null || accessToken.isEmpty) {
       throw Exception('Invalid login response: missing access token');
     }

@@ -172,6 +172,10 @@ class AuthRepository {
     required String code,
     String userType = 'employee',
   }) async {
+    print('PERSIST: user.privileges = ${user.privileges.length}');
+    print('PERSIST: user.role = ${user.role}');
+    print('PERSIST: user.toJson() = ${user.toJson()}');
+
     if (userType == 'client') {
       // Store as client auth
       await _storage.setClientAuthToken(token);
