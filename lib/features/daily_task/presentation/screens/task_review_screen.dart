@@ -7,6 +7,7 @@ import '../../../../core/core.dart';
 import '../../../../shared/widgets/buttons/primary_button.dart';
 import '../../../../shared/widgets/feedback/loading_indicator.dart';
 import '../../../../shared/widgets/icons/forui_icon_map.dart';
+import '../../../../shared/widgets/toast/app_toast.dart';
 import '../providers/daily_task_provider.dart';
 
 /// Review criteria model
@@ -129,11 +130,9 @@ class _TaskReviewScreenState extends State<TaskReviewScreen> {
         _isLoading = false;
       });
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Gagal memuat kriteria review: $e'),
-            backgroundColor: AppColors.danger,
-          ),
+        AppToast.of(context).show(
+          message: 'Gagal memuat kriteria review',
+          style: AppToastStyle.error,
         );
       }
     }
@@ -143,11 +142,9 @@ class _TaskReviewScreenState extends State<TaskReviewScreen> {
     // Validate all criteria have scores
     for (final criteria in _criteria) {
       if (!_scores.containsKey(criteria.id)) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Silakan berikan rating untuk "${criteria.name}"'),
-            backgroundColor: AppColors.warning,
-          ),
+        AppToast.of(context).show(
+          message: 'Silakan berikan rating untuk "${criteria.name}"',
+          style: AppToastStyle.warning,
         );
         return;
       }
@@ -174,30 +171,24 @@ class _TaskReviewScreenState extends State<TaskReviewScreen> {
 
       if (mounted) {
         if (success) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Review berhasil disimpan!'),
-              backgroundColor: AppColors.success,
-            ),
+          AppToast.of(context).show(
+            message: 'Review berhasil disimpan!',
+            style: AppToastStyle.success,
           );
           context.pop();
         } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(notifier.error ?? 'Gagal menyimpan review'),
-              backgroundColor: AppColors.danger,
-            ),
+          AppToast.of(context).show(
+            message: notifier.error ?? 'Gagal menyimpan review',
+            style: AppToastStyle.error,
           );
         }
       }
     } catch (e) {
       setState(() => _isSubmitting = false);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error: $e'),
-            backgroundColor: AppColors.danger,
-          ),
+        AppToast.of(context).show(
+          message: 'Error: $e',
+          style: AppToastStyle.error,
         );
       }
     }
@@ -284,7 +275,7 @@ class _TaskReviewScreenState extends State<TaskReviewScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = FTheme.of(context);
+    final theme = context.theme;
     final taskName = widget.taskData['item_name'] ?? widget.taskData['employee_name'] ?? 'Tugas';
     final status = widget.taskData['status'] as String? ?? 'completed';
     final isReviewed = status == 'reviewed';
@@ -376,7 +367,7 @@ class _TaskReviewScreenState extends State<TaskReviewScreen> {
                           vertical: AppSpacing.xs,
                         ),
                         decoration: BoxDecoration(
-                          color: isReviewed ? AppColors.primary.withAlpha(26) : AppColors.success.withAlpha(26),
+                          color: isReviewed ? theme.colors.primary.withAlpha(26) : AppColors.success.withAlpha(26),
                           borderRadius: AppRadius.radiusSm,
                         ),
                         child: Text(
@@ -384,7 +375,7 @@ class _TaskReviewScreenState extends State<TaskReviewScreen> {
                           style: TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.w500,
-                            color: isReviewed ? AppColors.primary : AppColors.success,
+                            color: isReviewed ? theme.colors.primary : AppColors.success,
                           ),
                         ),
                       ),
@@ -433,16 +424,16 @@ class _TaskReviewScreenState extends State<TaskReviewScreen> {
           width: double.infinity,
           padding: const EdgeInsets.all(AppSpacing.md),
           decoration: BoxDecoration(
-            color: AppColors.primary.withAlpha(26),
+            color: theme.colors.primary.withAlpha(26),
             borderRadius: AppRadius.radiusMd,
-            border: Border.all(color: AppColors.primary.withAlpha(51)),
+            border: Border.all(color: theme.colors.primary.withAlpha(51)),
           ),
           child: Column(
             children: [
               Icon(
                 IconMap.checkCircle,
                 size: 48,
-                color: AppColors.primary,
+                color: theme.colors.primary,
               ),
               const SizedBox(height: AppSpacing.sm),
               Text(
@@ -450,7 +441,7 @@ class _TaskReviewScreenState extends State<TaskReviewScreen> {
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
-                  color: AppColors.primary,
+                  color: theme.colors.primary,
                 ),
               ),
               if (reviewData.reviewerName != null) ...[
@@ -651,22 +642,13 @@ class _TaskReviewScreenState extends State<TaskReviewScreen> {
           ),
         ),
         const SizedBox(height: AppSpacing.sm),
-        Container(
-          decoration: BoxDecoration(
-            color: theme.colors.card,
-            borderRadius: AppRadius.radiusMd,
-          ),
-          child: TextField(
-            controller: _notesController,
-            maxLines: 3,
-            decoration: InputDecoration(
-              hintText: 'Tambahkan catatan review...',
-              hintStyle: TextStyle(color: theme.colors.mutedForeground),
-              border: OutlineInputBorder(
-                borderRadius: AppRadius.radiusMd,
-                borderSide: BorderSide.none,
-              ),
-              contentPadding: const EdgeInsets.all(AppSpacing.md),
+        TextField(
+          controller: _notesController,
+          maxLines: 3,
+          decoration: InputDecoration(
+            hintText: 'Tambahkan catatan review...',
+            border: OutlineInputBorder(
+              borderRadius: AppRadius.radiusMd,
             ),
           ),
         ),
@@ -735,12 +717,12 @@ class _TaskReviewScreenState extends State<TaskReviewScreen> {
                               child: Container(
                                 padding: const EdgeInsets.all(4),
                                 decoration: BoxDecoration(
-                                  color: Colors.black54,
+                                  color: theme.colors.background.withAlpha(140),
                                   borderRadius: BorderRadius.circular(4),
                                 ),
-                                child: const Icon(
-                                  Icons.zoom_in,
-                                  color: Colors.white,
+                                child: Icon(
+                                  IconMap.zoomIn,
+                                  color: theme.colors.foreground,
                                   size: 14,
                                 ),
                               ),
@@ -768,18 +750,19 @@ class _TaskReviewScreenState extends State<TaskReviewScreen> {
   }
 
   void _showFullScreenPhoto(String imageUrl, String type) {
+    final theme = context.theme;
     showDialog(
       context: context,
-      barrierColor: Colors.black87,
+      barrierColor: theme.colors.background.withAlpha(223),
       builder: (ctx) => Scaffold(
-        backgroundColor: Colors.black,
+        backgroundColor: theme.colors.background,
         appBar: AppBar(
-          backgroundColor: Colors.transparent,
+          backgroundColor: theme.colors.background.withAlpha(0),
           elevation: 0,
-          iconTheme: const IconThemeData(color: Colors.white),
+          iconTheme: IconThemeData(color: theme.colors.foreground),
           title: Text(
             type.toUpperCase(),
-            style: const TextStyle(color: Colors.white),
+            style: TextStyle(color: theme.colors.foreground),
           ),
         ),
         body: GestureDetector(
@@ -794,17 +777,15 @@ class _TaskReviewScreenState extends State<TaskReviewScreen> {
                 fit: BoxFit.contain,
                 loadingBuilder: (context, child, loadingProgress) {
                   if (loadingProgress == null) return child;
-                  return const Center(
-                    child: LoadingIndicator(color: Colors.white),
+                  return Center(
+                    child: LoadingIndicator(color: theme.colors.foreground),
                   );
                 },
                 errorBuilder: (context, error, stackTrace) {
-                  return const Center(
-                    child: Icon(
-                      Icons.broken_image,
-                      color: Colors.white54,
-                      size: 64,
-                    ),
+                  return Icon(
+                    IconMap.brokenImage,
+                    color: theme.colors.mutedForeground,
+                    size: 64,
                   );
                 },
               ),

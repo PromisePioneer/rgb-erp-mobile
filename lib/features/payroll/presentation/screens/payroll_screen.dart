@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import 'package:forui/forui.dart';
+
 import '../../../../core/core.dart';
 import '../../../../shared/widgets/layout/top_gradient_background.dart';
 import '../../domain/models/payslip.dart';
@@ -34,6 +36,8 @@ class _PayrollScreenState extends State<PayrollScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = context.theme;
+
     return TopGradientBackground(
       gradientHeight: 120,
       child: Scaffold(
@@ -43,14 +47,13 @@ class _PayrollScreenState extends State<PayrollScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Header
-              const Padding(
-                padding: EdgeInsets.fromLTRB(16, 16, 16, 16),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
                 child: Text(
                   'Payroll',
-                  style: TextStyle(
-                    fontSize: 24,
+                  style: theme.typography.body.xl.copyWith(
                     fontWeight: FontWeight.bold,
-                    color: AppColors.slate800,
+                    color: theme.colors.foreground,
                   ),
                 ),
               ),
@@ -60,18 +63,18 @@ class _PayrollScreenState extends State<PayrollScreen> {
                 child: Consumer<PayrollNotifier>(
                   builder: (context, notifier, child) {
                     if (notifier.state.isLoading) {
-                      return const Center(child: LoadingIndicator());
+                      return const Center(child: CircularProgressIndicator());
                     }
 
                     if (notifier.state.error != null) {
-                      return _buildError(notifier);
+                      return _buildError(notifier, theme);
                     }
 
                     if (notifier.state.payslips.isEmpty) {
-                      return _buildEmptyState();
+                      return _buildEmptyState(theme);
                     }
 
-                    return _buildPayslipList(notifier.state.payslips);
+                    return _buildPayslipList(notifier.state.payslips, theme);
                   },
                 ),
               ),
@@ -82,23 +85,30 @@ class _PayrollScreenState extends State<PayrollScreen> {
     );
   }
 
-  Widget _buildError(PayrollNotifier notifier) {
+  Widget _buildError(PayrollNotifier notifier, FThemeData theme) {
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(AppSpacing.lg),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.error_outline, size: 64, color: AppColors.danger),
+            Icon(
+              Icons.error_outline,
+              size: 64,
+              color: theme.colors.error,
+            ),
             const SizedBox(height: AppSpacing.md),
             Text(
               notifier.state.error!,
               textAlign: TextAlign.center,
-              style: const TextStyle(color: AppColors.slate500),
+              style: theme.typography.body.md.copyWith(
+                color: theme.colors.mutedForeground,
+              ),
             ),
             const SizedBox(height: AppSpacing.lg),
-            ElevatedButton(
-              onPressed: () => notifier.loadPayslips(),
+            FButton(
+              onPress: () => notifier.loadPayslips(),
+              variant: FButtonVariant.primary,
               child: const Text('Coba Lagi'),
             ),
           ],
@@ -107,22 +117,21 @@ class _PayrollScreenState extends State<PayrollScreen> {
     );
   }
 
-  Widget _buildEmptyState() {
+  Widget _buildEmptyState(FThemeData theme) {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
-        children: const [
+        children: [
           Icon(
             Icons.receipt_long,
             size: 64,
-            color: AppColors.slate300,
+            color: theme.colors.mutedForeground,
           ),
-          SizedBox(height: AppSpacing.md),
+          const SizedBox(height: AppSpacing.md),
           Text(
             'Belum ada data payroll',
-            style: TextStyle(
-              fontSize: 16,
-              color: AppColors.slate500,
+            style: theme.typography.body.md.copyWith(
+              color: theme.colors.mutedForeground,
             ),
           ),
         ],
@@ -130,18 +139,18 @@ class _PayrollScreenState extends State<PayrollScreen> {
     );
   }
 
-  Widget _buildPayslipList(List<Payslip> payslips) {
+  Widget _buildPayslipList(List<Payslip> payslips, FThemeData theme) {
     return ListView.builder(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       itemCount: payslips.length,
       itemBuilder: (context, index) {
         final payslip = payslips[index];
-        return _buildPayslipCard(payslip);
+        return _buildPayslipCard(payslip, theme);
       },
     );
   }
 
-  Widget _buildPayslipCard(Payslip payslip) {
+  Widget _buildPayslipCard(Payslip payslip, FThemeData theme) {
     final isPaid = payslip.status == 'Paid';
 
     return GestureDetector(
@@ -150,7 +159,7 @@ class _PayrollScreenState extends State<PayrollScreen> {
         margin: const EdgeInsets.only(bottom: 12),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: theme.colors.background,
           borderRadius: BorderRadius.circular(16),
           boxShadow: AppShadows.card,
         ),
@@ -163,10 +172,9 @@ class _PayrollScreenState extends State<PayrollScreen> {
                 children: [
                   Text(
                     payslip.period,
-                    style: const TextStyle(
-                      fontSize: 16,
+                    style: theme.typography.body.md.copyWith(
                       fontWeight: FontWeight.w600,
-                      color: AppColors.slate800,
+                      color: theme.colors.foreground,
                     ),
                   ),
                   const SizedBox(height: 4),
@@ -178,8 +186,7 @@ class _PayrollScreenState extends State<PayrollScreen> {
                     ),
                     child: Text(
                       payslip.status,
-                      style: TextStyle(
-                        fontSize: 11,
+                      style: theme.typography.body.xs.copyWith(
                         fontWeight: FontWeight.w600,
                         color: isPaid ? AppColors.success : AppColors.warning,
                       ),
@@ -195,27 +202,25 @@ class _PayrollScreenState extends State<PayrollScreen> {
               children: [
                 Text(
                   _formatCurrency(payslip.net),
-                  style: const TextStyle(
-                    fontSize: 16,
+                  style: theme.typography.body.md.copyWith(
                     fontWeight: FontWeight.bold,
-                    color: AppColors.slate800,
+                    color: theme.colors.foreground,
                   ),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   'Gaji Bersih',
-                  style: TextStyle(
-                    fontSize: 11,
-                    color: AppColors.slate400,
+                  style: theme.typography.body.xs.copyWith(
+                    color: theme.colors.mutedForeground,
                   ),
                 ),
               ],
             ),
 
             const SizedBox(width: 8),
-            const Icon(
+            Icon(
               Icons.chevron_right,
-              color: AppColors.slate400,
+              color: theme.colors.mutedForeground,
               size: 24,
             ),
           ],

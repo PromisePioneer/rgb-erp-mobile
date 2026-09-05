@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/core.dart';
+import '../../../../shared/widgets/buttons/primary_button.dart';
+import '../../../../shared/widgets/feedback/loading_indicator.dart';
+import '../../../../shared/widgets/icons/forui_icon_map.dart';
 import '../../../../shared/widgets/layout/top_gradient_background.dart';
 import '../../domain/models/leave_request_item.dart';
 import '../providers/leave_provider.dart';
@@ -68,13 +71,21 @@ class _LeaveScreenState extends State<LeaveScreen> {
           ),
         ),
         floatingActionButton: Padding(
-          padding: const EdgeInsets.only(bottom: 70),
-          child: FloatingActionButton.extended(
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(context).padding.bottom + 70,
+          ),
+          child: FloatingActionButton(
             onPressed: () => context.push('/leave/form'),
             backgroundColor: AppColors.primary,
             foregroundColor: Colors.white,
-            icon: const Icon(Icons.add),
-            label: const Text('Ajukan Cuti'),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(IconMap.add, size: 20),
+                const SizedBox(width: 8),
+                const Text('Ajukan Cuti'),
+              ],
+            ),
           ),
         ),
       ),
@@ -88,7 +99,7 @@ class _LeaveScreenState extends State<LeaveScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.error_outline, size: 64, color: AppColors.danger),
+            Icon(IconMap.errorOutline, size: 64, color: AppColors.danger),
             const SizedBox(height: AppSpacing.md),
             Text(
               notifier.state.error!,
@@ -96,9 +107,9 @@ class _LeaveScreenState extends State<LeaveScreen> {
               style: const TextStyle(color: AppColors.slate500),
             ),
             const SizedBox(height: AppSpacing.lg),
-            ElevatedButton(
+            PrimaryButton(
+              label: 'Coba Lagi',
               onPressed: () => notifier.loadLeaves(),
-              child: const Text('Coba Lagi'),
             ),
           ],
         ),
@@ -111,7 +122,7 @@ class _LeaveScreenState extends State<LeaveScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.beach_access, size: 64, color: AppColors.slate300),
+          Icon(IconMap.beachAccess, size: 64, color: AppColors.slate300),
           const SizedBox(height: AppSpacing.md),
           const Text(
             'Belum ada pengajuan cuti',
@@ -175,7 +186,7 @@ class _LeaveScreenState extends State<LeaveScreen> {
                         overflow: TextOverflow.ellipsis,
                         style: const TextStyle(
                           fontSize: 12,
-                          color: AppColors.slate400,
+                          color: AppColors.slate500,
                         ),
                       ),
                     ],
@@ -206,7 +217,7 @@ class _LeaveScreenState extends State<LeaveScreen> {
               '${leave.durationInDays} hari',
               style: const TextStyle(
                 fontSize: 12,
-                color: AppColors.slate400,
+                color: AppColors.slate500,
               ),
             ),
           ],

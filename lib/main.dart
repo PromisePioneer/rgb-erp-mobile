@@ -381,8 +381,6 @@ class _RGBERPAppState extends State<RGBERPApp> {
   Widget build(BuildContext context) {
     return MaterialApp.router(
       title: 'RGB 86',
-      debugShowCheckedModeBanner: false,
-      theme: AppTheme.light,
       routerConfig: appRouterProvider,
       locale: const Locale('id', 'ID'),
       supportedLocales: const [
@@ -394,10 +392,19 @@ class _RGBERPAppState extends State<RGBERPApp> {
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
       ],
+      debugShowCheckedModeBanner: false,
+      theme: ThemeData(
+        useMaterial3: true,
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: const Color(0xFF00875A), // RGB Primary
+        ),
+      ),
       builder: (context, child) {
         return FTheme(
           data: AppFTheme.light,
-          child: child ?? const SizedBox.shrink(),
+          child: FToaster(
+            child: child ?? const SizedBox.shrink(),
+          ),
         );
       },
     );

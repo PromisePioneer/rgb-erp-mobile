@@ -6,6 +6,7 @@ import 'package:forui/forui.dart';
 import '../../../../core/core.dart';
 import '../../../../shared/widgets/feedback/loading_indicator.dart';
 import '../../../../shared/widgets/icons/forui_icon_map.dart';
+import '../../../../shared/widgets/toast/app_toast.dart';
 import '../../domain/models/daily_task.dart';
 import '../providers/daily_task_provider.dart';
 
@@ -40,7 +41,7 @@ class _TaskDetailLeaderScreenState extends State<TaskDetailLeaderScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = FTheme.of(context);
+    final theme = context.theme;
 
     return Scaffold(
       backgroundColor: theme.colors.muted,
@@ -512,15 +513,15 @@ class _TaskDetailLeaderScreenState extends State<TaskDetailLeaderScreen> {
                             child: Container(
                               padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
                               decoration: BoxDecoration(
-                                color: Colors.black54,
+                                color: theme.colors.background.withAlpha(180),
                                 borderRadius: BorderRadius.circular(4),
                               ),
                               child: Text(
                                 photo.type.toUpperCase(),
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontSize: 8,
                                   fontWeight: FontWeight.w600,
-                                  color: Colors.white,
+                                  color: theme.colors.foreground,
                                 ),
                               ),
                             ),
@@ -659,6 +660,7 @@ class _TaskDetailLeaderScreenState extends State<TaskDetailLeaderScreen> {
     final task = context.read<DailyTaskNotifier>().selectedTask;
     if (task == null) return;
 
+    final theme = context.theme;
     showModalBottomSheet(
       context: context,
       shape: const RoundedRectangleBorder(
@@ -673,7 +675,7 @@ class _TaskDetailLeaderScreenState extends State<TaskDetailLeaderScreen> {
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                color: Colors.grey[300],
+                color: theme.colors.border,
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -690,7 +692,7 @@ class _TaskDetailLeaderScreenState extends State<TaskDetailLeaderScreen> {
             if (task.status == 'assigned' || task.status == 'in_progress')
               ListTile(
                 leading: Icon(IconMap.trash, color: AppColors.danger),
-                title: const Text('Hapus Tugas', style: TextStyle(color: AppColors.danger)),
+                title: Text('Hapus Tugas', style: TextStyle(color: AppColors.danger)),
                 subtitle: const Text('Batalkan penugasan'),
                 onTap: () {
                   Navigator.pop(ctx);
@@ -752,25 +754,41 @@ class _TaskDetailLeaderScreenState extends State<TaskDetailLeaderScreen> {
   }
 
   void _confirmDeleteTask() {
-    showDialog(
+    showFDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Hapus Tugas?'),
-        content: const Text('Tugas akan dibatalkan. Karyawan tidak akan bisa mengerjakannya lagi.'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Batal'),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(ctx);
-              _deleteTask();
-            },
-            style: TextButton.styleFrom(foregroundColor: AppColors.danger),
-            child: const Text('Hapus'),
-          ),
-        ],
+      builder: (ctx, style, animation) => FDialog(
+        builder: (ctx, style) => Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Hapus Tugas?', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
+            const SizedBox(height: 12),
+            const Text('Tugas akan dibatalkan. Karyawan tidak akan bisa mengerjakannya lagi.'),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Expanded(
+                  child: FButton(
+                    onPress: () => Navigator.pop(ctx),
+                    variant: FButtonVariant.ghost,
+                    child: const Text('Batal'),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: FButton(
+                    onPress: () {
+                      Navigator.pop(ctx);
+                      _deleteTask();
+                    },
+                    variant: FButtonVariant.destructive,
+                    child: const Text('Hapus'),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -782,32 +800,29 @@ class _TaskDetailLeaderScreenState extends State<TaskDetailLeaderScreen> {
     if (!mounted) return;
 
     if (success) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Tugas berhasil dihapus'),
-          backgroundColor: AppColors.success,
-        ),
+      context.toast.show(
+        message: 'Tugas berhasil dihapus',
+        style: AppToastStyle.success,
       );
       context.pop();
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(notifier.error ?? 'Gagal menghapus tugas'),
-          backgroundColor: AppColors.danger,
-        ),
+      context.toast.show(
+        message: notifier.error ?? 'Gagal menghapus tugas',
+        style: AppToastStyle.error,
       );
     }
   }
 
   void _showFullScreenPhoto(BuildContext context, String imageUrl) {
+    final theme = context.theme;
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (ctx) => Scaffold(
-          backgroundColor: Colors.black,
+          backgroundColor: theme.colors.background,
           appBar: AppBar(
             backgroundColor: Colors.transparent,
             elevation: 0,
-            iconTheme: const IconThemeData(color: Colors.white),
+            iconTheme: IconThemeData(color: theme.colors.foreground),
           ),
           body: GestureDetector(
             onTap: () => Navigator.pop(ctx),
@@ -844,7 +859,7 @@ class _TaskDetailLeaderScreenState extends State<TaskDetailLeaderScreen> {
       case 'reviewed':
         return AppColors.info;
       default:
-        return Colors.grey;
+        return AppColors.textMuted;
     }
   }
 

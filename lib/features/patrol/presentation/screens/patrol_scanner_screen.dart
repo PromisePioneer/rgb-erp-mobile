@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
+import 'package:forui/forui.dart';
 
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../shared/widgets/buttons/primary_button.dart';
@@ -65,28 +66,32 @@ class _PatrolScannerScreenState extends State<PatrolScannerScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = context.theme;
     return Scaffold(
       backgroundColor: Colors.black,
-      body: SafeArea(
-        child: Stack(
-          children: [
-            // Scanner or error
-            if (_errorMessage != null)
-              _buildError()
-            else if (!_isInitialized)
-              const Center(
-                child: LoadingIndicator(size: 32),
-              )
-            else if (_controller != null)
-              _buildScanner(),
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        foregroundColor: Colors.white,
+        title: const Text('Scan QR Code'),
+      ),
+      body: Stack(
+        children: [
+          // Scanner or error
+          if (_errorMessage != null)
+            _buildError(theme)
+          else if (!_isInitialized)
+            const Center(
+              child: LoadingIndicator(size: 32),
+            )
+          else if (_controller != null)
+            _buildScanner(),
 
-            // Guide overlay
-            if (_isInitialized && !_hasScanned) _buildGuideOverlay(),
+          // Guide overlay
+          if (_isInitialized && !_hasScanned) _buildGuideOverlay(),
 
-            // Controls
-            _buildControls(),
-          ],
-        ),
+          // Controls
+          _buildControls(theme),
+        ],
       ),
     );
   }
@@ -100,7 +105,7 @@ class _PatrolScannerScreenState extends State<PatrolScannerScreen> {
     );
   }
 
-  Widget _buildError() {
+  Widget _buildError(FThemeData theme) {
     return Container(
       color: Colors.black87,
       child: Center(
@@ -109,7 +114,7 @@ class _PatrolScannerScreenState extends State<PatrolScannerScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.error_outline, color: Colors.white, size: 64),
+              Icon(IconMap.errorOutline, color: Colors.white, size: 64),
               const SizedBox(height: AppSpacing.lg),
               Text(
                 _errorMessage ?? 'Gagal akses kamera',
@@ -147,9 +152,9 @@ class _PatrolScannerScreenState extends State<PatrolScannerScreen> {
           border: Border.all(color: Colors.white, width: 2),
           borderRadius: BorderRadius.circular(16),
         ),
-        child: const Center(
+        child: Center(
           child: Icon(
-            Icons.qr_code_scanner,
+            IconMap.qrCodeScanner,
             color: Colors.white54,
             size: 80,
           ),
@@ -158,14 +163,14 @@ class _PatrolScannerScreenState extends State<PatrolScannerScreen> {
     );
   }
 
-  Widget _buildControls() {
+  Widget _buildControls(FThemeData theme) {
     return Positioned(
       bottom: 0,
       left: 0,
       right: 0,
       child: SafeArea(
         top: false,
-        child: Container(
+        child: Padding(
           padding: const EdgeInsets.all(AppSpacing.lg),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -203,9 +208,9 @@ class _PatrolScannerScreenState extends State<PatrolScannerScreen> {
                     border: Border.all(color: Colors.white, width: 1),
                     borderRadius: BorderRadius.circular(AppSpacing.lg),
                   ),
-                  child: const Text(
+                  child: Text(
                     'Batal',
-                    style: TextStyle(color: Colors.white, fontSize: 16),
+                    style: const TextStyle(color: Colors.white, fontSize: 16),
                     textAlign: TextAlign.center,
                   ),
                 ),

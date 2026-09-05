@@ -39,7 +39,7 @@ class CheckpointPath extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = FTheme.of(context);
+    final theme = context.theme;
     return SizedBox(
       width: width,
       height: nodes.isEmpty ? 100 : (nodes.length * 80.0),
@@ -57,7 +57,7 @@ class CheckpointPath extends StatelessWidget {
   }
 
   Widget _buildNode(BuildContext context, CheckpointNode node, int index) {
-    final theme = FTheme.of(context);
+    final theme = context.theme;
     // Calculate position - zig-zag pattern
     final isLeft = index % 2 == 0;
     final xOffset = isLeft ? 20.0 : width - 70;

@@ -1,13 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
 
-/// Loading indicator widget using Forui's FCircularProgress
+/// Loading indicator widget using Forui's FCircularProgress wrapped in a Material widget
 class LoadingIndicator extends StatelessWidget {
   final double size;
+  final Color? color;
+  final double? value;
+  final double? strokeWidth;
 
   const LoadingIndicator({
     super.key,
     this.size = 24,
+    this.color,
+    this.value,
+    this.strokeWidth,
   });
 
   @override
@@ -26,9 +32,16 @@ class LoadingIndicator extends StatelessWidget {
       progressSize = FCircularProgressSizeVariant.xl;
     }
 
-    // Use theme's default style
-    return FCircularProgress(
-      size: progressSize,
+    // Use FCircularProgress - ForUI's circular progress indicator
+    return Material(
+      color: Colors.transparent,
+      child: SizedBox(
+        width: size,
+        height: size,
+        child: FCircularProgress(
+          size: progressSize,
+        ),
+      ),
     );
   }
 }
@@ -53,10 +66,7 @@ class LoadingWithText extends StatelessWidget {
         LoadingIndicator(size: size),
         if (text != null) ...[
           const SizedBox(height: 8),
-          Text(
-            text!,
-            style: Theme.of(context).textTheme.bodySmall,
-          ),
+          Text(text!),
         ],
       ],
     );

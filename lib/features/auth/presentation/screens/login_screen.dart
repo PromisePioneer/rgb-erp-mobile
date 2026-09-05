@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
+import 'package:forui/forui.dart';
 
 import '../../../../core/core.dart';
 import '../../../../shared/widgets/inputs/app_text_field.dart';
 import '../../../../shared/widgets/banners/banner_carousel.dart';
 import '../../../../shared/widgets/buttons/primary_button.dart';
+import '../../../../shared/widgets/toast/app_toast.dart';
+import '../../../../shared/widgets/icons/forui_icon_map.dart';
 import '../providers/auth_provider.dart';
 import '../widgets/biometric_section.dart';
 
@@ -79,12 +82,9 @@ class _LoginScreenState extends State<LoginScreen> {
       await authNotifier.login(code: nik, password: password);
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Login berhasil! Masuk dashboard...'),
-            backgroundColor: AppColors.success,
-            duration: Duration(seconds: 1),
-          ),
+        AppToast.of(context).show(
+          message: 'Login berhasil! Masuk dashboard...',
+          style: AppToastStyle.success,
         );
 
         // Auto-detect user type and redirect accordingly
@@ -97,19 +97,16 @@ class _LoginScreenState extends State<LoginScreen> {
       }
     } on ApiException catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.message), backgroundColor: AppColors.danger),
+        AppToast.of(context).show(
+          message: e.message,
+          style: AppToastStyle.error,
         );
       }
     } catch (e) {
-      
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error: ${e.toString()}'),
-            backgroundColor: AppColors.danger,
-            duration: const Duration(seconds: 5),
-          ),
+        AppToast.of(context).show(
+          message: 'Error: ${e.toString()}',
+          style: AppToastStyle.error,
         );
       }
     } finally {
@@ -123,30 +120,24 @@ class _LoginScreenState extends State<LoginScreen> {
 
   Future<void> _handleBiometricLogin() async {
     try {
-      
       await context.read<AuthNotifier>().loginWithBiometric();
-      
 
       if (mounted) {
-        
         // Biometric is only for employees
         context.go('/dashboard');
       }
     } on ApiException catch (e) {
-      
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.message), backgroundColor: AppColors.danger),
+        AppToast.of(context).show(
+          message: e.message,
+          style: AppToastStyle.error,
         );
       }
     } catch (e) {
-      
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Biometric login gagal. Silakan coba lagi.'),
-            backgroundColor: AppColors.danger,
-          ),
+        AppToast.of(context).show(
+          message: 'Biometric login gagal. Silakan coba lagi.',
+          style: AppToastStyle.error,
         );
       }
     }
@@ -158,11 +149,9 @@ class _LoginScreenState extends State<LoginScreen> {
 
     if (nik.isEmpty || password.isEmpty) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Masukkan NIK dan password terlebih dahulu'),
-            backgroundColor: AppColors.warning,
-          ),
+        AppToast.of(context).show(
+          message: 'Masukkan NIK dan password terlebih dahulu',
+          style: AppToastStyle.warning,
         );
       }
       return;
@@ -174,17 +163,16 @@ class _LoginScreenState extends State<LoginScreen> {
       await authNotifier.enableBiometric(nik);
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Biometric berhasil diaktifkan'),
-            backgroundColor: AppColors.success,
-          ),
+        AppToast.of(context).show(
+          message: 'Biometric berhasil diaktifkan',
+          style: AppToastStyle.success,
         );
       }
     } on ApiException catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.message), backgroundColor: AppColors.danger),
+        AppToast.of(context).show(
+          message: e.message,
+          style: AppToastStyle.error,
         );
       }
     }
@@ -207,7 +195,7 @@ class _LoginScreenState extends State<LoginScreen> {
               const SizedBox(height: 100),
 
               // Middle: Banner carousel
-              const BannerCarousel(),
+              BannerCarousel(),
 
               const SizedBox(height: AppSpacing.xxl),
 
@@ -234,8 +222,8 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                           child: Row(
                             children: [
-                              const Icon(
-                                Icons.person_outline,
+                              Icon(
+                                IconMap.person,
                                 color: AppColors.gray600,
                               ),
                               const SizedBox(width: AppSpacing.md),
@@ -261,8 +249,8 @@ class _LoginScreenState extends State<LoginScreen> {
                                   ],
                                 ),
                               ),
-                              const Icon(
-                                Icons.edit,
+                              Icon(
+                                IconMap.pencil,
                                 color: AppColors.gray400,
                                 size: 20,
                               ),
@@ -274,7 +262,9 @@ class _LoginScreenState extends State<LoginScreen> {
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          TextFormField(
+                          AppTextField(
+                            label: 'NIK / Email',
+                            hint: 'Masukkan NIK atau Email',
                             controller: _nikController,
                             onChanged: (value) {
                               setState(() {
@@ -284,28 +274,9 @@ class _LoginScreenState extends State<LoginScreen> {
                                 }
                               });
                             },
-                            decoration: InputDecoration(
-                              labelText: 'NIK / Email',
-                              hintText: 'Masukkan NIK atau Email',
-                              prefixIcon: const Icon(Icons.badge_outlined, color: AppColors.gray400),
-                              filled: true,
-                              fillColor: _nikError != null ? AppColors.dangerBg : AppColors.gray100,
-                              border: OutlineInputBorder(
-                                borderRadius: AppRadius.input,
-                                borderSide: BorderSide.none,
-                              ),
-                            ),
+                            prefixIcon: Icon(IconMap.person),
+                            errorText: _nikError,
                           ),
-                          if (_nikError != null) ...[
-                            const SizedBox(height: 4),
-                            Text(
-                              _nikError!,
-                              style: const TextStyle(
-                                fontSize: 12,
-                                color: AppColors.danger,
-                              ),
-                            ),
-                          ],
                         ],
                       ),
                     ],
@@ -343,10 +314,11 @@ class _LoginScreenState extends State<LoginScreen> {
 
                     // Forgot password link
                     Center(
-                      child: TextButton(
-                        onPressed: () {
+                      child: FButton(
+                        onPress: () {
                           // Navigate to forgot password screen
                         },
+                        variant: FButtonVariant.ghost,
                         child: const Text(
                           'Lupa Password?',
                           style: TextStyle(

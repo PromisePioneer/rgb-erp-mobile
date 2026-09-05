@@ -2,8 +2,12 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import 'package:forui/forui.dart';
+
 import '../../../../core/core.dart';
 import '../../../../shared/widgets/inputs/async_select_field.dart';
+import '../../../../shared/widgets/feedback/loading_indicator.dart';
+import '../../../../shared/widgets/icons/forui_icon_map.dart';
 import '../providers/purchase_request_provider.dart';
 
 /// Purchase Request form screen for create/edit
@@ -228,21 +232,21 @@ class _PurchaseRequestFormScreenState extends State<PurchaseRequestFormScreen> {
                 children: [
                   // Date field
                   _buildDateField(),
-                  const SizedBox(height: 16),
+                  SizedBox(height: 16),
 
                   // Supplier field
                   _buildSupplierField(),
-                  const SizedBox(height: 16),
+                  SizedBox(height: 16),
 
                   // Notes field
                   _buildNotesField(),
-                  const SizedBox(height: 24),
+                  SizedBox(height: 24),
 
                   // Products section header
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text(
+                      Text(
                         'Produk',
                         style: TextStyle(
                           fontSize: 16,
@@ -250,17 +254,21 @@ class _PurchaseRequestFormScreenState extends State<PurchaseRequestFormScreen> {
                           color: AppColors.slate800,
                         ),
                       ),
-                      TextButton.icon(
-                        onPressed: _addLineItem,
-                        icon: const Icon(Icons.add, size: 18),
-                        label: const Text('Tambah'),
-                        style: TextButton.styleFrom(
-                          foregroundColor: AppColors.primary,
+                      FButton(
+                        onPress: _addLineItem,
+                        variant: FButtonVariant.ghost,
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(IconMap.plus, size: 18),
+                            SizedBox(width: 4),
+                            Text('Tambah'),
+                          ],
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 8),
+                  SizedBox(height: 8),
 
                   // Line items
                   ...List.generate(_lineItems.length, (index) {
@@ -268,7 +276,7 @@ class _PurchaseRequestFormScreenState extends State<PurchaseRequestFormScreen> {
                   }),
 
                   if (_formError != null) ...[
-                    const SizedBox(height: 16),
+                    SizedBox(height: 16),
                     Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
@@ -277,8 +285,8 @@ class _PurchaseRequestFormScreenState extends State<PurchaseRequestFormScreen> {
                       ),
                       child: Row(
                         children: [
-                          const Icon(Icons.error_outline, color: AppColors.danger, size: 20),
-                          const SizedBox(width: 8),
+                          Icon(IconMap.errorOutline, color: AppColors.danger, size: 20),
+                          SizedBox(width: 8),
                           Expanded(
                             child: Text(
                               _formError!,
@@ -291,7 +299,7 @@ class _PurchaseRequestFormScreenState extends State<PurchaseRequestFormScreen> {
                   ],
 
                   // Grand total
-                  const SizedBox(height: 24),
+                  SizedBox(height: 24),
                   Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
@@ -301,7 +309,7 @@ class _PurchaseRequestFormScreenState extends State<PurchaseRequestFormScreen> {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Text(
+                        Text(
                           'Total',
                           style: TextStyle(
                             fontSize: 16,
@@ -321,7 +329,7 @@ class _PurchaseRequestFormScreenState extends State<PurchaseRequestFormScreen> {
                     ),
                   ),
 
-                  const SizedBox(height: 100),
+                  SizedBox(height: 100),
                 ],
               ),
             ),
@@ -341,33 +349,26 @@ class _PurchaseRequestFormScreenState extends State<PurchaseRequestFormScreen> {
           ],
         ),
         child: SafeArea(
-          child: ElevatedButton(
-            onPressed: isSubmitting || !_canSubmit ? null : _submit,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primary,
-              disabledBackgroundColor: AppColors.slate300,
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
+          child: SizedBox(
+            height: 52,
+            child: FButton(
+              onPress: isSubmitting || !_canSubmit ? null : _submit,
+              variant: FButtonVariant.primary,
+              child: isSubmitting
+                  ? SizedBox(
+                      width: 24,
+                      height: 24,
+                      child: LoadingIndicator(
+                      ),
+                    )
+                  : Text(
+                      _isEditing ? 'Update Purchase Request' : 'Simpan Purchase Request',
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
             ),
-            child: isSubmitting
-                ? const SizedBox(
-                    width: 24,
-                    height: 24,
-                    child: LoadingIndicator(
-                      strokeWidth: 2,
-                      color: Colors.white,
-                    ),
-                  )
-                : Text(
-                    _isEditing ? 'Update Purchase Request' : 'Simpan Purchase Request',
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
           ),
         ),
       ),
@@ -378,35 +379,36 @@ class _PurchaseRequestFormScreenState extends State<PurchaseRequestFormScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           'Tanggal',
           style: TextStyle(fontSize: 12, color: AppColors.slate500),
         ),
-        const SizedBox(height: 4),
-        GestureDetector(
-          onTap: _pickDate,
-          child: Container(
-            width: double.infinity,
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Row(
-              children: [
-                Icon(Icons.calendar_today, size: 20, color: AppColors.slate400),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    _selectedDate != null ? _formatDate(_selectedDate!) : 'Pilih tanggal',
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: _selectedDate == null ? AppColors.slate400 : AppColors.slate800,
+        SizedBox(height: 4),
+        Material(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          child: InkWell(
+            onTap: _pickDate,
+            borderRadius: BorderRadius.circular(12),
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+              child: Row(
+                children: [
+                  Icon(IconMap.calendarToday, size: 20, color: AppColors.gray400),
+                  SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      _selectedDate != null ? _formatDate(_selectedDate!) : 'Pilih tanggal',
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: _selectedDate == null ? AppColors.gray400 : AppColors.slate800,
+                      ),
                     ),
                   ),
-                ),
-                Icon(Icons.chevron_right, size: 24, color: AppColors.slate400),
-              ],
+                  Icon(IconMap.chevronRight, size: 24, color: AppColors.gray400),
+                ],
+              ),
             ),
           ),
         ),
@@ -418,11 +420,11 @@ class _PurchaseRequestFormScreenState extends State<PurchaseRequestFormScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           'Supplier (opsional)',
           style: TextStyle(fontSize: 12, color: AppColors.slate500),
         ),
-        const SizedBox(height: 4),
+        SizedBox(height: 4),
         TextFormField(
           controller: _supplierController,
           decoration: InputDecoration(
@@ -444,11 +446,11 @@ class _PurchaseRequestFormScreenState extends State<PurchaseRequestFormScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           'Keterangan',
           style: TextStyle(fontSize: 12, color: AppColors.slate500),
         ),
-        const SizedBox(height: 4),
+        SizedBox(height: 4),
         TextFormField(
           controller: _notesController,
           maxLines: 3,
@@ -507,7 +509,7 @@ class _PurchaseRequestFormScreenState extends State<PurchaseRequestFormScreen> {
               const Spacer(),
               if (_lineItems.length > 1)
                 IconButton(
-                  icon: const Icon(Icons.delete_outline, color: AppColors.danger),
+                  icon: Icon(IconMap.deleteOutline, color: AppColors.danger),
                   onPressed: () => _removeLineItem(index),
                   iconSize: 20,
                   padding: EdgeInsets.zero,
@@ -515,11 +517,11 @@ class _PurchaseRequestFormScreenState extends State<PurchaseRequestFormScreen> {
                 ),
             ],
           ),
-          const SizedBox(height: 12),
+          SizedBox(height: 12),
 
           // Product dropdown
           _buildProductDropdown(index, item),
-          const SizedBox(height: 12),
+          SizedBox(height: 12),
 
           // Qty and Price row
           Row(
@@ -527,19 +529,19 @@ class _PurchaseRequestFormScreenState extends State<PurchaseRequestFormScreen> {
               Expanded(
                 child: _buildQtyField(index, item),
               ),
-              const SizedBox(width: 12),
+              SizedBox(width: 12),
               Expanded(
                 child: _buildPriceField(index, item),
               ),
             ],
           ),
-          const SizedBox(height: 12),
+          SizedBox(height: 12),
 
           // Total
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
+              Text(
                 'Subtotal',
                 style: TextStyle(
                   fontSize: 13,
@@ -565,11 +567,11 @@ class _PurchaseRequestFormScreenState extends State<PurchaseRequestFormScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           'Produk',
-          style: TextStyle(fontSize: 11, color: AppColors.slate400),
+          style: TextStyle(fontSize: 11, color: AppColors.gray400),
         ),
-        const SizedBox(height: 4),
+        SizedBox(height: 4),
         AsyncSelectField(
           label: null,
           placeholder: 'Cari produk...',
@@ -604,11 +606,11 @@ class _PurchaseRequestFormScreenState extends State<PurchaseRequestFormScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           'Qty',
-          style: TextStyle(fontSize: 11, color: AppColors.slate400),
+          style: TextStyle(fontSize: 11, color: AppColors.gray400),
         ),
-        const SizedBox(height: 4),
+        SizedBox(height: 4),
         TextFormField(
           initialValue: item.qty > 0 ? item.qty.toString() : '',
           keyboardType: const TextInputType.numberWithOptions(decimal: true),
@@ -635,11 +637,11 @@ class _PurchaseRequestFormScreenState extends State<PurchaseRequestFormScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           'Harga',
-          style: TextStyle(fontSize: 11, color: AppColors.slate400),
+          style: TextStyle(fontSize: 11, color: AppColors.gray400),
         ),
-        const SizedBox(height: 4),
+        SizedBox(height: 4),
         TextFormField(
           initialValue: item.price > 0 ? item.price.toStringAsFixed(0) : '',
           keyboardType: TextInputType.number,

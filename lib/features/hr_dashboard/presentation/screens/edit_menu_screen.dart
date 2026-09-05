@@ -61,7 +61,7 @@ class _EditMenuScreenState extends State<EditMenuScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = FTheme.of(context);
+    final theme = context.theme;
     return Scaffold(
       backgroundColor: AppColors.slate100,
       body: Column(
@@ -77,9 +77,10 @@ class _EditMenuScreenState extends State<EditMenuScreen> {
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
                 child: Row(
                   children: [
-                    IconButton(
-                      onPressed: () => context.pop(),
-                      icon: Icon(IconMap.arrowBack, color: Colors.white),
+                    FButton(
+                      onPress: () => context.pop(),
+                      variant: FButtonVariant.ghost,
+                      child: Icon(IconMap.arrowBack, color: Colors.white),
                     ),
                     const Expanded(
                       child: Text(
@@ -130,8 +131,9 @@ class _EditMenuScreenState extends State<EditMenuScreen> {
                                   color: AppColors.slate800,
                                 ),
                               ),
-                              TextButton(
-                                onPressed: _clearAll,
+                              FButton(
+                                onPress: _clearAll,
+                                variant: FButtonVariant.ghost,
                                 child: Text(
                                   'Clear All',
                                   style: TextStyle(
@@ -147,7 +149,7 @@ class _EditMenuScreenState extends State<EditMenuScreen> {
                         // Menu items grid
                         Builder(
                           builder: (context) {
-                            final theme = FTheme.of(context);
+                            final theme = context.theme;
                             return Wrap(
                               spacing: 16,
                               runSpacing: 16,
@@ -209,14 +211,14 @@ class _EditMenuScreenState extends State<EditMenuScreen> {
                         ),
 
                         // TODO: Add additional features checklist here
-                        Padding(
-                          padding: const EdgeInsets.all(24),
+                        const Padding(
+                          padding: EdgeInsets.all(24),
                           child: Center(
                             child: Text(
                               'Segera hadir',
                               style: TextStyle(
                                 fontSize: 14,
-                                color: AppColors.slate400,
+                                color: AppColors.gray400,
                               ),
                             ),
                           ),

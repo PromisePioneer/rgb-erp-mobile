@@ -49,23 +49,36 @@ class AppTextField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = context.theme;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         if (label != null) ...[
-          Text(label!.toUpperCase()),
+          Text(
+            label!.toUpperCase(),
+            style: theme.typography.body.xs.copyWith(
+              fontWeight: FontWeight.w600,
+              color: theme.colors.mutedForeground,
+            ),
+          ),
           const SizedBox(height: AppSpacing.xs),
         ],
-        _buildTextField(context),
+        _buildTextField(context, theme),
         if (errorText != null) ...[
           const SizedBox(height: AppSpacing.xs),
-          Text(errorText!),
+          Text(
+            errorText!,
+            style: theme.typography.body.xs.copyWith(
+              color: theme.colors.error,
+            ),
+          ),
         ],
       ],
     );
   }
 
-  Widget _buildTextField(BuildContext context) {
+  Widget _buildTextField(BuildContext context, FThemeData theme) {
     // Use FTextField password variant
     if (obscureText || showVisibilityToggle) {
       return FTextField.password(
@@ -151,7 +164,7 @@ class NikTextField extends StatelessWidget {
       onChanged: onChanged,
       keyboardType: TextInputType.text,
       errorText: errorText,
-      prefixIcon: const Icon(Icons.badge_outlined),
+      prefixIcon: Icon(Icons.badge_outlined),
     );
   }
 }
@@ -193,7 +206,7 @@ class _PasswordTextFieldState extends State<PasswordTextField> {
       keyboardType: TextInputType.visiblePassword,
       textInputAction: widget.textInputAction,
       errorText: widget.errorText,
-      prefixIcon: const Icon(Icons.lock_outline),
+      prefixIcon: Icon(Icons.lock_outline),
     );
   }
 }

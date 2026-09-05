@@ -73,8 +73,16 @@ class AppColors {
 
   // Other utility colors
   static const Color emerald500 = Color(0xFF10B981);
+  static const Color amber50 = Color(0xFFFFFBEB);
+  static const Color amber100 = Color(0xFFFEF3C7);
+  static const Color amber200 = Color(0xFFFDE68A);
+  static const Color amber300 = Color(0xFFFCBF49);
+  static const Color amber400 = Color(0xFFF59E0B);
   static const Color amber500 = Color(0xFFF59E0B);
+  static const Color amber600 = Color(0xFFD97706);
   static const Color rose500 = Color(0xFFF43F5E);
   static const Color cyan500 = Color(0xFF06B6D4);
   static const Color red500 = Color(0xFFEF4444);
+  static const Color sky50 = Color(0xFFF0F9FF);
+  static const Color sky100 = Color(0xFFE0F2FE);
 }

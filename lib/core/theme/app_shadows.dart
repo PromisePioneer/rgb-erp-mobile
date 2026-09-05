@@ -45,7 +45,7 @@ class AppShadows {
   /// Floating button shadow
   static List<BoxShadow> get floatingButton => [
         BoxShadow(
-          color: AppColors.slate400.withAlpha(77),
+          color: AppColors.slate500.withAlpha(77),
           blurRadius: 12,
           offset: const Offset(0, 4),
         ),

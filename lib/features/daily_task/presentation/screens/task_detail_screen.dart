@@ -11,6 +11,7 @@ import '../../../../shared/widgets/buttons/primary_button.dart';
 import '../../../../shared/widgets/feedback/loading_indicator.dart';
 import '../../../../shared/widgets/icons/forui_icon_map.dart';
 import '../../../../shared/widgets/inputs/app_text_field.dart';
+import '../../../../shared/widgets/toast/app_toast.dart';
 import '../../domain/models/daily_task.dart';
 import '../providers/daily_task_provider.dart';
 
@@ -89,11 +90,9 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Gagal mengambil foto: $e'),
-            backgroundColor: AppColors.danger,
-          ),
+        context.toast.show(
+          message: 'Gagal mengambil foto: $e',
+          style: AppToastStyle.error,
         );
       }
     }
@@ -110,18 +109,19 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
   }
 
   void _showFullScreenPhoto(String imageUrl, String type) {
+    final theme = context.theme;
     showDialog(
       context: context,
-      barrierColor: Colors.black87,
+      barrierColor: theme.colors.background.withAlpha(230),
       builder: (ctx) => Scaffold(
-        backgroundColor: Colors.black,
+        backgroundColor: theme.colors.background,
         appBar: AppBar(
           backgroundColor: Colors.transparent,
           elevation: 0,
-          iconTheme: const IconThemeData(color: Colors.white),
+          iconTheme: IconThemeData(color: theme.colors.foreground),
           title: Text(
             type.toUpperCase(),
-            style: const TextStyle(color: Colors.white),
+            style: TextStyle(color: theme.colors.foreground),
           ),
         ),
         body: GestureDetector(
@@ -136,15 +136,15 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
                 fit: BoxFit.contain,
                 loadingBuilder: (context, child, loadingProgress) {
                   if (loadingProgress == null) return child;
-                  return const Center(
-                    child: LoadingIndicator(color: Colors.white),
+                  return Center(
+                    child: LoadingIndicator(),
                   );
                 },
                 errorBuilder: (context, error, stackTrace) {
-                  return const Center(
+                  return Center(
                     child: Icon(
                       Icons.broken_image,
-                      color: Colors.white54,
+                      color: theme.colors.mutedForeground,
                       size: 64,
                     ),
                   );
@@ -158,18 +158,19 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
   }
 
   void _showLocalFullScreenPhoto(String filePath) {
+    final theme = context.theme;
     showDialog(
       context: context,
-      barrierColor: Colors.black87,
+      barrierColor: theme.colors.background.withAlpha(230),
       builder: (ctx) => Scaffold(
-        backgroundColor: Colors.black,
+        backgroundColor: theme.colors.background,
         appBar: AppBar(
           backgroundColor: Colors.transparent,
           elevation: 0,
-          iconTheme: const IconThemeData(color: Colors.white),
-          title: const Text(
+          iconTheme: IconThemeData(color: theme.colors.foreground),
+          title: Text(
             'FOTO',
-            style: TextStyle(color: Colors.white),
+            style: TextStyle(color: theme.colors.foreground),
           ),
         ),
         body: GestureDetector(
@@ -183,10 +184,10 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
                 File(filePath),
                 fit: BoxFit.contain,
                 errorBuilder: (context, error, stackTrace) {
-                  return const Center(
+                  return Center(
                     child: Icon(
                       Icons.broken_image,
-                      color: Colors.white54,
+                      color: theme.colors.mutedForeground,
                       size: 64,
                     ),
                   );
@@ -403,62 +404,74 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
   }
 
   void _showErrorDialog(String title, String message) {
-    final theme = FTheme.of(context);
-    showDialog(
+    final theme = context.theme;
+    showFDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: AppRadius.radiusLg),
-        title: Row(
+      builder: (ctx, style, animation) => FDialog(
+        builder: (ctx, style) => Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Icon(IconMap.errorOutline, color: theme.colors.destructive),
-            const SizedBox(width: 8),
-            Text(title),
+            Row(
+              children: [
+                Icon(IconMap.errorOutline, color: theme.colors.destructive),
+                const SizedBox(width: 8),
+                Text(title, style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Text(message),
+            const SizedBox(height: 16),
+            FButton(
+              onPress: () => Navigator.pop(ctx),
+              variant: FButtonVariant.ghost,
+              child: const Text('Tutup'),
+            ),
           ],
         ),
-        content: Text(message),
-        actions: [
-          FButton(
-            onPress: () => Navigator.pop(ctx),
-            variant: FButtonVariant.ghost,
-            child: const Text('Tutup'),
-          ),
-        ],
       ),
     );
   }
 
   void _showSuccessDialog(String title, String message) {
-    showDialog(
+    showFDialog(
       context: context,
       barrierDismissible: false,
-      builder: (ctx) => AlertDialog(
-        title: Row(
+      builder: (ctx, style, animation) => FDialog(
+        builder: (ctx, style) => Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Icon(IconMap.checkCircle, color: AppColors.success),
-            const SizedBox(width: 8),
-            Text(title),
+            Row(
+              children: [
+                Icon(IconMap.checkCircle, color: AppColors.success),
+                const SizedBox(width: 8),
+                Text(title, style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Text(message),
+            const SizedBox(height: 16),
+            SizedBox(
+              width: double.infinity,
+              child: FButton(
+                onPress: () {
+                  Navigator.pop(ctx);
+                  context.pop();
+                },
+                variant: FButtonVariant.primary,
+                child: const Text('OK'),
+              ),
+            ),
           ],
         ),
-        content: Text(message),
-        actions: [
-          SizedBox(
-            width: double.infinity,
-            child: PrimaryButton(
-              label: 'OK',
-              onPressed: () {
-                Navigator.pop(ctx);
-                context.pop();
-              },
-            ),
-          ),
-        ],
       ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    final theme = FTheme.of(context);
+    final theme = context.theme;
 
     return Scaffold(
       backgroundColor: theme.colors.muted,
@@ -614,8 +627,8 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
 
               if (notifier.isLoading)
                 Container(
-                  color: Colors.black26,
-                  child: const Center(
+                  color: theme.colors.background.withAlpha(128),
+                  child: Center(
                     child: LoadingIndicator(size: 48),
                   ),
                 ),
@@ -714,13 +727,13 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
                                   child: Container(
                                     padding: const EdgeInsets.all(4),
                                     decoration: BoxDecoration(
-                                      color: Colors.black54,
+                                      color: theme.colors.background.withAlpha(180),
                                       borderRadius: BorderRadius.circular(12),
                                     ),
-                                    child: const Icon(
+                                    child: Icon(
                                       Icons.close,
                                       size: 16,
-                                      color: Colors.white,
+                                      color: theme.colors.foreground,
                                     ),
                                   ),
                                 ),
@@ -1314,7 +1327,7 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
                             if (loadingProgress == null) return child;
                             return Container(
                               color: theme.colors.muted,
-                              child: const Center(
+                              child: Center(
                                 child: LoadingIndicator(size: 24),
                               ),
                             );
@@ -1329,12 +1342,12 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
                               vertical: 2,
                             ),
                             decoration: BoxDecoration(
-                              color: Colors.black54,
+                              color: theme.colors.background.withAlpha(180),
                               borderRadius: BorderRadius.circular(4),
                             ),
-                            child: const Icon(
+                            child: Icon(
                               Icons.zoom_in,
-                              color: Colors.white,
+                              color: theme.colors.foreground,
                               size: 14,
                             ),
                           ),

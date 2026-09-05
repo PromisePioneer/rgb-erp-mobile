@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../../../../core/core.dart';
 
 /// Top gradient background widget - adds a subtle gradient at the top of the screen
@@ -20,8 +21,8 @@ class TopGradientBackground extends StatelessWidget {
     super.key,
     required this.child,
     this.gradientHeight = 200,
-    this.colors = const [AppColors.indigo50, Colors.white],
-    this.backgroundColor = AppColors.white,
+    this.colors = const [Color(0xFFF0FDFA), Colors.white], // teal50 to white
+    this.backgroundColor = Colors.white,
   });
 
   @override

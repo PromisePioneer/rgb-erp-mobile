@@ -33,9 +33,7 @@ class PrimaryButton extends StatelessWidget {
             ? const SizedBox(
                 width: 24,
                 height: 24,
-                child: LoadingIndicator(
-                  strokeWidth: 2,
-                ),
+                child: CircularProgressIndicator(strokeWidth: 2),
               )
             : Row(
                 mainAxisSize: MainAxisSize.min,
@@ -85,9 +83,7 @@ class SecondaryButton extends StatelessWidget {
             ? const SizedBox(
                 width: 24,
                 height: 24,
-                child: LoadingIndicator(
-                  strokeWidth: 2,
-                ),
+                child: CircularProgressIndicator(strokeWidth: 2),
               )
             : Row(
                 mainAxisSize: MainAxisSize.min,
@@ -120,13 +116,14 @@ class LoadingTextButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return TextButton(
-      onPressed: isLoading ? null : onPressed,
+    return FButton(
+      onPress: isLoading ? null : onPressed,
+      variant: FButtonVariant.ghost,
       child: isLoading
           ? const SizedBox(
               width: 16,
               height: 16,
-              child: LoadingIndicator(strokeWidth: 2),
+              child: CircularProgressIndicator(strokeWidth: 2),
             )
           : Text(label),
     );

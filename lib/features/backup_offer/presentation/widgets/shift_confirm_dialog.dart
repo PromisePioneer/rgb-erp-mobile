@@ -33,17 +33,17 @@ class _ShiftConfirmDialogState extends State<ShiftConfirmDialog> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = FTheme.of(context);
+    final theme = context.theme;
 
-    return Material(
-      color: Colors.black54,
-      child: Center(
+    return Center(
+      child: Material(
+        color: Colors.transparent,
         child: Container(
-          margin: const EdgeInsets.all(32),
-          padding: const EdgeInsets.all(24),
+          margin: const EdgeInsets.all(AppSpacing.xl),
+          padding: const EdgeInsets.all(AppSpacing.lg),
           decoration: BoxDecoration(
-            color: theme.colors.background,
-            borderRadius: BorderRadius.circular(16),
+            color: theme.colors.card,
+            borderRadius: AppRadius.radiusLg,
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -53,7 +53,7 @@ class _ShiftConfirmDialogState extends State<ShiftConfirmDialog> {
                 size: 48,
                 color: theme.colors.primary,
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: AppSpacing.md),
               Text(
                 widget.title,
                 style: TextStyle(
@@ -63,45 +63,47 @@ class _ShiftConfirmDialogState extends State<ShiftConfirmDialog> {
                 ),
                 textAlign: TextAlign.center,
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: AppSpacing.md),
               Container(
-                padding: const EdgeInsets.all(16),
+                width: double.infinity,
+                padding: const EdgeInsets.all(AppSpacing.md),
                 decoration: BoxDecoration(
-                  color: AppColors.sky50,
-                  borderRadius: BorderRadius.circular(8),
+                  color: AppColors.teal50,
+                  borderRadius: AppRadius.radiusMd,
                 ),
                 child: Column(
                   children: [
                     _buildRow(IconMap.locationOn, 'Area', widget.areaName),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: AppSpacing.sm),
                     _buildRow(IconMap.accessTime, 'Shift', widget.shiftName),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: AppSpacing.sm),
                     _buildRow(IconMap.schedule, 'Jam', widget.shiftTime),
                   ],
                 ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: AppSpacing.md),
               Container(
-                padding: const EdgeInsets.all(12),
+                width: double.infinity,
+                padding: const EdgeInsets.all(AppSpacing.md),
                 decoration: BoxDecoration(
-                  color: AppColors.amber50,
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: AppColors.amber200),
+                  color: AppColors.warningBg,
+                  borderRadius: AppRadius.radiusMd,
+                  border: Border.all(color: AppColors.warning.withAlpha(76)),
                 ),
                 child: Row(
                   children: [
-                    Icon(IconMap.infoOutline, color: AppColors.amber600, size: 20),
-                    const SizedBox(width: 8),
+                    Icon(IconMap.infoOutline, color: AppColors.amber500, size: 20),
+                    const SizedBox(width: AppSpacing.sm),
                     Expanded(
                       child: Text(
                         'Jika ditolak, sistem akan cari backup.',
-                        style: TextStyle(fontSize: 12, color: AppColors.amber600),
+                        style: TextStyle(fontSize: 12, color: AppColors.amber500),
                       ),
                     ),
                   ],
                 ),
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: AppSpacing.lg),
               Row(
                 children: [
                   Expanded(
@@ -114,7 +116,7 @@ class _ShiftConfirmDialogState extends State<ShiftConfirmDialog> {
                       isLoading: _isLoading,
                     ),
                   ),
-                  const SizedBox(width: 16),
+                  const SizedBox(width: AppSpacing.md),
                   Expanded(
                     child: PrimaryButton(
                       label: 'TERIMA',
@@ -137,7 +139,7 @@ class _ShiftConfirmDialogState extends State<ShiftConfirmDialog> {
     return Row(
       children: [
         Icon(icon, size: 16, color: AppColors.textSecondary),
-        const SizedBox(width: 8),
+        const SizedBox(width: AppSpacing.sm),
         Text('$label: ', style: const TextStyle(color: AppColors.textSecondary, fontSize: 13)),
         Expanded(
           child: Text(

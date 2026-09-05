@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import 'package:forui/forui.dart';
+
 import '../providers/notification_provider.dart';
 import '../widgets/notification_item_widget.dart';
-import '../../../core/constants/app_constants.dart';
 
 class NotificationScreen extends StatefulWidget {
   const NotificationScreen({super.key});
@@ -23,23 +24,34 @@ class _NotificationScreenState extends State<NotificationScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = context.theme;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Notifikasi'),
-        backgroundColor: AppColors.rgbPrimary,
-        foregroundColor: Colors.white,
+        backgroundColor: theme.colors.primary,
+        foregroundColor: theme.colors.primaryForeground,
         actions: [
           Consumer<NotificationProvider>(
             builder: (context, provider, _) {
               if (provider.unreadCount == 0) {
                 return const SizedBox.shrink();
               }
-              return TextButton.icon(
-                onPressed: () => provider.markAllAsRead(),
-                icon: const Icon(Icons.done_all, color: Colors.white),
-                label: const Text(
-                  'Tandai semua baca',
-                  style: TextStyle(color: Colors.white),
+              return FButton(
+                onPress: () => provider.markAllAsRead(),
+                variant: FButtonVariant.ghost,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.done_all, color: theme.colors.primaryForeground, size: 20),
+                    const SizedBox(width: 4),
+                    Text(
+                      'Tandai semua baca',
+                      style: theme.typography.body.md.copyWith(
+                        color: theme.colors.primaryForeground,
+                      ),
+                    ),
+                  ],
                 ),
               );
             },
@@ -49,7 +61,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
       body: Consumer<NotificationProvider>(
         builder: (context, provider, _) {
           if (provider.isLoading && provider.notifications.isEmpty) {
-            return const Center(child: LoadingIndicator());
+            return const Center(child: CircularProgressIndicator());
           }
 
           if (provider.error != null && provider.notifications.isEmpty) {
@@ -57,12 +69,22 @@ class _NotificationScreenState extends State<NotificationScreen> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(Icons.error_outline, size: 64, color: Colors.grey),
+                  Icon(
+                    Icons.error_outline,
+                    size: 64,
+                    color: theme.colors.mutedForeground,
+                  ),
                   const SizedBox(height: 16),
-                  Text('Gagal memuat notifikasi'),
+                  Text(
+                    'Gagal memuat notifikasi',
+                    style: theme.typography.body.md.copyWith(
+                      color: theme.colors.mutedForeground,
+                    ),
+                  ),
                   const SizedBox(height: 8),
-                  ElevatedButton(
-                    onPressed: () => provider.fetchNotifications(),
+                  FButton(
+                    onPress: () => provider.fetchNotifications(),
+                    variant: FButtonVariant.primary,
                     child: const Text('Coba lagi'),
                   ),
                 ],
@@ -75,14 +97,16 @@ class _NotificationScreenState extends State<NotificationScreen> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.notifications_none,
-                      size: 80, color: Colors.grey[400]),
+                  Icon(
+                    Icons.notifications_none,
+                    size: 80,
+                    color: theme.colors.mutedForeground,
+                  ),
                   const SizedBox(height: 16),
                   Text(
                     'Tidak ada notifikasi',
-                    style: TextStyle(
-                      fontSize: 18,
-                      color: Colors.grey[600],
+                    style: theme.typography.body.md.copyWith(
+                      color: theme.colors.mutedForeground,
                     ),
                   ),
                 ],

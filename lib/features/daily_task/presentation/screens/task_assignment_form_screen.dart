@@ -6,6 +6,7 @@ import 'package:forui/forui.dart';
 
 import '../../../../core/core.dart';
 import '../../../../shared/widgets/inputs/async_select_field.dart';
+import '../../../../shared/widgets/feedback/loading_indicator.dart';
 import '../../domain/models/daily_task.dart';
 import '../providers/daily_task_provider.dart';
 
@@ -23,19 +24,28 @@ class _StepIndicator extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.theme.colors;
+
     return Column(
       children: [
-        // Progress bar
-        Container(
-          height: 4,
-          margin: const EdgeInsets.symmetric(horizontal: 16),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(2),
-            child: LinearProgressIndicator(
-              value: (currentStep + 1) / totalSteps,
-              backgroundColor: AppColors.slate200,
-              valueColor: const AlwaysStoppedAnimation<Color>(
-                  AppColors.primary),
+        // Progress bar - custom using Container with FTheme colors
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Container(
+            height: 4,
+            decoration: BoxDecoration(
+              color: colors.muted,
+              borderRadius: BorderRadius.circular(2),
+            ),
+            child: FractionallySizedBox(
+              alignment: Alignment.centerLeft,
+              widthFactor: (currentStep + 1) / totalSteps,
+              child: Container(
+                decoration: BoxDecoration(
+                  color: colors.primary,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
             ),
           ),
         ),
@@ -55,18 +65,17 @@ class _StepIndicator extends StatelessWidget {
                       width: 28,
                       height: 28,
                       decoration: BoxDecoration(
-                        color: isActive ? AppColors.primary : AppColors
-                            .slate200,
+                        color: isActive ? colors.primary : colors.muted,
                         shape: BoxShape.circle,
                       ),
                       child: Center(
                         child: isActive && !isCurrent
-                            ? const Icon(
-                            Icons.check, color: Colors.white, size: 16)
+                            ? Icon(
+                            Icons.check, color: colors.primaryForeground, size: 16)
                             : Text(
                           '${index + 1}',
                           style: TextStyle(
-                            color: isActive ? Colors.white : AppColors.slate500,
+                            color: isActive ? colors.primaryForeground : colors.mutedForeground,
                             fontWeight: FontWeight.w600,
                             fontSize: 12,
                           ),
@@ -80,8 +89,7 @@ class _StepIndicator extends StatelessWidget {
                         fontSize: 10,
                         fontWeight: isCurrent ? FontWeight.w600 : FontWeight
                             .normal,
-                        color: isActive ? AppColors.primary : AppColors
-                            .slate500,
+                        color: isActive ? colors.primary : colors.mutedForeground,
                       ),
                       textAlign: TextAlign.center,
                       maxLines: 1,
@@ -109,13 +117,15 @@ class FormFieldCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.theme.colors;
+
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: colors.background,
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withAlpha(13),
+            color: colors.foreground.withAlpha(13),
             blurRadius: 4,
             offset: const Offset(0, 2),
           ),
@@ -388,11 +398,10 @@ class _TaskAssignmentFormScreenState extends State<TaskAssignmentFormScreen> {
         default:
           message = 'Lengkapi data yang diperlukan';
       }
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(message),
-          backgroundColor: AppColors.danger,
-        ),
+      showFToast(
+        context: context,
+        title: Text(message),
+        variant: FToastVariant.destructive,
       );
     }
   }
@@ -433,20 +442,18 @@ class _TaskAssignmentFormScreenState extends State<TaskAssignmentFormScreen> {
       if (!mounted) return;
 
       if (success) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Tugas berhasil diperbarui'),
-            backgroundColor: AppColors.success,
-          ),
+        showFToast(
+          context: context,
+          title: const Text('Tugas berhasil diperbarui'),
+          variant: FToastVariant.primary,
         );
         context.pop();
         context.pop(); // Also pop the detail screen
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(notifier.error ?? 'Gagal memperbarui tugas'),
-            backgroundColor: AppColors.danger,
-          ),
+        showFToast(
+          context: context,
+          title: Text(notifier.error ?? 'Gagal memperbarui tugas'),
+          variant: FToastVariant.destructive,
         );
       }
     } else {
@@ -468,12 +475,10 @@ class _TaskAssignmentFormScreenState extends State<TaskAssignmentFormScreen> {
       if (!mounted) return;
 
       if (result != null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Tugas berhasil ditugaskan ke ${_selectedEmployeeIds
-                .length} karyawan'),
-            backgroundColor: AppColors.success,
-          ),
+        showFToast(
+          context: context,
+          title: Text('Tugas berhasil ditugaskan ke ${_selectedEmployeeIds.length} karyawan'),
+          variant: FToastVariant.primary,
         );
         context.pop();
       } else {
@@ -486,22 +491,19 @@ class _TaskAssignmentFormScreenState extends State<TaskAssignmentFormScreen> {
               errorMessages.add(error);
             }
           });
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                errorMessages.join('\n'),
-                style: const TextStyle(fontSize: 13),
-              ),
-              backgroundColor: AppColors.danger,
-              duration: const Duration(seconds: 4),
+          showFToast(
+            context: context,
+            title: Text(
+              errorMessages.join('\n'),
+              style: const TextStyle(fontSize: 13),
             ),
+            variant: FToastVariant.destructive,
           );
         } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(notifier.error ?? 'Gagal membuat tugas'),
-              backgroundColor: AppColors.danger,
-            ),
+          showFToast(
+            context: context,
+            title: Text(notifier.error ?? 'Gagal membuat tugas'),
+            variant: FToastVariant.destructive,
           );
         }
       }
@@ -743,14 +745,13 @@ class _TaskAssignmentFormScreenState extends State<TaskAssignmentFormScreen> {
 
         // Tanggal - Card
         FormFieldCard(
-          child: InkWell(
+          child: GestureDetector(
             onTap: isSubmitting ? null : _selectDate,
-            borderRadius: BorderRadius.circular(12),
             child: Padding(
               padding: const EdgeInsets.symmetric(vertical: 8),
               child: Row(
                 children: [
-                  const Icon(Icons.calendar_today, color: AppColors.slate500,
+                  Icon(Icons.calendar_today, color: AppColors.slate500,
                       size: 20),
                   const SizedBox(width: 12),
                   Expanded(
@@ -777,7 +778,7 @@ class _TaskAssignmentFormScreenState extends State<TaskAssignmentFormScreen> {
                       ],
                     ),
                   ),
-                  const Icon(
+                  Icon(
                       Icons.keyboard_arrow_down, color: AppColors.slate500,
                       size: 20),
                 ],
@@ -889,29 +890,34 @@ class _TaskAssignmentFormScreenState extends State<TaskAssignmentFormScreen> {
       children: [
         // Info text - area stock
         if (_currentAreaId != null)
-          Container(
-            margin: const EdgeInsets.only(bottom: 16),
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: AppColors.primary.withAlpha(13),
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: AppColors.primary.withAlpha(51)),
-            ),
-            child: Row(
-              children: [
-                Icon(Icons.inventory_2, size: 18, color: AppColors.primary),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    'Stok diambil dari stok produk di area ini',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: AppColors.primary,
-                    ),
-                  ),
+          Builder(
+            builder: (context) {
+              final colors = context.theme.colors;
+              return Container(
+                margin: const EdgeInsets.only(bottom: 16),
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: colors.primary.withAlpha(13),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: colors.primary.withAlpha(51)),
                 ),
-              ],
-            ),
+                child: Row(
+                  children: [
+                    Icon(Icons.inventory_2, size: 18, color: colors.primary),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'Stok diambil dari stok produk di area ini',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: colors.primary,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            },
           ),
 
         // Alat - AsyncSelectField
@@ -1097,7 +1103,7 @@ class _TaskAssignmentFormScreenState extends State<TaskAssignmentFormScreen> {
                   ),
                 ],
               ),
-              const Divider(height: 24),
+              _buildCustomDivider(),
               _buildKonfirmasiRow('Role/Jabatan', _selectedRoleName ?? '-'),
               const SizedBox(height: 8),
               _buildKonfirmasiRow('Jenis Tugas', _selectedItemName ?? '-'),
@@ -1155,7 +1161,7 @@ class _TaskAssignmentFormScreenState extends State<TaskAssignmentFormScreen> {
                   ),
                 ],
               ),
-              const Divider(height: 24),
+              _buildCustomDivider(),
               _buildKonfirmasiRow('Target Durasi',
                   _targetMinutesController.text.isEmpty
                       ? '-'
@@ -1187,7 +1193,7 @@ class _TaskAssignmentFormScreenState extends State<TaskAssignmentFormScreen> {
                   ),
                 ],
               ),
-              const Divider(height: 24),
+              _buildCustomDivider(),
 
               // Alat
               if (_selectedToolNames.isNotEmpty) ...[
@@ -1350,18 +1356,30 @@ class _TaskAssignmentFormScreenState extends State<TaskAssignmentFormScreen> {
     );
   }
 
+  /// Custom divider using Container with FTheme colors
+  Widget _buildCustomDivider() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 12),
+      child: Container(
+        height: 1,
+        color: AppColors.slate200,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final notifier = context.watch<DailyTaskNotifier>();
     final isSubmitting = notifier.isSubmitting;
+    final colors = context.theme.colors;
 
     return Scaffold(
-      backgroundColor: AppColors.slate100,
+      backgroundColor: colors.muted,
       appBar: AppBar(
         title: Text(_isEditMode ? 'Edit Tugas' : 'Step ${_currentStep +
             1} dari $_totalSteps'),
-        backgroundColor: Colors.white,
-        foregroundColor: AppColors.slate800,
+        backgroundColor: colors.background,
+        foregroundColor: colors.foreground,
         elevation: 0,
       ),
       body: SafeArea(
@@ -1387,13 +1405,13 @@ class _TaskAssignmentFormScreenState extends State<TaskAssignmentFormScreen> {
             // Navigation buttons
             Container(
               padding: const EdgeInsets.all(16),
-              decoration: const BoxDecoration(
-                color: Colors.white,
+              decoration: BoxDecoration(
+                color: colors.background,
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black12,
+                    color: colors.foreground.withAlpha(13),
                     blurRadius: 4,
-                    offset: Offset(0, -2),
+                    offset: const Offset(0, -2),
                   ),
                 ],
               ),
@@ -1418,8 +1436,7 @@ class _TaskAssignmentFormScreenState extends State<TaskAssignmentFormScreen> {
                         width: 20,
                         height: 20,
                         child: LoadingIndicator(
-                          strokeWidth: 2,
-                          color: Colors.white,
+                          size: 20,
                         ),
                       )
                           : Text(_currentStep == _totalSteps - 1

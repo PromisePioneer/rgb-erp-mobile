@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:forui/forui.dart';
+
 
 import '../../../../core/core.dart';
+import '../../../../shared/widgets/feedback/loading_indicator.dart';
+import '../../../../shared/widgets/icons/forui_icon_map.dart';
 import '../providers/client_dashboard_provider.dart';
 
 /// Client employee list screen
@@ -10,14 +14,17 @@ class ClientEmployeeListScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = FTheme.of(context);
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Daftar Karyawan'),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: () => context.read<ClientDashboardNotifier>().fetchEmployees(),
+          FButton.icon(
+            onPress: () => context.read<ClientDashboardNotifier>().fetchEmployees(),
+            child: Icon(IconMap.refreshCcw),
           ),
+          const SizedBox(width: 8),
         ],
       ),
       body: Consumer<ClientDashboardNotifier>(
@@ -31,12 +38,13 @@ class ClientEmployeeListScreen extends StatelessWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(Icons.error_outline, size: 64, color: AppColors.danger),
+                  Icon(IconMap.alertCircle, size: 64, color: AppColors.danger),
                   const SizedBox(height: AppSpacing.md),
-                  Text('Gagal memuat: ${notifier.employeesError}'),
+                  Text('Gagal memuat: ${notifier.employeesError}', style: theme.typography.body.md),
                   const SizedBox(height: AppSpacing.lg),
-                  ElevatedButton(
-                    onPressed: () => notifier.fetchEmployees(),
+                  FButton(
+                    onPress: () => notifier.fetchEmployees(),
+                    variant: FButtonVariant.primary,
                     child: const Text('Coba Lagi'),
                   ),
                 ],
@@ -45,13 +53,13 @@ class ClientEmployeeListScreen extends StatelessWidget {
           }
 
           if (notifier.employees.isEmpty) {
-            return const Center(
+            return Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.people_outline, size: 64, color: AppColors.gray400),
-                  SizedBox(height: AppSpacing.md),
-                  Text('Belum ada karyawan'),
+                  Icon(IconMap.users, size: 64, color: AppColors.gray400),
+                  const SizedBox(height: AppSpacing.md),
+                  Text('Belum ada karyawan', style: theme.typography.body.md),
                 ],
               ),
             );
@@ -64,7 +72,7 @@ class ClientEmployeeListScreen extends StatelessWidget {
               itemCount: notifier.employees.length,
               itemBuilder: (context, index) {
                 final employee = notifier.employees[index];
-                return _EmployeeCard(employee: employee);
+                return _EmployeeCard(employee: employee, theme: theme);
               },
             ),
           );
@@ -76,8 +84,9 @@ class ClientEmployeeListScreen extends StatelessWidget {
 
 class _EmployeeCard extends StatelessWidget {
   final ClientEmployee employee;
+  final FThemeData theme;
 
-  const _EmployeeCard({required this.employee});
+  const _EmployeeCard({required this.employee, required this.theme});
 
   @override
   Widget build(BuildContext context) {
@@ -98,18 +107,27 @@ class _EmployeeCard extends StatelessWidget {
       child: Row(
         children: [
           // Avatar
-          CircleAvatar(
-            radius: 24,
-            backgroundColor: AppColors.gray200,
-            backgroundImage: employee.photoUrl != null
-                ? NetworkImage(employee.photoUrl!)
-                : null,
+          Container(
+            width: 48,
+            height: 48,
+            decoration: BoxDecoration(
+              color: AppColors.gray200,
+              borderRadius: BorderRadius.circular(24),
+              image: employee.photoUrl != null
+                  ? DecorationImage(
+                      image: NetworkImage(employee.photoUrl!),
+                      fit: BoxFit.cover,
+                    )
+                  : null,
+            ),
             child: employee.photoUrl == null
-                ? Text(
-                    _getInitials(employee.name),
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.gray600,
+                ? Center(
+                    child: Text(
+                      _getInitials(employee.name),
+                      style: theme.typography.body.md.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.gray600,
+                      ),
                     ),
                   )
                 : null,
@@ -122,17 +140,13 @@ class _EmployeeCard extends StatelessWidget {
               children: [
                 Text(
                   employee.name,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w600,
-                    fontSize: 16,
-                  ),
+                  style: theme.typography.body.md.copyWith(fontWeight: FontWeight.w600),
                 ),
                 const SizedBox(height: 2),
                 Text(
                   'NIK: ${employee.code.isNotEmpty ? employee.code : '-'}',
-                  style: const TextStyle(
+                  style: theme.typography.body.sm.copyWith(
                     color: AppColors.gray500,
-                    fontSize: 13,
                   ),
                 ),
                 if (employee.role != null) ...[
@@ -145,9 +159,8 @@ class _EmployeeCard extends StatelessWidget {
                     ),
                     child: Text(
                       employee.role!,
-                      style: const TextStyle(
+                      style: theme.typography.body.xs.copyWith(
                         color: AppColors.primary,
-                        fontSize: 11,
                         fontWeight: FontWeight.w500,
                       ),
                     ),

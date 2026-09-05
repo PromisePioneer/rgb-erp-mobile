@@ -1,11 +1,46 @@
 import 'dart:async';
 
-import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart' show
+  Widget,
+  BuildContext,
+  State,
+  Text,
+  SizedBox,
+  Container,
+  EdgeInsets,
+  BorderRadius,
+  BoxDecoration,
+  BoxShadow,
+  MainAxisAlignment,
+  CrossAxisAlignment,
+  MainAxisSize,
+  FontWeight,
+  TextStyle,
+  ClipRRect,
+  Icon,
+  Image,
+  Color,
+  StatelessWidget,
+  StatefulWidget,
+  Center,
+  Column,
+  WidgetsBinding,
+  SafeArea;
+import 'package:flutter/material.dart' show
+  Scaffold,
+  AppBar,
+  ElevatedButton,
+  Radius,
+  BoxFit,
+  AssetImage;
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 
 import '../core/core.dart';
 import '../shared/utils/tutorial_keys.dart';
+import '../shared/widgets/icons/forui_icon_map.dart';
+import '../shared/widgets/feedback/loading_indicator.dart';
 
 // Features imports
 import '../features/auth/presentation/providers/auth_provider.dart';
@@ -541,11 +576,11 @@ void initRouter(AuthNotifier authNotifier) {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.error_outline, size: 64, color: AppColors.danger),
+            Icon(IconMap.errorOutline, size: 64, color: AppColors.danger),
             const SizedBox(height: AppSpacing.lg),
             Text(
               'Page not found: ${state.matchedLocation}',
-              style: Theme.of(context).textTheme.headlineSmall,
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
             ),
             const SizedBox(height: AppSpacing.lg),
             ElevatedButton(
@@ -742,11 +777,11 @@ class _MainShellState extends State<MainShell> {
       margin: const EdgeInsets.symmetric(horizontal: 16),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: const Color(0xFFFFFFFF),
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withAlpha(26),
+            color: const Color(0xFF000000).withOpacity(0.1),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -779,7 +814,7 @@ class _MainShellState extends State<MainShell> {
 
     TutorialCoachMark(
       targets: targets,
-      colorShadow: AppColors.primary.withAlpha(179),
+      colorShadow: AppColors.primary.withOpacity(0.7),
       textSkip: 'LEWATI',
       textStyleSkip: const TextStyle(
         color: AppColors.slate700,
@@ -936,46 +971,45 @@ class _SplashScreenState extends State<SplashScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.white,
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              height: 100,
-              width: 100,
-              decoration: BoxDecoration(borderRadius: AppRadius.radiusXl),
-              child: const ClipRRect(
-                borderRadius: BorderRadius.all(Radius.circular(16)),
-                child: Image(
-                  image: AssetImage('assets/images/rajawali.png'),
-                  fit: BoxFit.contain,
+      body: SafeArea(
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                height: 100,
+                width: 100,
+                decoration: BoxDecoration(borderRadius: AppRadius.radiusXl),
+                child: ClipRRect(
+                  borderRadius: const BorderRadius.all(Radius.circular(16)),
+                  child: const Image(
+                    image: AssetImage('assets/images/rajawali.png'),
+                    fit: BoxFit.contain,
+                  ),
                 ),
               ),
-            ),
-            const SizedBox(height: AppSpacing.xxl),
-            const SizedBox(
-              width: 24,
-              height: 24,
-              child: LoadingIndicator(
-                strokeWidth: 2,
-                valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
+              const SizedBox(height: AppSpacing.xxl),
+              const SizedBox(
+                width: 24,
+                height: 24,
+                child: LoadingIndicator(),
               ),
-            ),
-            const SizedBox(height: AppSpacing.lg),
-            const Text(
-              'RGB ERP',
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                color: AppColors.textPrimary,
+              const SizedBox(height: AppSpacing.lg),
+              const Text(
+                'RGB ERP',
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.textPrimary,
+                ),
               ),
-            ),
-            const SizedBox(height: AppSpacing.xs),
-            const Text(
-              'Loading...',
-              style: TextStyle(fontSize: 14, color: AppColors.textSecondary),
-            ),
-          ],
+              const SizedBox(height: AppSpacing.xs),
+              const Text(
+                'Loading...',
+                style: TextStyle(fontSize: 14, color: AppColors.textSecondary),
+              ),
+            ],
+          ),
         ),
       ),
     );

@@ -7,6 +7,7 @@ import '../../../../shared/widgets/buttons/primary_button.dart';
 import '../../../../shared/widgets/feedback/loading_indicator.dart';
 import '../../../../shared/widgets/inputs/app_text_field.dart';
 import '../../../../shared/widgets/icons/forui_icon_map.dart';
+import '../../../../shared/widgets/notification/notification_helper.dart';
 import '../../../backup_offer/domain/models/shift_response.dart';
 import '../../../backup_offer/data/repositories/shift_response_repository.dart';
 import '../../../backup_offer/presentation/providers/shift_response_provider.dart';
@@ -57,17 +58,13 @@ class _ShiftResponseScreenState extends State<ShiftResponseScreen> {
     try {
       await _notifier.acceptShift(widget.shiftId);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Shift berhasil dikonfirmasi'), backgroundColor: AppColors.success),
-        );
+        NotificationHelper.showSuccess(context, 'Shift berhasil dikonfirmasi');
         context.pop();
       }
     } catch (e) {
       setState(() => _isSubmitting = false);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e'), backgroundColor: AppColors.danger),
-        );
+        NotificationHelper.showError(context, 'Error: $e');
       }
     }
   }
@@ -80,17 +77,13 @@ class _ShiftResponseScreenState extends State<ShiftResponseScreen> {
     try {
       await _notifier.rejectShift(widget.shiftId, reason: reason);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Shift ditolak'), backgroundColor: AppColors.warning),
-        );
+        NotificationHelper.showWarning(context, 'Shift ditolak');
         context.pop();
       }
     } catch (e) {
       setState(() => _isSubmitting = false);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e'), backgroundColor: AppColors.danger),
-        );
+        NotificationHelper.showError(context, 'Error: $e');
       }
     }
   }
@@ -99,47 +92,55 @@ class _ShiftResponseScreenState extends State<ShiftResponseScreen> {
     final controller = TextEditingController();
     String? errorText;
 
-    return showDialog<String>(
+    return showFDialog<String>(
       context: context,
-      builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setState) => AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: AppRadius.radiusLg),
-          title: const Text('Alasan Penolakan'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              AppTextField(
-                controller: controller,
-                hint: 'Contoh: Sakit, Urusan keluarga, dll',
-                maxLines: 3,
-                errorText: errorText,
-                onChanged: (_) {
-                  if (errorText != null) {
-                    setState(() => errorText = null);
-                  }
-                },
-              ),
-            ],
-          ),
-          actionsAlignment: MainAxisAlignment.spaceEvenly,
-          actionsPadding: const EdgeInsets.fromLTRB(24, 0, 24, 16),
-          actions: [
-            FButton(
-              onPress: () => Navigator.pop(ctx),
-              variant: FButtonVariant.ghost,
-              child: const Text('Batal'),
+      builder: (context, style, animation) => FDialog(
+        builder: (context, dialogStyle) => Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Alasan Penolakan',
+              style: dialogStyle.titleTextStyle,
             ),
-            FButton(
-              onPress: () {
-                final reason = controller.text.trim();
-                if (reason.isEmpty) {
-                  setState(() => errorText = 'Harap isi alasan');
-                  return;
+            const SizedBox(height: AppSpacing.md),
+            AppTextField(
+              controller: controller,
+              hint: 'Contoh: Sakit, Urusan keluarga, dll',
+              maxLines: 3,
+              errorText: errorText,
+              onChanged: (_) {
+                if (errorText != null) {
+                  setState(() => errorText = null);
                 }
-                Navigator.pop(ctx, reason);
               },
-              variant: FButtonVariant.destructive,
-              child: const Text('Tolak'),
+            ),
+            const SizedBox(height: AppSpacing.lg),
+            Row(
+              children: [
+                Expanded(
+                  child: FButton(
+                    onPress: () => Navigator.pop(context),
+                    variant: FButtonVariant.ghost,
+                    child: const Text('Batal'),
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.sm),
+                Expanded(
+                  child: FButton(
+                    onPress: () {
+                      final reason = controller.text.trim();
+                      if (reason.isEmpty) {
+                        setState(() => errorText = 'Harap isi alasan');
+                        return;
+                      }
+                      Navigator.pop(context, reason);
+                    },
+                    variant: FButtonVariant.destructive,
+                    child: const Text('Tolak'),
+                  ),
+                ),
+              ],
             ),
           ],
         ),
@@ -152,11 +153,15 @@ class _ShiftResponseScreenState extends State<ShiftResponseScreen> {
     final theme = FTheme.of(context);
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Konfirmasi Jadwal Shift'),
+        title: Text(
+          'Konfirmasi Jadwal Shift',
+          style: TextStyle(color: theme.colors.foreground),
+        ),
         leading: IconButton(
-          icon: const Icon(Icons.close),
+          icon: Icon(IconMap.close, color: theme.colors.foreground),
           onPressed: () => context.pop(),
         ),
+        backgroundColor: theme.colors.background,
       ),
       body: _isLoading
           ? const Center(child: LoadingIndicator(size: 32))
@@ -176,35 +181,33 @@ class _ShiftResponseScreenState extends State<ShiftResponseScreen> {
         mainAxisSize: MainAxisSize.min,
         children: [
           // Info Card
-          Container(
-            padding: const EdgeInsets.all(AppSpacing.lg),
-            decoration: BoxDecoration(
-              color: theme.colors.card,
-              borderRadius: AppRadius.radiusLg,
+          FCard(
+            child: Padding(
+              padding: const EdgeInsets.all(AppSpacing.lg),
+              child: shift != null
+                  ? Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildRow(IconMap.calendarToday, 'Tanggal', shift.date),
+                        const SizedBox(height: AppSpacing.sm),
+                        if (shift.areaName != null) _buildRow(IconMap.locationOn, 'Area', shift.areaName!),
+                        if (shift.posName != null) ...[
+                          const SizedBox(height: AppSpacing.sm),
+                          _buildRow(IconMap.place, 'POS', shift.posName!),
+                        ],
+                        if (shift.shiftName != null) ...[
+                          const SizedBox(height: AppSpacing.sm),
+                          _buildRow(IconMap.schedule, 'Shift', shift.shiftName!),
+                        ],
+                        const SizedBox(height: AppSpacing.sm),
+                        _buildRow(IconMap.accessTime, 'Jam Mulai', shift.shiftStartTime),
+                      ],
+                    )
+                  : Text(
+                      'Loading shift details...',
+                      style: TextStyle(color: theme.colors.mutedForeground),
+                    ),
             ),
-            child: shift != null
-                ? Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _buildRow(IconMap.calendarToday, 'Tanggal', shift.date),
-                      const SizedBox(height: AppSpacing.sm),
-                      if (shift.areaName != null) _buildRow(IconMap.locationOn, 'Area', shift.areaName!),
-                      if (shift.posName != null) ...[
-                        const SizedBox(height: AppSpacing.sm),
-                        _buildRow(IconMap.place, 'POS', shift.posName!),
-                      ],
-                      if (shift.shiftName != null) ...[
-                        const SizedBox(height: AppSpacing.sm),
-                        _buildRow(IconMap.schedule, 'Shift', shift.shiftName!),
-                      ],
-                      const SizedBox(height: AppSpacing.sm),
-                      _buildRow(IconMap.accessTime, 'Jam Mulai', shift.shiftStartTime),
-                    ],
-                  )
-                : Text(
-                    'Loading shift details...',
-                    style: TextStyle(color: theme.colors.mutedForeground),
-                  ),
           ),
 
           const SizedBox(height: AppSpacing.lg),

@@ -1,7 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import 'package:forui/forui.dart';
+
 import '../../../../core/core.dart';
+import '../../../../shared/widgets/buttons/primary_button.dart';
+import '../../../../shared/widgets/feedback/loading_indicator.dart';
+import '../../../../shared/widgets/icons/forui_icon_map.dart';
 import '../../domain/models/approval.dart';
 import '../providers/approval_provider.dart';
 
@@ -16,7 +21,7 @@ class ApprovalDetailScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: AppColors.slate100,
       appBar: AppBar(
-        title: const Text('Detail Persetujuan'),
+        title: Text('Detail Persetujuan'),
         backgroundColor: Colors.white,
         foregroundColor: AppColors.slate800,
         elevation: 0,
@@ -120,9 +125,9 @@ class ApprovalDetailScreen extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Row(
+          Row(
             children: [
-              Icon(Icons.info_outline, size: 20, color: AppColors.slate600),
+              Icon(IconMap.infoOutline, size: 20, color: AppColors.slate600),
               SizedBox(width: 8),
               Text(
                 'Informasi',
@@ -152,7 +157,7 @@ class ApprovalDetailScreen extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text(
+                Text(
                   'Total',
                   style: TextStyle(
                     fontSize: 16,
@@ -204,9 +209,9 @@ class ApprovalDetailScreen extends StatelessWidget {
         children: [
           Row(
             children: [
-              const Icon(Icons.inventory_2_outlined, size: 20, color: AppColors.slate600),
+              Icon(IconMap.inventory, size: 20, color: AppColors.slate600),
               const SizedBox(width: 8),
-              const Text(
+              Text(
                 'Daftar Produk',
                 style: TextStyle(
                   fontSize: 16,
@@ -289,9 +294,9 @@ class ApprovalDetailScreen extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Row(
+          Row(
             children: [
-              Icon(Icons.notes, size: 20, color: AppColors.slate600),
+              Icon(IconMap.notes, size: 20, color: AppColors.slate600),
               SizedBox(width: 8),
               Text(
                 'Keterangan',
@@ -340,7 +345,7 @@ class ApprovalDetailScreen extends StatelessWidget {
             ),
             child: Row(
               children: [
-                const Icon(Icons.error_outline, color: AppColors.danger, size: 20),
+                Icon(IconMap.errorOutline, color: AppColors.danger, size: 20),
                 const SizedBox(width: 8),
                 Expanded(child: Text(state.actError!, style: const TextStyle(color: AppColors.danger))),
               ],
@@ -349,46 +354,31 @@ class ApprovalDetailScreen extends StatelessWidget {
         Row(
           children: [
             Expanded(
-              child: OutlinedButton(
-                onPressed: state.isActing
-                    ? null
-                    : () => _showRejectDialog(context, notifier, approval),
-                style: OutlinedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  side: const BorderSide(color: AppColors.danger),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                child: const Text(
-                  'Tolak',
-                  style: TextStyle(color: AppColors.danger),
-                ),
+              child: SecondaryButton(
+                label: 'Tolak',
+                isDanger: true,
+                isLoading: state.isActing,
+                onPressed: () => _showRejectDialog(context, notifier, approval),
               ),
             ),
             const SizedBox(width: 12),
             Expanded(
-              child: ElevatedButton(
-                onPressed: state.isActing
-                    ? null
-                    : () => _act(context, notifier, approval, true, null),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.success,
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
+              child: SizedBox(
+                height: 48,
+                child: FButton(
+                  onPress: state.isActing
+                      ? null
+                      : () => _act(context, notifier, approval, true, null),
+                  variant: FButtonVariant.primary,
+                  child: state.isActing
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: LoadingIndicator(
+                          ),
+                        )
+                      : Text('Setujui'),
                 ),
-                child: state.isActing
-                    ? const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: LoadingIndicator(
-                          strokeWidth: 2,
-                          color: Colors.white,
-                        ),
-                      )
-                    : const Text('Setujui'),
               ),
             ),
           ],
@@ -401,7 +391,7 @@ class ApprovalDetailScreen extends StatelessWidget {
     final isApproved = approval.isApproved;
     final color = isApproved ? AppColors.success : AppColors.danger;
     final bg = isApproved ? AppColors.successBg : AppColors.dangerBg;
-    final icon = isApproved ? Icons.check_circle : Icons.cancel;
+    final icon = isApproved ? IconMap.checkCircle : IconMap.cancel;
     final label = isApproved ? 'Disetujui' : 'Ditolak';
 
     return Container(
@@ -443,40 +433,72 @@ class ApprovalDetailScreen extends StatelessWidget {
 
     showDialog(
       context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('Tolak Persetujuan'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text('Berikan alasan penolakan (opsional):'),
-            const SizedBox(height: 12),
-            TextField(
-              controller: noteController,
-              maxLines: 3,
-              decoration: InputDecoration(
-                hintText: 'Keterangan...',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
+      builder: (dialogContext) => Dialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Tolak Persetujuan',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.slate800,
                 ),
               ),
-            ),
-          ],
+              const SizedBox(height: 16),
+              Text(
+                'Berikan alasan penolakan (opsional):',
+                style: TextStyle(color: AppColors.slate600),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: noteController,
+                maxLines: 3,
+                decoration: InputDecoration(
+                  hintText: 'Keterangan...',
+                  filled: true,
+                  fillColor: AppColors.slate50,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: BorderSide.none,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 24),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  SizedBox(
+                    height: 40,
+                    child: FButton(
+                      onPress: () => Navigator.pop(dialogContext),
+                      variant: FButtonVariant.ghost,
+                      child: Text('Batal'),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  SizedBox(
+                    height: 40,
+                    child: FButton(
+                      onPress: () {
+                        Navigator.pop(dialogContext);
+                        _act(context, notifier, approval, false, noteController.text.isNotEmpty ? noteController.text : null);
+                      },
+                      variant: FButtonVariant.destructive,
+                      child: Text('Tolak'),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext),
-            child: const Text('Batal'),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(dialogContext);
-              _act(context, notifier, approval, false, noteController.text.isNotEmpty ? noteController.text : null);
-            },
-            style: TextButton.styleFrom(foregroundColor: AppColors.danger),
-            child: const Text('Tolak'),
-          ),
-        ],
       ),
     );
   }
@@ -505,12 +527,12 @@ class ApprovalDetailScreen extends StatelessWidget {
 
   IconData _getTypeIcon(String type) {
     if (type.contains('Purchase') || type.contains('purchase')) {
-      return Icons.shopping_cart;
+      return IconMap.shoppingCart;
     } else if (type.contains('Leave') || type.contains('Cuti')) {
-      return Icons.beach_access;
+      return IconMap.beachAccess;
     } else if (type.contains('Expense') || type.contains('Biaya')) {
-      return Icons.receipt_long;
+      return IconMap.receipt;
     }
-    return Icons.approval;
+    return IconMap.checklist;
   }
 }

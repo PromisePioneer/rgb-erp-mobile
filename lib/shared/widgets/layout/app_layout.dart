@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:forui/forui.dart';
 
 /// Base layout that wraps content with proper SafeArea and bottom padding
 /// for the app's bottom navigation bar.
@@ -21,7 +22,7 @@ abstract class AppContent extends StatelessWidget {
   Widget buildContent(BuildContext context);
 
   /// Optional: App bar configuration. Return null for no app bar.
-  AppBar? buildAppBar(BuildContext context) => null;
+  PreferredSizeWidget? buildAppBar(BuildContext context) => null;
 
   /// Optional: FAB configuration. Return null for no FAB.
   Widget? buildFloatingActionButton(BuildContext context) => null;

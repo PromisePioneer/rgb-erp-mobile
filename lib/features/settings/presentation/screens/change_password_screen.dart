@@ -93,58 +93,57 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
       await showDialog(
         context: context,
         barrierDismissible: false,
-        builder: (context) => AlertDialog(
+        builder: (dialogContext) => Dialog(
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
           ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 64,
-                height: 64,
-                decoration: BoxDecoration(
-                  color: AppColors.successBg,
-                  shape: BoxShape.circle,
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 64,
+                  height: 64,
+                  decoration: BoxDecoration(
+                    color: AppColors.successBg,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    IconMap.checkCircle,
+                    color: AppColors.success,
+                    size: 40,
+                  ),
                 ),
-                child: Icon(
-                  IconMap.checkCircle,
-                  color: AppColors.success,
-                  size: 40,
+                const SizedBox(height: 16),
+                const Text(
+                  'Password Berhasil Diubah',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.slate800,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 16),
-              const Text(
-                'Password Berhasil Diubah',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.slate800,
+                const SizedBox(height: 8),
+                const Text(
+                  'Password Anda telah berhasil diperbarui.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: AppColors.slate500,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 8),
-              const Text(
-                'Password Anda telah berhasil diperbarui.',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 14,
-                  color: AppColors.slate500,
+                const SizedBox(height: 24),
+                PrimaryButton(
+                  label: 'OK',
+                  onPressed: () {
+                    Navigator.pop(dialogContext);
+                    context.pop();
+                  },
                 ),
-              ),
-            ],
-          ),
-          actions: [
-            SizedBox(
-              width: double.infinity,
-              child: PrimaryButton(
-                label: 'OK',
-                onPressed: () {
-                  Navigator.pop(context);
-                  context.pop();
-                },
-              ),
+              ],
             ),
-          ],
+          ),
         ),
       );
     } else {
@@ -216,7 +215,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
               prefixIcon: Icon(IconMap.lock, color: AppColors.gray400),
               suffixIcon: IconButton(
                 icon: Icon(
-                  _obscureCurrent ? Icons.visibility_off : Icons.visibility,
+                  _obscureCurrent ? IconMap.visibilityOff : IconMap.visibility,
                   color: AppColors.gray400,
                 ),
                 onPressed: () {
@@ -236,7 +235,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
               prefixIcon: Icon(IconMap.lock, color: AppColors.gray400),
               suffixIcon: IconButton(
                 icon: Icon(
-                  _obscureNew ? Icons.visibility_off : Icons.visibility,
+                  _obscureNew ? IconMap.visibilityOff : IconMap.visibility,
                   color: AppColors.gray400,
                 ),
                 onPressed: () {
@@ -256,7 +255,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
               prefixIcon: Icon(IconMap.lock, color: AppColors.gray400),
               suffixIcon: IconButton(
                 icon: Icon(
-                  _obscureConfirm ? Icons.visibility_off : Icons.visibility,
+                  _obscureConfirm ? IconMap.visibilityOff : IconMap.visibility,
                   color: AppColors.gray400,
                 ),
                 onPressed: () {

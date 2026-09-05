@@ -98,11 +98,11 @@ class _PatrolAlarmScreenState extends State<PatrolAlarmScreen>
                   width: 140,
                   height: 140,
                   decoration: BoxDecoration(
-                    color: Colors.white.withAlpha(26),
+                    color: const Color(0x26FFFFFF),
                     shape: BoxShape.circle,
                   ),
-                  child: const Icon(
-                    Icons.notifications_active_rounded,
+                  child: Icon(
+                    IconMap.notifications,
                     color: Colors.white,
                     size: 80,
                   ),
@@ -144,8 +144,8 @@ class _PatrolAlarmScreenState extends State<PatrolAlarmScreen>
                   vertical: 16,
                 ),
                 decoration: BoxDecoration(
-                  color: Colors.black.withAlpha(51),
-                  borderRadius: BorderRadius.circular(AppRadius.lg),
+                  color: const Color(0x33FFFFFF),
+                  borderRadius: AppRadius.radiusLg,
                 ),
                 child: Text(
                   widget.message,

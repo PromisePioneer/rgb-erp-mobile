@@ -80,7 +80,7 @@ class _PatrolHomeScreenState extends State<PatrolHomeScreen> with WidgetsBinding
 
   /// Show dialog to input OTP code
   Future<String?> _showOtpDialog(String checkpointName, String secretKey) async {
-    final theme = FTheme.of(context);
+    final theme = context.theme;
     final controller = TextEditingController();
     final notifier = context.read<PatrolNotifier>();
 
@@ -111,7 +111,7 @@ class _PatrolHomeScreenState extends State<PatrolHomeScreen> with WidgetsBinding
             shape: RoundedRectangleBorder(borderRadius: AppRadius.radiusLg),
             title: Row(
               children: [
-                Icon(IconMap.lock, color: theme.colors.primary),
+                Icon(IconMap.lock, color: theme.colors.destructive),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
@@ -181,24 +181,16 @@ class _PatrolHomeScreenState extends State<PatrolHomeScreen> with WidgetsBinding
                   ),
                 ),
                 const SizedBox(height: AppSpacing.lg),
-                // Input field
-                TextField(
-                  controller: controller,
+                // Input field - using FTextField
+                FTextField(
+                  control: FTextFieldControl.managed(
+                    controller: controller,
+                    onChange: (_) {},
+                  ),
+                  size: FTextFieldSizeVariant.md,
+                  hint: 'Input kode OTP',
                   keyboardType: TextInputType.number,
-                  maxLength: 6,
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: 8,
-                  ),
-                  decoration: InputDecoration(
-                    hintText: 'Input kode OTP',
-                    counterText: '',
-                    border: OutlineInputBorder(
-                      borderRadius: AppRadius.radiusMd,
-                    ),
-                  ),
+                  textInputAction: TextInputAction.done,
                 ),
                 const SizedBox(height: AppSpacing.sm),
                 Text(
@@ -211,11 +203,12 @@ class _PatrolHomeScreenState extends State<PatrolHomeScreen> with WidgetsBinding
               ],
             ),
             actions: [
-              TextButton(
-                onPressed: () {
+              FButton(
+                onPress: () {
                   timer?.cancel();
                   Navigator.pop(context, null);
                 },
+                variant: FButtonVariant.ghost,
                 child: const Text('Batal'),
               ),
               FButton(
@@ -235,26 +228,18 @@ class _PatrolHomeScreenState extends State<PatrolHomeScreen> with WidgetsBinding
   void _handleResult(PatrolScanResult result) {
     if (result.success) {
       if (result.valid) {
-        // Success with valid location
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              'Checkpoint ${result.checkpoint?.name ?? ''} berhasil discan!',
-            ),
-            backgroundColor: AppColors.success,
-          ),
+        // Success with valid location - use custom notification
+        _showNotification(
+          'Checkpoint ${result.checkpoint?.name ?? ''} berhasil discan!',
+          AppColors.success,
         );
       } else {
         // Success but location warning
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              result.validation?.locationMessage ??
-                  'Scan berhasil - lokasi di luar radius',
-            ),
-            backgroundColor: AppColors.warning,
-            duration: const Duration(seconds: 4),
-          ),
+        _showNotification(
+          result.validation?.locationMessage ??
+              'Scan berhasil - lokasi di luar radius',
+          AppColors.warning,
+          duration: const Duration(seconds: 4),
         );
       }
     } else {
@@ -263,8 +248,23 @@ class _PatrolHomeScreenState extends State<PatrolHomeScreen> with WidgetsBinding
     }
   }
 
+  void _showNotification(String message, Color backgroundColor, {Duration? duration}) {
+    // Use custom notification overlay
+    final overlay = Overlay.of(context);
+    late OverlayEntry entry;
+    entry = OverlayEntry(
+      builder: (context) => _NotificationOverlay(
+        message: message,
+        backgroundColor: backgroundColor,
+        duration: duration ?? const Duration(seconds: 2),
+        onDismiss: () => entry.remove(),
+      ),
+    );
+    overlay.insert(entry);
+  }
+
   void _handleError(PatrolScanResult result) {
-    final theme = FTheme.of(context);
+    final theme = context.theme;
     final code = result.errorCode;
     final message = result.errorMessage ?? 'Scan gagal';
 
@@ -275,18 +275,12 @@ class _PatrolHomeScreenState extends State<PatrolHomeScreen> with WidgetsBinding
     } else if (code == 'TIME_DRIFT') {
       _showTimeDriftDialog(message);
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(message),
-          backgroundColor: theme.colors.destructive,
-          duration: const Duration(seconds: 4),
-        ),
-      );
+      _showNotification(message, theme.colors.destructive, duration: const Duration(seconds: 4));
     }
   }
 
   void _showMockLocationDialog(String message) {
-    final theme = FTheme.of(context);
+    final theme = context.theme;
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -313,7 +307,7 @@ class _PatrolHomeScreenState extends State<PatrolHomeScreen> with WidgetsBinding
   }
 
   void _showTOTPErrorDialog(String message) {
-    final theme = FTheme.of(context);
+    final theme = context.theme;
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -340,7 +334,7 @@ class _PatrolHomeScreenState extends State<PatrolHomeScreen> with WidgetsBinding
   }
 
   void _showTimeDriftDialog(String message) {
-    final theme = FTheme.of(context);
+    final theme = context.theme;
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -429,7 +423,7 @@ class _PatrolHomeScreenState extends State<PatrolHomeScreen> with WidgetsBinding
   }
 
   Widget _buildCountdownBadge(String text, bool isOverdue) {
-    final theme = FTheme.of(context);
+    final theme = context.theme;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
@@ -459,7 +453,7 @@ class _PatrolHomeScreenState extends State<PatrolHomeScreen> with WidgetsBinding
   }
 
   Widget _buildError(PatrolNotifier notifier) {
-    final theme = FTheme.of(context);
+    final theme = context.theme;
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(AppSpacing.lg),
@@ -489,7 +483,7 @@ class _PatrolHomeScreenState extends State<PatrolHomeScreen> with WidgetsBinding
   }
 
   Widget _buildNoSchedule() {
-    final theme = FTheme.of(context);
+    final theme = context.theme;
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(AppSpacing.lg),
@@ -509,40 +503,36 @@ class _PatrolHomeScreenState extends State<PatrolHomeScreen> with WidgetsBinding
   }
 
   Widget _buildContent(PatrolNotifier notifier, PatrolTodayStatus status) {
-    return RefreshIndicator(
-      onRefresh: () => notifier.loadTodayStatus(),
-      child: SingleChildScrollView(
-        physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.fromLTRB(
-          AppSpacing.screenPadding,
-          AppSpacing.screenPadding,
-          AppSpacing.screenPadding,
-          120, // Extra padding at bottom for fixed button
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            // Countdown card (for when not overdue)
-            if (!notifier.state.isRoundOverdue &&
-                notifier.state.roundCountdownText != null)
-              _buildCountdownCard(notifier),
+    return SingleChildScrollView(
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.screenPadding,
+        AppSpacing.screenPadding,
+        AppSpacing.screenPadding,
+        120, // Extra padding at bottom for fixed button
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // Countdown card (for when not overdue)
+          if (!notifier.state.isRoundOverdue &&
+              notifier.state.roundCountdownText != null)
+            _buildCountdownCard(notifier),
 
-            // Schedule card
-            _buildScheduleCard(status),
-            const SizedBox(height: AppSpacing.lg),
+          // Schedule card
+          _buildScheduleCard(status),
+          const SizedBox(height: AppSpacing.lg),
 
-            // Progress info
-            _buildProgressInfo(status),
-            const SizedBox(height: AppSpacing.lg),
+          // Progress info
+          _buildProgressInfo(status),
+          const SizedBox(height: AppSpacing.lg),
 
-            // Checkpoint path visualization
-            _buildCheckpointPath(notifier, status),
-            const SizedBox(height: AppSpacing.lg),
+          // Checkpoint path visualization
+          _buildCheckpointPath(notifier, status),
+          const SizedBox(height: AppSpacing.lg),
 
-            // Session history
-            if (status.sessions.isNotEmpty) ...[_buildSessionHistory(status)],
-          ],
-        ),
+          // Session history
+          if (status.sessions.isNotEmpty) ...[_buildSessionHistory(status)],
+        ],
       ),
     );
   }
@@ -570,7 +560,7 @@ class _PatrolHomeScreenState extends State<PatrolHomeScreen> with WidgetsBinding
   }
 
   Widget _buildCountdownCard(PatrolNotifier notifier) {
-    final theme = FTheme.of(context);
+    final theme = context.theme;
     final progress = notifier.state.todayStatus?.currentProgress;
     if (progress == null) return const SizedBox.shrink();
 
@@ -658,7 +648,7 @@ class _PatrolHomeScreenState extends State<PatrolHomeScreen> with WidgetsBinding
   }
 
   Widget _buildCountdownProgressBar(CurrentProgressInfo progress) {
-    final theme = FTheme.of(context);
+    final theme = context.theme;
     // Calculate progress based on interval and time elapsed
     final intervalMinutes = progress.intervalMinutes;
     final dueAt = progress.currentRoundDueAt;
@@ -713,52 +703,49 @@ class _PatrolHomeScreenState extends State<PatrolHomeScreen> with WidgetsBinding
   }
 
   Widget _buildScheduleCard(PatrolTodayStatus status) {
-    final theme = FTheme.of(context);
+    final theme = context.theme;
     final schedule = status.schedule;
     if (schedule == null) return const SizedBox.shrink();
 
-    return Container(
-      padding: const EdgeInsets.all(AppSpacing.lg),
-      decoration: BoxDecoration(
-        color: theme.colors.card,
-        borderRadius: AppRadius.radiusLg,
-        boxShadow: AppShadows.card,
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 48,
-            height: 48,
-            decoration: BoxDecoration(
-              color: theme.colors.secondary,
-              borderRadius: BorderRadius.circular(12),
+    return FCard(
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.lg),
+        child: Row(
+          children: [
+            Container(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                color: theme.colors.secondary,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(IconMap.locationCity, color: theme.colors.secondaryForeground),
             ),
-            child: Icon(IconMap.locationCity, color: theme.colors.secondaryForeground),
-          ),
-          const SizedBox(width: AppSpacing.md),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  schedule.areaName,
-                  style: TextStyle(
-                    fontWeight: FontWeight.w600,
-                    color: theme.colors.foreground,
+            const SizedBox(width: AppSpacing.md),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    schedule.areaName,
+                    style: TextStyle(
+                      fontWeight: FontWeight.w600,
+                      color: theme.colors.foreground,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  '${schedule.shiftName} (${schedule.shiftStartTime} - ${schedule.shiftEndTime})',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: theme.colors.mutedForeground,
+                  const SizedBox(height: 4),
+                  Text(
+                    '${schedule.shiftName} (${schedule.shiftStartTime} - ${schedule.shiftEndTime})',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: theme.colors.mutedForeground,
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -771,7 +758,7 @@ class _PatrolHomeScreenState extends State<PatrolHomeScreen> with WidgetsBinding
             'Ronde Selesai',
             '${status.stats?.completedRounds ?? 0}',
             IconMap.checkCircle,
-            FTheme.of(context).colors.primary,
+            context.theme.colors.primary,
           ),
         ),
         const SizedBox(width: AppSpacing.md),
@@ -780,7 +767,7 @@ class _PatrolHomeScreenState extends State<PatrolHomeScreen> with WidgetsBinding
             'Sedang Berlangsung',
             '${status.stats?.inProgressRounds ?? 0}',
             IconMap.playCircle,
-            FTheme.of(context).colors.secondary,
+            context.theme.colors.secondary,
           ),
         ),
         const SizedBox(width: AppSpacing.md),
@@ -789,7 +776,7 @@ class _PatrolHomeScreenState extends State<PatrolHomeScreen> with WidgetsBinding
             'Total Titik',
             '${status.stats?.totalCheckpoints ?? 0}',
             IconMap.place,
-            FTheme.of(context).colors.muted,
+            context.theme.colors.muted,
           ),
         ),
       ],
@@ -802,35 +789,32 @@ class _PatrolHomeScreenState extends State<PatrolHomeScreen> with WidgetsBinding
     IconData icon,
     Color color,
   ) {
-    final theme = FTheme.of(context);
-    return Container(
-      padding: const EdgeInsets.all(AppSpacing.md),
-      decoration: BoxDecoration(
-        color: theme.colors.card,
-        borderRadius: AppRadius.radiusMd,
-        boxShadow: AppShadows.card,
-      ),
-      child: Column(
-        children: [
-          Icon(icon, color: color, size: 24),
-          const SizedBox(height: 4),
-          Text(
-            value,
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-              color: color,
+    final theme = context.theme;
+    return FCard(
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.md),
+        child: Column(
+          children: [
+            Icon(icon, color: color, size: 24),
+            const SizedBox(height: 4),
+            Text(
+              value,
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: color,
+              ),
             ),
-          ),
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 10,
-              color: theme.colors.mutedForeground,
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 10,
+                color: theme.colors.mutedForeground,
+              ),
+              textAlign: TextAlign.center,
             ),
-            textAlign: TextAlign.center,
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -839,7 +823,7 @@ class _PatrolHomeScreenState extends State<PatrolHomeScreen> with WidgetsBinding
     PatrolNotifier notifier,
     PatrolTodayStatus status,
   ) {
-    final theme = FTheme.of(context);
+    final theme = context.theme;
     final total = status.stats?.totalCheckpoints ?? 0;
     final nextSeq = status.nextExpectedSequence;
 
@@ -863,82 +847,77 @@ class _PatrolHomeScreenState extends State<PatrolHomeScreen> with WidgetsBinding
       return CheckpointNode(sequence: seq, status: nodeStatus, name: name);
     });
 
-    return Container(
-      padding: const EdgeInsets.all(AppSpacing.lg),
-      decoration: BoxDecoration(
-        color: theme.colors.card,
-        borderRadius: AppRadius.radiusLg,
-        boxShadow: AppShadows.card,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'Peta Checkpoint',
-                style: TextStyle(
-                  fontWeight: FontWeight.w600,
-                  fontSize: 16,
-                  color: theme.colors.foreground,
-                ),
-              ),
-              if (notifier.state.isCountingDown)
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: theme.colors.secondary,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        IconMap.timer,
-                        size: 14,
-                        color: theme.colors.secondaryForeground,
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        '${notifier.state.countdownSeconds}s',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: theme.colors.secondaryForeground,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ],
+    return FCard(
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.lg),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Peta Checkpoint',
+                  style: TextStyle(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 16,
+                    color: theme.colors.foreground,
                   ),
                 ),
-            ],
-          ),
-          const SizedBox(height: AppSpacing.lg),
-          Center(
-            child: CheckpointPath(
-              nodes: nodes,
-              onNodeTap: (node) {
-                if (node.status == CheckpointNodeStatus.locked) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Selesaikan checkpoint sebelumnya dulu'),
-                      backgroundColor: AppColors.warning,
+                if (notifier.state.isCountingDown)
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
                     ),
-                  );
-                }
-              },
+                    decoration: BoxDecoration(
+                      color: theme.colors.secondary,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          IconMap.timer,
+                          size: 14,
+                          color: theme.colors.secondaryForeground,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          '${notifier.state.countdownSeconds}s',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: theme.colors.secondaryForeground,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+              ],
             ),
-          ),
-        ],
+            const SizedBox(height: AppSpacing.lg),
+            Center(
+              child: CheckpointPath(
+                nodes: nodes,
+                onNodeTap: (node) {
+                  if (node.status == CheckpointNodeStatus.locked) {
+                    _showNotification(
+                      'Selesaikan checkpoint sebelumnya dulu',
+                      AppColors.warning,
+                    );
+                  }
+                },
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 
   Widget _buildSessionHistory(PatrolTodayStatus status) {
-    final theme = FTheme.of(context);
+    final theme = context.theme;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -957,7 +936,7 @@ class _PatrolHomeScreenState extends State<PatrolHomeScreen> with WidgetsBinding
   }
 
   Widget _buildSessionItem(PatrolSession session) {
-    final theme = FTheme.of(context);
+    final theme = context.theme;
     Color statusColor;
     IconData statusIcon;
 
@@ -1034,6 +1013,115 @@ class _PatrolHomeScreenState extends State<PatrolHomeScreen> with WidgetsBinding
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// Custom notification overlay (replaces SnackBar)
+class _NotificationOverlay extends StatefulWidget {
+  final String message;
+  final Color backgroundColor;
+  final Duration duration;
+  final VoidCallback onDismiss;
+
+  const _NotificationOverlay({
+    required this.message,
+    required this.backgroundColor,
+    required this.duration,
+    required this.onDismiss,
+  });
+
+  @override
+  State<_NotificationOverlay> createState() => _NotificationOverlayState();
+}
+
+class _NotificationOverlayState extends State<_NotificationOverlay>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _fadeAnimation;
+  late Animation<Offset> _slideAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      duration: const Duration(milliseconds: 300),
+      vsync: this,
+    );
+
+    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeOut),
+    );
+
+    _slideAnimation = Tween<Offset>(
+      begin: const Offset(0, -1),
+      end: Offset.zero,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOut));
+
+    _controller.forward();
+
+    // Auto dismiss after duration
+    Future.delayed(widget.duration, () {
+      if (mounted) {
+        _dismiss();
+      }
+    });
+  }
+
+  void _dismiss() async {
+    await _controller.reverse();
+    if (mounted) {
+      widget.onDismiss();
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Positioned(
+      top: 0,
+      left: 0,
+      right: 0,
+      child: SafeArea(
+        child: SlideTransition(
+          position: _slideAnimation,
+          child: FadeTransition(
+            opacity: _fadeAnimation,
+            child: Container(
+              margin: const EdgeInsets.all(AppSpacing.md),
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.md,
+                vertical: AppSpacing.sm,
+              ),
+              decoration: BoxDecoration(
+                color: widget.backgroundColor,
+                borderRadius: AppRadius.radiusMd,
+                boxShadow: [
+                  BoxShadow(
+                    color: widget.backgroundColor.withAlpha(77),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: Text(
+                widget.message,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ),
+          ),
+        ),
       ),
     );
   }

@@ -6,6 +6,7 @@ import '../../../../core/core.dart';
 import '../../../../shared/widgets/buttons/primary_button.dart';
 import '../../../../shared/widgets/feedback/loading_indicator.dart';
 import '../../../../shared/widgets/icons/forui_icon_map.dart';
+import '../../../../shared/widgets/notification/notification_helper.dart';
 import '../../../backup_offer/domain/models/backup_offer.dart';
 import '../../../backup_offer/data/repositories/backup_offer_repository.dart';
 import '../../../backup_offer/presentation/providers/backup_offer_provider.dart';
@@ -56,17 +57,13 @@ class _BackupOfferScreenState extends State<BackupOfferScreen> {
     try {
       await _notifier.acceptOffer(widget.offerId);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Backup offer diterima'), backgroundColor: AppColors.success),
-        );
+        NotificationHelper.showSuccess(context, 'Backup offer diterima');
         context.pop();
       }
     } catch (e) {
       setState(() => _isSubmitting = false);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e'), backgroundColor: AppColors.danger),
-        );
+        NotificationHelper.showError(context, 'Error: $e');
       }
     }
   }
@@ -76,17 +73,13 @@ class _BackupOfferScreenState extends State<BackupOfferScreen> {
     try {
       await _notifier.rejectOffer(widget.offerId);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Backup offer ditolak'), backgroundColor: AppColors.warning),
-        );
+        NotificationHelper.showWarning(context, 'Backup offer ditolak');
         context.pop();
       }
     } catch (e) {
       setState(() => _isSubmitting = false);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e'), backgroundColor: AppColors.danger),
-        );
+        NotificationHelper.showError(context, 'Error: $e');
       }
     }
   }
@@ -96,11 +89,15 @@ class _BackupOfferScreenState extends State<BackupOfferScreen> {
     final theme = FTheme.of(context);
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Tawaran Backup Jaga'),
+        title: Text(
+          'Tawaran Backup Jaga',
+          style: TextStyle(color: theme.colors.foreground),
+        ),
         leading: IconButton(
-          icon: const Icon(Icons.close),
+          icon: Icon(IconMap.close, color: theme.colors.foreground),
           onPressed: () => context.pop(),
         ),
+        backgroundColor: theme.colors.background,
       ),
       body: _isLoading
           ? const Center(child: LoadingIndicator(size: 32))
@@ -147,22 +144,20 @@ class _BackupOfferScreenState extends State<BackupOfferScreen> {
           const SizedBox(height: AppSpacing.xl),
 
           // Info Card
-          Container(
-            padding: const EdgeInsets.all(AppSpacing.lg),
-            decoration: BoxDecoration(
-              color: theme.colors.card,
-              borderRadius: AppRadius.radiusLg,
-            ),
-            child: Column(
-              children: [
-                _buildRow(IconMap.locationOn, 'Area', offer.areaName ?? '-'),
-                const SizedBox(height: AppSpacing.md),
-                _buildRow(IconMap.calendarToday, 'Tanggal', offer.date),
-                const SizedBox(height: AppSpacing.md),
-                _buildRow(IconMap.schedule, 'Shift', offer.shiftName ?? '-'),
-                const SizedBox(height: AppSpacing.md),
-                _buildRow(IconMap.place, 'POS', offer.posName ?? '-'),
-              ],
+          FCard(
+            child: Padding(
+              padding: const EdgeInsets.all(AppSpacing.lg),
+              child: Column(
+                children: [
+                  _buildRow(IconMap.locationOn, 'Area', offer.areaName ?? '-'),
+                  const SizedBox(height: AppSpacing.md),
+                  _buildRow(IconMap.calendarToday, 'Tanggal', offer.date),
+                  const SizedBox(height: AppSpacing.md),
+                  _buildRow(IconMap.schedule, 'Shift', offer.shiftName ?? '-'),
+                  const SizedBox(height: AppSpacing.md),
+                  _buildRow(IconMap.place, 'POS', offer.posName ?? '-'),
+                ],
+              ),
             ),
           ),
 

@@ -75,65 +75,123 @@ class _ReportFormScreenState extends State<ReportFormScreen> {
   }
 
   void _showErrorDialog(String title, String message) {
+    final theme = context.theme;
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: Row(
-          children: [
-            Icon(IconMap.errorOutline, color: AppColors.danger),
-            const SizedBox(width: 8),
-            Text(title),
-          ],
-        ),
-        content: Text(message),
-        actions: [
-          FButton(
-            onPress: () => Navigator.pop(ctx),
-            variant: FButtonVariant.ghost,
-            child: const Text('Tutup'),
+      builder: (ctx) => Center(
+        child: Material(
+          color: Colors.transparent,
+          child: Container(
+            margin: const EdgeInsets.all(AppSpacing.lg),
+            padding: const EdgeInsets.all(AppSpacing.lg),
+            decoration: BoxDecoration(
+              color: theme.colors.card,
+              borderRadius: AppRadius.radiusLg,
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Icon(IconMap.errorOutline, color: theme.colors.destructive),
+                    const SizedBox(width: AppSpacing.sm),
+                    Expanded(
+                      child: Text(
+                        title,
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: theme.colors.foreground,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: AppSpacing.md),
+                Text(
+                  message,
+                  style: TextStyle(color: theme.colors.mutedForeground),
+                ),
+                const SizedBox(height: AppSpacing.lg),
+                SizedBox(
+                  width: double.infinity,
+                  child: FButton(
+                    onPress: () => Navigator.pop(ctx),
+                    variant: FButtonVariant.ghost,
+                    child: const Text('Tutup'),
+                  ),
+                ),
+              ],
+            ),
           ),
-        ],
+        ),
       ),
     );
   }
 
   void _showSuccessDialog() {
+    final theme = context.theme;
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (ctx) => AlertDialog(
-        title: Row(
-          children: [
-            Icon(IconMap.checkCircle, color: AppColors.success),
-            const SizedBox(width: 8),
-            const Text('Berhasil'),
-          ],
-        ),
-        content: const Text('Laporan mutasi berhasil disimpan.'),
-        actions: [
-          SizedBox(
-            width: double.infinity,
-            child: PrimaryButton(
-              label: 'OK',
-              onPressed: () {
-                Navigator.pop(ctx);
-                context.pop();
-              },
+      builder: (ctx) => Center(
+        child: Material(
+          color: Colors.transparent,
+          child: Container(
+            margin: const EdgeInsets.all(AppSpacing.lg),
+            padding: const EdgeInsets.all(AppSpacing.lg),
+            decoration: BoxDecoration(
+              color: theme.colors.card,
+              borderRadius: AppRadius.radiusLg,
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(IconMap.checkCircle, size: 48, color: theme.colors.primary),
+                const SizedBox(height: AppSpacing.md),
+                Text(
+                  'Berhasil',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: theme.colors.foreground,
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                Text(
+                  'Laporan mutasi berhasil disimpan.',
+                  style: TextStyle(color: theme.colors.mutedForeground),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: AppSpacing.lg),
+                SizedBox(
+                  width: double.infinity,
+                  child: PrimaryButton(
+                    label: 'OK',
+                    onPressed: () {
+                      Navigator.pop(ctx);
+                      context.pop();
+                    },
+                  ),
+                ),
+              ],
             ),
           ),
-        ],
+        ),
       ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
+    final theme = context.theme;
     return Scaffold(
-      backgroundColor: AppColors.slate100,
+      backgroundColor: theme.colors.muted,
       appBar: AppBar(
         title: const Text('Buat Laporan Mutasi'),
-        backgroundColor: Colors.white,
-        foregroundColor: AppColors.slate800,
+        backgroundColor: theme.colors.card,
+        foregroundColor: theme.colors.foreground,
         elevation: 0,
       ),
       body: Consumer<ReportNotifier>(
@@ -186,10 +244,11 @@ class _ReportFormScreenState extends State<ReportFormScreen> {
 
   Widget _buildInfoCard(ReportNotifier notifier) {
     return Container(
+      width: double.infinity,
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
         color: AppColors.infoBg,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: AppRadius.radiusMd,
         border: Border.all(color: AppColors.info.withAlpha(51)),
       ),
       child: Row(
@@ -208,6 +267,7 @@ class _ReportFormScreenState extends State<ReportFormScreen> {
   }
 
   Widget _buildSection(String label, Widget child) {
+    final theme = context.theme;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -216,7 +276,7 @@ class _ReportFormScreenState extends State<ReportFormScreen> {
           style: TextStyle(
             fontSize: 12,
             fontWeight: FontWeight.w500,
-            color: AppColors.gray600,
+            color: theme.colors.mutedForeground,
             letterSpacing: 1,
           ),
         ),
@@ -227,22 +287,16 @@ class _ReportFormScreenState extends State<ReportFormScreen> {
   }
 
   Widget _buildDescriptionField(ReportNotifier notifier) {
-    return TextField(
-      controller: _descriptionController,
+    return FTextField(
+      control: FTextFieldControl.managed(
+        controller: _descriptionController,
+        onChange: (value) => notifier.updateDescription(value.text),
+      ),
+      size: FTextFieldSizeVariant.md,
+      hint: 'Tuliskan deskripsi laporan Mutasi...',
       maxLines: 5,
       maxLength: 2000,
-      decoration: InputDecoration(
-        hintText: 'Tuliskan deskripsi laporan Mutasi...',
-        hintStyle: TextStyle(color: AppColors.gray400),
-        filled: true,
-        fillColor: Colors.white,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide.none,
-        ),
-        contentPadding: const EdgeInsets.all(AppSpacing.md),
-      ),
-      onChanged: (v) => notifier.updateDescription(v),
+      textInputAction: TextInputAction.newline,
     );
   }
 
@@ -254,7 +308,7 @@ class _ReportFormScreenState extends State<ReportFormScreen> {
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
         color: location != null ? AppColors.successBg : AppColors.dangerBg,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: AppRadius.radiusMd,
         border: Border.all(
           color: location != null ? AppColors.success : AppColors.danger,
         ),
@@ -262,7 +316,7 @@ class _ReportFormScreenState extends State<ReportFormScreen> {
       child: Row(
         children: [
           Icon(
-            location != null ? IconMap.locationOn : IconMap.locationOn,
+            location != null ? IconMap.locationOn : IconMap.locationOff,
             color: location != null ? AppColors.success : AppColors.danger,
           ),
           const SizedBox(width: AppSpacing.sm),
@@ -278,8 +332,9 @@ class _ReportFormScreenState extends State<ReportFormScreen> {
             ),
           ),
           if (location == null)
-            TextButton(
-              onPressed: () => notifier.getLocation(),
+            FButton(
+              onPress: () => notifier.getLocation(),
+              variant: FButtonVariant.ghost,
               child: Text(
                 'Coba Lagi',
                 style: TextStyle(color: AppColors.danger),

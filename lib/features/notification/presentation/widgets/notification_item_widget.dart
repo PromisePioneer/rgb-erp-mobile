@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:forui/forui.dart';
+
+import '../../../../core/core.dart';
 import '../../domain/entities/notification_entity.dart';
-import '../../../core/constants/app_constants.dart';
 
 class NotificationItemWidget extends StatelessWidget {
   final NotificationEntity notification;
@@ -14,21 +16,24 @@ class NotificationItemWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = context.theme;
     final isRead = notification.isRead;
 
-    return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-      elevation: isRead ? 0 : 1,
-      color: isRead ? Colors.grey[50] : Colors.white,
-      child: InkWell(
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+      child: GestureDetector(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(8),
-        child: Padding(
+        child: Container(
           padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: isRead ? theme.colors.muted : theme.colors.background,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: theme.colors.border),
+          ),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildIcon(),
+              _buildIcon(theme),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
@@ -39,10 +44,9 @@ class NotificationItemWidget extends StatelessWidget {
                         Expanded(
                           child: Text(
                             notification.title,
-                            style: TextStyle(
+                            style: theme.typography.body.md.copyWith(
                               fontWeight:
                                   isRead ? FontWeight.w500 : FontWeight.bold,
-                              fontSize: 15,
                             ),
                           ),
                         ),
@@ -50,8 +54,8 @@ class NotificationItemWidget extends StatelessWidget {
                           Container(
                             width: 10,
                             height: 10,
-                            decoration: const BoxDecoration(
-                              color: AppColors.danger,
+                            decoration: BoxDecoration(
+                              color: theme.colors.error,
                               shape: BoxShape.circle,
                             ),
                           ),
@@ -60,9 +64,8 @@ class NotificationItemWidget extends StatelessWidget {
                     const SizedBox(height: 4),
                     Text(
                       notification.body,
-                      style: TextStyle(
-                        color: Colors.grey[600],
-                        fontSize: 14,
+                      style: theme.typography.body.md.copyWith(
+                        color: theme.colors.mutedForeground,
                       ),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
@@ -70,9 +73,8 @@ class NotificationItemWidget extends StatelessWidget {
                     const SizedBox(height: 8),
                     Text(
                       _formatTime(notification.createdAt),
-                      style: TextStyle(
-                        color: Colors.grey[400],
-                        fontSize: 12,
+                      style: theme.typography.body.xs.copyWith(
+                        color: theme.colors.mutedForeground,
                       ),
                     ),
                   ],
@@ -85,14 +87,14 @@ class NotificationItemWidget extends StatelessWidget {
     );
   }
 
-  Widget _buildIcon() {
+  Widget _buildIcon(FThemeData theme) {
     IconData icon;
     Color color;
 
     switch (notification.type) {
       case 'approval_request':
         icon = Icons.assignment_ind;
-        color = AppColors.info;
+        color = theme.colors.primary;
         break;
       case 'request_approved':
         icon = Icons.check_circle;
@@ -100,7 +102,7 @@ class NotificationItemWidget extends StatelessWidget {
         break;
       case 'request_rejected':
         icon = Icons.cancel;
-        color = AppColors.danger;
+        color = theme.colors.error;
         break;
       case 'patrol_alarm':
         icon = Icons.warning;
@@ -108,7 +110,7 @@ class NotificationItemWidget extends StatelessWidget {
         break;
       case 'shift_reminder':
         icon = Icons.access_time;
-        color = AppColors.info;
+        color = theme.colors.primary;
         break;
       case 'backup_offer':
       case 'backup_assigned':
@@ -117,15 +119,15 @@ class NotificationItemWidget extends StatelessWidget {
         break;
       case 'backup_escalation':
         icon = Icons.priority_high;
-        color = AppColors.danger;
+        color = theme.colors.error;
         break;
       case 'task_assigned':
         icon = Icons.task_alt;
-        color = AppColors.info;
+        color = theme.colors.primary;
         break;
       case 'task_started':
         icon = Icons.play_circle;
-        color = AppColors.info;
+        color = theme.colors.primary;
         break;
       case 'task_completed':
         icon = Icons.done_all;
@@ -137,13 +139,13 @@ class NotificationItemWidget extends StatelessWidget {
         break;
       default:
         icon = Icons.notifications;
-        color = AppColors.rgbPrimary;
+        color = theme.colors.primary;
     }
 
     return Container(
       padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withAlpha(25),
         shape: BoxShape.circle,
       ),
       child: Icon(icon, color: color, size: 24),

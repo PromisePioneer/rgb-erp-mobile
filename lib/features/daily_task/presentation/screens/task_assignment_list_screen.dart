@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
+import 'package:forui/forui.dart';
 
 import '../../../../core/core.dart';
 import '../../../../shared/widgets/feedback/loading_indicator.dart';
+import '../../../../shared/widgets/icons/forui_icon_map.dart';
+import '../../../../shared/widgets/toast/app_toast.dart';
 import '../providers/daily_task_provider.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 
@@ -51,8 +54,10 @@ class _TaskAssignmentListScreenState extends State<TaskAssignmentListScreen> {
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            style: TextButton.styleFrom(foregroundColor: AppColors.danger),
-            child: const Text('Hapus'),
+            child: const Text(
+              'Hapus',
+              style: TextStyle(color: Colors.red),
+            ),
           ),
         ],
       ),
@@ -60,6 +65,12 @@ class _TaskAssignmentListScreenState extends State<TaskAssignmentListScreen> {
 
     if (confirm == true && mounted) {
       await context.read<DailyTaskNotifier>().deleteAssignment(id);
+      if (mounted) {
+        AppToast.of(context).show(
+          message: 'Tugas berhasil dihapus',
+          style: AppToastStyle.success,
+        );
+      }
     }
   }
 
@@ -74,18 +85,18 @@ class _TaskAssignmentListScreenState extends State<TaskAssignmentListScreen> {
     }
   }
 
-  Color _getStatusColor(String? status) {
+  Color _getStatusColor(String? status, FThemeData theme) {
     switch (status) {
       case 'assigned':
-        return AppColors.warning;
+        return theme.colors.primary;
       case 'in_progress':
-        return AppColors.info;
+        return AppColors.warning;
       case 'completed':
         return AppColors.success;
       case 'reviewed':
-        return AppColors.primary;
+        return AppColors.info;
       default:
-        return AppColors.slate400;
+        return theme.colors.mutedForeground;
     }
   }
 
@@ -106,23 +117,24 @@ class _TaskAssignmentListScreenState extends State<TaskAssignmentListScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = context.theme;
     final notifier = context.watch<DailyTaskNotifier>();
     final assignments = notifier.assignments;
     final isLoading = notifier.isLoading;
     final error = notifier.error;
 
     return Scaffold(
-      backgroundColor: AppColors.slate100,
+      backgroundColor: theme.colors.muted,
       appBar: AppBar(
         title: const Text('Daftar Tugas'),
-        backgroundColor: Colors.white,
-        foregroundColor: AppColors.slate800,
+        backgroundColor: theme.colors.card,
+        foregroundColor: theme.colors.foreground,
         elevation: 0,
         actions: [
           if (_canAssignTask)
             IconButton(
-              icon: const Icon(Icons.add),
               onPressed: () => context.push('/daily-task-assignment/new'),
+              icon: Icon(IconMap.plus),
               tooltip: 'Tambah Tugas',
             ),
         ],
@@ -132,12 +144,13 @@ class _TaskAssignmentListScreenState extends State<TaskAssignmentListScreen> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(Icons.error_outline, size: 48, color: AppColors.danger),
+                  Icon(IconMap.errorOutline, size: 48, color: theme.colors.destructive),
                   const SizedBox(height: 16),
-                  Text(error, textAlign: TextAlign.center),
+                  Text(error, textAlign: TextAlign.center, style: TextStyle(color: theme.colors.foreground)),
                   const SizedBox(height: 16),
-                  ElevatedButton(
-                    onPressed: _checkPrivilegesAndLoadData,
+                  FButton(
+                    onPress: _checkPrivilegesAndLoadData,
+                    variant: FButtonVariant.primary,
                     child: const Text('Coba Lagi'),
                   ),
                 ],
@@ -150,25 +163,32 @@ class _TaskAssignmentListScreenState extends State<TaskAssignmentListScreen> {
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          const Icon(
-                            Icons.task_alt,
+                          Icon(
+                            IconMap.checkCircle,
                             size: 64,
-                            color: AppColors.slate400,
+                            color: theme.colors.mutedForeground,
                           ),
                           const SizedBox(height: 16),
-                          const Text(
+                          Text(
                             'Belum ada tugas',
                             style: TextStyle(
                               fontSize: 16,
-                              color: AppColors.slate500,
+                              color: theme.colors.mutedForeground,
                             ),
                           ),
                           const SizedBox(height: 8),
                           if (_canAssignTask)
-                            ElevatedButton.icon(
-                              onPressed: () => context.push('/daily-task-assignment/new'),
-                              icon: const Icon(Icons.add),
-                              label: const Text('Tambah Tugas'),
+                            FButton(
+                              onPress: () => context.push('/daily-task-assignment/new'),
+                              variant: FButtonVariant.primary,
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(IconMap.plus, size: 18, color: Colors.white),
+                                  const SizedBox(width: 8),
+                                  const Text('Tambah Tugas'),
+                                ],
+                              ),
                             ),
                         ],
                       ),
@@ -186,81 +206,91 @@ class _TaskAssignmentListScreenState extends State<TaskAssignmentListScreen> {
                           final targetMinutes = assignment['target_minutes'] as int?;
                           final notes = assignment['notes'] as String?;
                           final assignedDate = assignment['assigned_date'] as String?;
+                          final statusColor = _getStatusColor(status, theme);
 
-                          return Card(
+                          return Container(
                             margin: const EdgeInsets.only(bottom: 12),
-                            child: ListTile(
-                              contentPadding: const EdgeInsets.all(16),
-                              title: Text(
-                                employeeName,
-                                style: const TextStyle(fontWeight: FontWeight.w600),
-                              ),
-                              subtitle: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  const SizedBox(height: 4),
-                                  Row(
-                                    children: [
-                                      Container(
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 8,
-                                          vertical: 2,
-                                        ),
-                                        decoration: BoxDecoration(
-                                          color: _getStatusColor(status).withAlpha(26),
-                                          borderRadius: BorderRadius.circular(4),
-                                        ),
-                                        child: Text(
-                                          _getStatusLabel(status),
-                                          style: TextStyle(
-                                            fontSize: 12,
-                                            color: _getStatusColor(status),
-                                            fontWeight: FontWeight.w500,
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                  if (targetMinutes != null) ...[
-                                    const SizedBox(height: 4),
-                                    Text(
-                                      'Target: $targetMinutes menit',
-                                      style: const TextStyle(fontSize: 13),
-                                    ),
-                                  ],
-                                  if (assignedDate != null) ...[
-                                    const SizedBox(height: 2),
-                                    Text(
-                                      'Tanggal: ${_formatDate(assignedDate)}',
-                                      style: const TextStyle(fontSize: 13),
-                                    ),
-                                  ],
-                                  if (notes != null && notes.isNotEmpty) ...[
-                                    const SizedBox(height: 4),
-                                    Text(
-                                      notes,
-                                      style: const TextStyle(
-                                        fontSize: 13,
-                                        color: AppColors.slate500,
-                                      ),
-                                      maxLines: 2,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                  ],
-                                ],
-                              ),
-                              trailing: status == 'assigned'
-                                  ? IconButton(
-                                      icon: const Icon(
-                                        Icons.delete_outline,
-                                        color: AppColors.danger,
-                                      ),
-                                      onPressed: () => _deleteAssignment(id!),
-                                    )
-                                  : null,
+                            decoration: BoxDecoration(
+                              color: theme.colors.card,
+                              borderRadius: AppRadius.radiusLg,
+                              border: Border.all(color: theme.colors.border, width: 1),
+                            ),
+                            child: InkWell(
                               onTap: () {
                                 // Could navigate to detail screen if needed
                               },
+                              borderRadius: AppRadius.radiusLg,
+                              child: Padding(
+                                padding: const EdgeInsets.all(16),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Row(
+                                      children: [
+                                        Expanded(
+                                          child: Text(
+                                            employeeName,
+                                            style: TextStyle(
+                                              fontWeight: FontWeight.w600,
+                                              color: theme.colors.foreground,
+                                            ),
+                                          ),
+                                        ),
+                                        if (status == 'assigned')
+                                          IconButton(
+                                            onPressed: () => _deleteAssignment(id!),
+                                            icon: Icon(IconMap.trash, color: theme.colors.destructive),
+                                          ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 8),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 8,
+                                        vertical: 2,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: statusColor.withAlpha(26),
+                                        borderRadius: AppRadius.radiusSm,
+                                      ),
+                                      child: Text(
+                                        _getStatusLabel(status),
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          color: statusColor,
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
+                                    ),
+                                    if (targetMinutes != null) ...[
+                                      const SizedBox(height: 8),
+                                      Text(
+                                        'Target: $targetMinutes menit',
+                                        style: TextStyle(fontSize: 13, color: theme.colors.foreground),
+                                      ),
+                                    ],
+                                    if (assignedDate != null) ...[
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        'Tanggal: ${_formatDate(assignedDate)}',
+                                        style: TextStyle(fontSize: 13, color: theme.colors.foreground),
+                                      ),
+                                    ],
+                                    if (notes != null && notes.isNotEmpty) ...[
+                                      const SizedBox(height: 8),
+                                      Text(
+                                        notes,
+                                        style: TextStyle(
+                                          fontSize: 13,
+                                          color: theme.colors.mutedForeground,
+                                        ),
+                                        maxLines: 2,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ],
+                                  ],
+                                ),
+                              ),
                             ),
                           );
                         },

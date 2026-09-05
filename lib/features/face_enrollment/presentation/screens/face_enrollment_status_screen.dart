@@ -10,6 +10,61 @@ import '../../../../shared/widgets/icons/forui_icon_map.dart';
 import '../../../../shared/widgets/layout/top_gradient_background.dart';
 import '../providers/face_enrollment_provider.dart';
 
+/// Shows a custom notification overlay
+void _showNotification(BuildContext context, String message, {Color? backgroundColor}) {
+  final overlay = Overlay.of(context);
+  late OverlayEntry overlayEntry;
+
+  overlayEntry = OverlayEntry(
+    builder: (context) => Positioned(
+      top: MediaQuery.of(context).padding.top + 16,
+      left: 16,
+      right: 16,
+      child: Material(
+        color: Colors.transparent,
+        child: Container(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.md,
+            vertical: AppSpacing.sm,
+          ),
+          decoration: BoxDecoration(
+            color: backgroundColor ?? AppColors.success,
+            borderRadius: AppRadius.radiusMd,
+            boxShadow: AppShadows.card,
+          ),
+          child: Row(
+            children: [
+              Icon(
+                backgroundColor == AppColors.danger
+                    ? IconMap.errorOutline
+                    : IconMap.checkCircle,
+                color: Colors.white,
+                size: 20,
+              ),
+              const SizedBox(width: AppSpacing.sm),
+              Expanded(
+                child: Text(
+                  message,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 14,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    ),
+  );
+
+  overlay.insert(overlayEntry);
+
+  Future.delayed(const Duration(seconds: 3), () {
+    overlayEntry.remove();
+  });
+}
+
 /// Face enrollment status screen
 class FaceEnrollmentStatusScreen extends StatefulWidget {
   const FaceEnrollmentStatusScreen({super.key});
@@ -103,7 +158,7 @@ class _FaceEnrollmentStatusScreenState extends State<FaceEnrollmentStatusScreen>
   }
 
   Widget _buildStatusCard(bool isEnrolled, dynamic faceInfo) {
-    final theme = FTheme.of(context);
+    final theme = context.theme;
     return Container(
       padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
@@ -140,7 +195,7 @@ class _FaceEnrollmentStatusScreenState extends State<FaceEnrollmentStatusScreen>
   }
 
   Widget _buildFaceInfoCard(dynamic faceInfo) {
-    final theme = FTheme.of(context);
+    final theme = context.theme;
     return Container(
       padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
@@ -174,7 +229,7 @@ class _FaceEnrollmentStatusScreenState extends State<FaceEnrollmentStatusScreen>
   }
 
   Widget _buildInfoRow(String label, String value) {
-    final theme = FTheme.of(context);
+    final theme = context.theme;
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
       child: Row(
@@ -197,7 +252,7 @@ class _FaceEnrollmentStatusScreenState extends State<FaceEnrollmentStatusScreen>
   }
 
   Widget _buildNotEnrolledContent(FaceEnrollmentNotifier notifier) {
-    final theme = FTheme.of(context);
+    final theme = context.theme;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -239,7 +294,7 @@ class _FaceEnrollmentStatusScreenState extends State<FaceEnrollmentStatusScreen>
   }
 
   Widget _buildStep(int number, String text) {
-    final theme = FTheme.of(context);
+    final theme = context.theme;
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
       child: Row(
@@ -275,7 +330,7 @@ class _FaceEnrollmentStatusScreenState extends State<FaceEnrollmentStatusScreen>
   }
 
   Widget _buildEnrolledActions(FaceEnrollmentNotifier notifier) {
-    final theme = FTheme.of(context);
+    final theme = context.theme;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -326,14 +381,12 @@ class _FaceEnrollmentStatusScreenState extends State<FaceEnrollmentStatusScreen>
           'Wajah yang terdaftar akan dihapus. Anda perlu mendaftarkan wajah kembali untuk dapat absen.',
         ),
         actions: [
-          FButton(
-            onPress: () => Navigator.pop(context, false),
-            variant: FButtonVariant.ghost,
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
             child: const Text('Batal'),
           ),
-          FButton(
-            onPress: () => Navigator.pop(context, true),
-            variant: FButtonVariant.destructive,
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
             child: const Text('Hapus'),
           ),
         ],
@@ -343,12 +396,9 @@ class _FaceEnrollmentStatusScreenState extends State<FaceEnrollmentStatusScreen>
     if (confirmed == true) {
       final success = await notifier.deleteEnrollment();
       if (success && mounted) {
-        final theme = FTheme.of(context);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text('Pendaftaran wajah berhasil dihapus'),
-            backgroundColor: theme.colors.primary,
-          ),
+        _showNotification(
+          context,
+          'Pendaftaran wajah berhasil dihapus',
         );
       }
     }

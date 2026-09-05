@@ -2,6 +2,8 @@ import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
+import 'package:forui/forui.dart';
+
 import '../../../core/theme/app_spacing.dart';
 
 /// Face capture screen with auto-capture when face is ready
@@ -150,6 +152,8 @@ class _FaceCaptureScreenState extends State<FaceCaptureScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = context.theme;
+
     return Scaffold(
       backgroundColor: Colors.black,
       body: SafeArea(
@@ -164,13 +168,13 @@ class _FaceCaptureScreenState extends State<FaceCaptureScreen> {
 
             // Instructions
             if (_capturedPhotoPath == null && _isInitialized)
-              _buildInstructions(),
+              _buildInstructions(theme),
 
             // Controls (only cancel button)
-            _buildControls(),
+            _buildControls(theme),
 
             // Error message
-            if (_errorMessage != null) _buildErrorOverlay(),
+            if (_errorMessage != null) _buildErrorOverlay(theme),
           ],
         ),
       ),
@@ -199,7 +203,7 @@ class _FaceCaptureScreenState extends State<FaceCaptureScreen> {
 
     if (!_isInitialized || _controller == null) {
       return const Center(
-        child: LoadingIndicator(color: Colors.white),
+        child: CircularProgressIndicator(color: Colors.white),
       );
     }
 
@@ -222,7 +226,7 @@ class _FaceCaptureScreenState extends State<FaceCaptureScreen> {
     );
   }
 
-  Widget _buildInstructions() {
+  Widget _buildInstructions(FThemeData theme) {
     return Positioned(
       top: 20,
       left: 20,
@@ -242,9 +246,8 @@ class _FaceCaptureScreenState extends State<FaceCaptureScreen> {
               ? 'Wajah terdeteksi! Menangkap foto...'
               : 'Posisikan wajah Anda di dalam oval',
           textAlign: TextAlign.center,
-          style: TextStyle(
+          style: theme.typography.body.md.copyWith(
             color: Colors.white,
-            fontSize: 14,
             fontWeight: _isFaceReady ? FontWeight.bold : FontWeight.normal,
           ),
         ),
@@ -252,36 +255,22 @@ class _FaceCaptureScreenState extends State<FaceCaptureScreen> {
     );
   }
 
-  Widget _buildControls() {
+  Widget _buildControls(FThemeData theme) {
     return Positioned(
       bottom: 40,
       left: 0,
       right: 0,
       child: Center(
-        child: TextButton(
-          onPressed: () {
-            widget.onCancel?.call();
-          },
-          child: Container(
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppSpacing.xl,
-              vertical: AppSpacing.md,
-            ),
-            decoration: BoxDecoration(
-              border: Border.all(color: Colors.white, width: 1),
-              borderRadius: BorderRadius.circular(AppSpacing.lg),
-            ),
-            child: const Text(
-              'Batal',
-              style: TextStyle(color: Colors.white, fontSize: 16),
-            ),
-          ),
+        child: FButton(
+          onPress: widget.onCancel,
+          variant: FButtonVariant.outline,
+          child: const Text('Batal'),
         ),
       ),
     );
   }
 
-  Widget _buildErrorOverlay() {
+  Widget _buildErrorOverlay(FThemeData theme) {
     return Container(
       color: Colors.black87,
       child: Center(
@@ -290,16 +279,23 @@ class _FaceCaptureScreenState extends State<FaceCaptureScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.error_outline, color: Colors.white, size: 64),
+              Icon(
+                Icons.error_outline,
+                color: theme.colors.error,
+                size: 64,
+              ),
               const SizedBox(height: AppSpacing.lg),
               Text(
                 _errorMessage!,
                 textAlign: TextAlign.center,
-                style: const TextStyle(color: Colors.white, fontSize: 16),
+                style: theme.typography.body.md.copyWith(
+                  color: theme.colors.background,
+                ),
               ),
               const SizedBox(height: AppSpacing.lg),
-              ElevatedButton(
-                onPressed: _initializeCamera,
+              FButton(
+                onPress: _initializeCamera,
+                variant: FButtonVariant.primary,
                 child: const Text('Coba Lagi'),
               ),
             ],

@@ -2,8 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:provider/provider.dart';
+import 'package:forui/forui.dart';
+
 
 import '../../../../core/core.dart';
+import '../../../../shared/widgets/feedback/loading_indicator.dart';
 import '../providers/client_dashboard_provider.dart';
 
 /// Client area list screen with map
@@ -12,14 +15,17 @@ class ClientAreaListScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = FTheme.of(context);
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Daftar Area'),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: () => context.read<ClientDashboardNotifier>().fetchAreas(),
+          FButton.icon(
+            onPress: () => context.read<ClientDashboardNotifier>().fetchAreas(),
+            child: const Icon(FLucideIcons.refreshCcw),
           ),
+          const SizedBox(width: 8),
         ],
       ),
       body: Consumer<ClientDashboardNotifier>(
@@ -33,12 +39,13 @@ class ClientAreaListScreen extends StatelessWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(Icons.error_outline, size: 64, color: AppColors.danger),
+                  const Icon(FLucideIcons.alertCircle, size: 64, color: AppColors.danger),
                   const SizedBox(height: AppSpacing.md),
-                  Text('Gagal memuat: ${notifier.areasError}'),
+                  Text('Gagal memuat: ${notifier.areasError}', style: theme.typography.body.md),
                   const SizedBox(height: AppSpacing.lg),
-                  ElevatedButton(
-                    onPressed: () => notifier.fetchAreas(),
+                  FButton(
+                    onPress: () => notifier.fetchAreas(),
+                    variant: FButtonVariant.primary,
                     child: const Text('Coba Lagi'),
                   ),
                 ],
@@ -47,19 +54,19 @@ class ClientAreaListScreen extends StatelessWidget {
           }
 
           if (notifier.areas.isEmpty) {
-            return const Center(
+            return Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.location_off, size: 64, color: AppColors.gray400),
-                  SizedBox(height: AppSpacing.md),
-                  Text('Belum ada area'),
+                  const Icon(FLucideIcons.mapPinOff, size: 64, color: AppColors.gray400),
+                  const SizedBox(height: AppSpacing.md),
+                  Text('Belum ada area', style: theme.typography.body.md),
                 ],
               ),
             );
           }
 
-          return _AreaListContent(areas: notifier.areas);
+          return _AreaListContent(areas: notifier.areas, theme: theme);
         },
       ),
     );
@@ -68,8 +75,9 @@ class ClientAreaListScreen extends StatelessWidget {
 
 class _AreaListContent extends StatefulWidget {
   final List<ClientArea> areas;
+  final FThemeData theme;
 
-  const _AreaListContent({required this.areas});
+  const _AreaListContent({required this.areas, required this.theme});
 
   @override
   State<_AreaListContent> createState() => _AreaListContentState();
@@ -131,7 +139,7 @@ class _AreaListContentState extends State<_AreaListContent> {
                               });
                             },
                             child: Icon(
-                              Icons.location_pin,
+                              FLucideIcons.mapPin,
                               color: area.id == _selectedArea?.id
                                   ? AppColors.danger
                                   : AppColors.primary,
@@ -184,8 +192,8 @@ class _AreaListContentState extends State<_AreaListContent> {
                           color: AppColors.primary.withAlpha(26),
                           borderRadius: BorderRadius.circular(8),
                         ),
-                        child: const Icon(
-                          Icons.location_on,
+                        child: Icon(
+                          FLucideIcons.mapPin,
                           color: AppColors.primary,
                         ),
                       ),
@@ -196,18 +204,14 @@ class _AreaListContentState extends State<_AreaListContent> {
                           children: [
                             Text(
                               area.name,
-                              style: const TextStyle(
-                                fontWeight: FontWeight.w600,
-                                fontSize: 16,
-                              ),
+                              style: widget.theme.typography.body.md.copyWith(fontWeight: FontWeight.w600),
                             ),
                             if (area.lat != null && area.lng != null) ...[
                               const SizedBox(height: 4),
                               Text(
                                 '${area.lat!.toStringAsFixed(5)}, ${area.lng!.toStringAsFixed(5)}',
-                                style: const TextStyle(
+                                style: widget.theme.typography.body.xs.copyWith(
                                   color: AppColors.gray500,
-                                  fontSize: 12,
                                 ),
                               ),
                             ],
@@ -215,8 +219,8 @@ class _AreaListContentState extends State<_AreaListContent> {
                         ),
                       ),
                       if (isSelected)
-                        const Icon(
-                          Icons.check_circle,
+                        Icon(
+                          FLucideIcons.checkCircle,
                           color: AppColors.primary,
                         ),
                     ],

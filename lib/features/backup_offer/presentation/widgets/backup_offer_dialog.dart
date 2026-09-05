@@ -96,128 +96,162 @@ class _BackupOfferDialogState extends State<BackupOfferDialog> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = FTheme.of(context);
+    final theme = context.theme;
     final isExpired = _remainingSeconds <= 0;
     final isLowTime = _remainingSeconds < 300;
 
-    return AlertDialog(
-      title: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: theme.colors.muted,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Icon(IconMap.swapHoriz, color: theme.colors.primary),
+    return Center(
+      child: Material(
+        color: Colors.transparent,
+        child: Container(
+          margin: const EdgeInsets.all(AppSpacing.lg),
+          padding: const EdgeInsets.all(AppSpacing.lg),
+          decoration: BoxDecoration(
+            color: theme.colors.card,
+            borderRadius: AppRadius.radiusLg,
           ),
-          const SizedBox(width: AppSpacing.sm),
-          const Expanded(child: Text('Tawaran Backup Jaga')),
-        ],
-      ),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Timer countdown
-          Container(
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppSpacing.md,
-              vertical: AppSpacing.sm,
-            ),
-            decoration: BoxDecoration(
-              color: isLowTime ? AppColors.dangerBg : AppColors.primaryBg,
-              borderRadius: AppRadius.radiusMd,
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  IconMap.timer,
-                  size: 20,
-                  color: isLowTime ? AppColors.danger : theme.colors.primary,
-                ),
-                const SizedBox(width: AppSpacing.sm),
-                Text(
-                  isExpired
-                      ? 'Waktu Habis'
-                      : 'Berakhir dalam: ${_formatTime(_remainingSeconds)}',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: isLowTime ? AppColors.danger : theme.colors.primary,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Header
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(AppSpacing.sm),
+                    decoration: BoxDecoration(
+                      color: theme.colors.muted,
+                      borderRadius: AppRadius.radiusMd,
+                    ),
+                    child: Icon(IconMap.swapHoriz, color: theme.colors.primary),
                   ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: AppSpacing.lg),
-
-          // Schedule details
-          Container(
-            padding: const EdgeInsets.all(AppSpacing.md),
-            decoration: BoxDecoration(
-              color: AppColors.sky50,
-              borderRadius: AppRadius.radiusMd,
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildInfoRow(IconMap.calendarToday, 'Tanggal', widget.offer.date),
-                const SizedBox(height: AppSpacing.sm),
-                if (widget.offer.areaName != null)
-                  _buildInfoRow(IconMap.locationOn, 'Area', widget.offer.areaName!),
-                const SizedBox(height: AppSpacing.sm),
-                if (widget.offer.posName != null)
-                  _buildInfoRow(IconMap.place, 'POS', widget.offer.posName!),
-                const SizedBox(height: AppSpacing.sm),
-                if (widget.offer.shiftName != null)
-                  _buildInfoRow(IconMap.accessTime, 'Shift', widget.offer.shiftName!),
-              ],
-            ),
-          ),
-          const SizedBox(height: AppSpacing.md),
-
-          // Info text
-          Container(
-            padding: const EdgeInsets.all(AppSpacing.md),
-            decoration: BoxDecoration(
-              color: AppColors.amber50,
-              borderRadius: AppRadius.radiusMd,
-              border: Border.all(color: AppColors.amber200),
-            ),
-            child: Row(
-              children: [
-                Icon(IconMap.infoOutline, color: AppColors.amber600, size: 20),
-                const SizedBox(width: AppSpacing.sm),
-                const Expanded(
-                  child: Text(
-                    'Menjadi backup jaga berarti Anda menggantikan petugas original.',
-                    style: TextStyle(
-                      color: AppColors.amber600,
-                      fontSize: 12,
+                  const SizedBox(width: AppSpacing.sm),
+                  Expanded(
+                    child: Text(
+                      'Tawaran Backup Jaga',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: theme.colors.foreground,
+                      ),
                     ),
                   ),
+                ],
+              ),
+              const SizedBox(height: AppSpacing.lg),
+
+              // Timer countdown
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.md,
+                  vertical: AppSpacing.sm,
                 ),
-              ],
-            ),
+                decoration: BoxDecoration(
+                  color: isLowTime ? AppColors.dangerBg : AppColors.primaryBg,
+                  borderRadius: AppRadius.radiusMd,
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      IconMap.timer,
+                      size: 20,
+                      color: isLowTime ? AppColors.danger : theme.colors.primary,
+                    ),
+                    const SizedBox(width: AppSpacing.sm),
+                    Text(
+                      isExpired
+                          ? 'Waktu Habis'
+                          : 'Berakhir dalam: ${_formatTime(_remainingSeconds)}',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: isLowTime ? AppColors.danger : theme.colors.primary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: AppSpacing.lg),
+
+              // Schedule details
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(AppSpacing.md),
+                decoration: BoxDecoration(
+                  color: AppColors.teal50,
+                  borderRadius: AppRadius.radiusMd,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildInfoRow(IconMap.calendarToday, 'Tanggal', widget.offer.date),
+                    const SizedBox(height: AppSpacing.sm),
+                    if (widget.offer.areaName != null)
+                      _buildInfoRow(IconMap.locationOn, 'Area', widget.offer.areaName!),
+                    const SizedBox(height: AppSpacing.sm),
+                    if (widget.offer.posName != null)
+                      _buildInfoRow(IconMap.place, 'POS', widget.offer.posName!),
+                    const SizedBox(height: AppSpacing.sm),
+                    if (widget.offer.shiftName != null)
+                      _buildInfoRow(IconMap.accessTime, 'Shift', widget.offer.shiftName!),
+                  ],
+                ),
+              ),
+              const SizedBox(height: AppSpacing.md),
+
+              // Info text
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(AppSpacing.md),
+                decoration: BoxDecoration(
+                  color: AppColors.warningBg,
+                  borderRadius: AppRadius.radiusMd,
+                  border: Border.all(color: AppColors.warning.withAlpha(76)),
+                ),
+                child: Row(
+                  children: [
+                    Icon(IconMap.infoOutline, color: AppColors.amber500, size: 20),
+                    const SizedBox(width: AppSpacing.sm),
+                    Expanded(
+                      child: Text(
+                        'Menjadi backup jaga berarti Anda menggantikan petugas original.',
+                        style: TextStyle(
+                          color: AppColors.amber500,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: AppSpacing.lg),
+
+              // Action buttons
+              Row(
+                children: [
+                  Expanded(
+                    child: SecondaryButton(
+                      label: 'TOLAK',
+                      onPressed: (_isLoading || isExpired) ? null : _reject,
+                      isDanger: true,
+                      isLoading: _isLoading,
+                    ),
+                  ),
+                  const SizedBox(width: AppSpacing.md),
+                  Expanded(
+                    child: PrimaryButton(
+                      label: 'TERIMA',
+                      onPressed: (_isLoading || isExpired) ? null : _accept,
+                      isLoading: _isLoading,
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ),
-        ],
+        ),
       ),
-      actions: [
-        // Reject button
-        SecondaryButton(
-          label: 'TOLAK',
-          onPressed: (_isLoading || isExpired) ? null : _reject,
-          isDanger: true,
-          isLoading: _isLoading,
-        ),
-        // Accept button
-        PrimaryButton(
-          label: 'TERIMA',
-          onPressed: (_isLoading || isExpired) ? null : _accept,
-          isLoading: _isLoading,
-        ),
-      ],
     );
   }
 

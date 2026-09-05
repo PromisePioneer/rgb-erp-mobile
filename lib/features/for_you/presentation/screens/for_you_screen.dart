@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:forui/forui.dart';
+
+
 import '../../../../core/core.dart';
+import '../../../../shared/widgets/icons/forui_icon_map.dart';
 import '../../../../shared/widgets/layout/top_gradient_background.dart';
 
 /// For You screen - placeholder
@@ -8,6 +12,8 @@ class ForYouScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = FTheme.of(context);
+
     return TopGradientBackground(
       gradientHeight: 180,
       child: Scaffold(
@@ -26,32 +32,29 @@ class ForYouScreen extends StatelessWidget {
                 width: 80,
                 height: 80,
                 decoration: BoxDecoration(
-                  color: AppColors.indigo100,
+                  color: AppColors.teal100,
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(
-                  Icons.auto_awesome,
-                  color: AppColors.indigo600,
+                child: Icon(
+                  IconMap.star,
+                  color: AppColors.teal600,
                   size: 40,
                 ),
               ),
               const SizedBox(height: AppSpacing.lg),
-              const Text(
+              Text(
                 'Segera Hadir',
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
+                style: theme.typography.display.lg.copyWith(
                   color: AppColors.slate800,
                 ),
               ),
               const SizedBox(height: AppSpacing.sm),
-              const Padding(
-                padding: EdgeInsets.symmetric(horizontal: 48),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 48),
                 child: Text(
                   'Fitur personalisasi berdasarkan aktivitas Anda sedang dalam pengembangan',
                   textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 14,
+                  style: theme.typography.body.md.copyWith(
                     color: AppColors.slate500,
                   ),
                 ),

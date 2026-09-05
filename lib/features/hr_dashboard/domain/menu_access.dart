@@ -1,4 +1,5 @@
-import 'package:flutter/material.dart';
+// Only import IconData for type annotation - non-widget utility
+import 'package:flutter/material.dart' show IconData;
 import '../../auth/domain/entities/user.dart';
 
 /// Menu item data class

@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart' show GlobalKey;
 
 /// Global keys for tutorial targets
 /// These keys are used to highlight specific UI elements during onboarding

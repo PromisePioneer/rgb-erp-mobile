@@ -30,7 +30,7 @@ class _ViolationReportHistoryScreenState extends State<ViolationReportHistoryScr
 
   @override
   Widget build(BuildContext context) {
-    final theme = FTheme.of(context);
+    final theme = context.theme;
     return TopGradientBackground(
       gradientHeight: 120,
       child: Scaffold(
@@ -137,7 +137,8 @@ class _ViolationReportHistoryScreenState extends State<ViolationReportHistoryScr
           child: FloatingActionButton(
             onPressed: () => context.push('/violation-report/form'),
             backgroundColor: theme.colors.primary,
-            child: Icon(IconMap.add, color: theme.colors.primaryForeground),
+            foregroundColor: theme.colors.primaryForeground,
+            child: Icon(IconMap.add),
           ),
         ),
       ),
@@ -152,115 +153,111 @@ class _ViolationCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = FTheme.of(context);
-    return Container(
-      margin: EdgeInsets.only(bottom: AppSpacing.md),
-      decoration: BoxDecoration(
-        color: theme.colors.card,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: AppShadows.card,
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: () {
-            context.push('/violation-report/${violation.id}');
-          },
-          borderRadius: BorderRadius.circular(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Header
-              Container(
-                padding: EdgeInsets.all(AppSpacing.md),
-                decoration: BoxDecoration(
-                  color: theme.colors.destructive.withAlpha(25),
-                  borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-                ),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 48,
-                      height: 48,
-                      decoration: BoxDecoration(
-                        color: theme.colors.destructive.withAlpha(50),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Icon(IconMap.warning, color: theme.colors.destructive, size: 24),
-                    ),
-                    SizedBox(width: AppSpacing.md),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            violation.violationTypeName ?? 'Pelanggaran',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                              color: theme.colors.foreground,
-                            ),
-                          ),
-                          SizedBox(height: 2),
-                          Text(
-                            violation.areaName ?? '-',
-                            style: TextStyle(
-                              fontSize: 13,
-                              color: theme.colors.mutedForeground,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Icon(IconMap.chevronRight, color: theme.colors.mutedForeground),
-                  ],
-                ),
+    final theme = context.theme;
+    return GestureDetector(
+      onTap: () {
+        context.push('/violation-report/${violation.id}');
+      },
+      child: Container(
+        margin: EdgeInsets.only(bottom: AppSpacing.md),
+        decoration: BoxDecoration(
+          color: theme.colors.card,
+          borderRadius: AppRadius.radiusLg,
+          boxShadow: AppShadows.card,
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Header
+            Container(
+              padding: EdgeInsets.all(AppSpacing.md),
+              decoration: BoxDecoration(
+                color: theme.colors.destructive.withAlpha(25),
+                borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
               ),
-              // Body
-              Padding(
-                padding: EdgeInsets.all(AppSpacing.md),
-                child: Column(
-                  children: [
-                    _InfoRow(
-                      icon: IconMap.person,
-                      label: 'Pelanggar',
-                      value: violation.employeeName ?? '-',
+              child: Row(
+                children: [
+                  Container(
+                    width: 48,
+                    height: 48,
+                    decoration: BoxDecoration(
+                      color: theme.colors.destructive.withAlpha(50),
+                      borderRadius: AppRadius.radiusMd,
                     ),
+                    child: Icon(IconMap.warning, color: theme.colors.destructive, size: 24),
+                  ),
+                  SizedBox(width: AppSpacing.md),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          violation.violationTypeName ?? 'Pelanggaran',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            color: theme.colors.foreground,
+                          ),
+                        ),
+                        SizedBox(height: 2),
+                        Text(
+                          violation.areaName ?? '-',
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: theme.colors.mutedForeground,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Icon(IconMap.chevronRight, color: theme.colors.mutedForeground),
+                ],
+              ),
+            ),
+            // Body
+            Padding(
+              padding: EdgeInsets.all(AppSpacing.md),
+              child: Column(
+                children: [
+                  _InfoRow(
+                    icon: IconMap.person,
+                    label: 'Pelanggar',
+                    value: violation.employeeName ?? '-',
+                  ),
+                  SizedBox(height: AppSpacing.sm),
+                  _InfoRow(
+                    icon: IconMap.calendarToday,
+                    label: 'Waktu',
+                    value: _formatDateTime(violation.capturedAt),
+                  ),
+                  SizedBox(height: AppSpacing.sm),
+                  _InfoRow(
+                    icon: IconMap.locationOn,
+                    label: 'Lokasi',
+                    value: violation.latitude != null && violation.longitude != null
+                        ? '${violation.latitude!.toStringAsFixed(5)}, ${violation.longitude!.toStringAsFixed(5)}'
+                        : '-',
+                  ),
+                  if (violation.action != null && violation.action!.isNotEmpty) ...[
                     SizedBox(height: AppSpacing.sm),
                     _InfoRow(
-                      icon: IconMap.calendarToday,
-                      label: 'Waktu',
-                      value: _formatDateTime(violation.capturedAt),
+                      icon: IconMap.build,
+                      label: 'Tindakan',
+                      value: violation.action!,
                     ),
+                  ],
+                  if (violation.photoCount > 0) ...[
                     SizedBox(height: AppSpacing.sm),
                     _InfoRow(
-                      icon: IconMap.locationOn,
-                      label: 'Lokasi',
-                      value: violation.latitude != null && violation.longitude != null
-                          ? '${violation.latitude!.toStringAsFixed(5)}, ${violation.longitude!.toStringAsFixed(5)}'
-                          : '-',
+                      icon: IconMap.cameraAlt,
+                      label: 'Foto',
+                      value: '${violation.photoCount} foto',
                     ),
-                    if (violation.action != null && violation.action!.isNotEmpty) ...[
-                      SizedBox(height: AppSpacing.sm),
-                      _InfoRow(
-                        icon: IconMap.build,
-                        label: 'Tindakan',
-                        value: violation.action!,
-                      ),
-                    ],
-                    if (violation.photoCount > 0) ...[
-                      SizedBox(height: AppSpacing.sm),
-                      _InfoRow(
-                        icon: IconMap.cameraAlt,
-                        label: 'Foto',
-                        value: '${violation.photoCount} foto',
-                      ),
-                    ],
                   ],
-                ),
+                ],
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
@@ -290,7 +287,7 @@ class _InfoRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = FTheme.of(context);
+    final theme = context.theme;
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [

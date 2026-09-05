@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:forui_lucide/forui_lucide.dart';
+import 'package:forui/forui.dart';
 
 /// Map Material Icons to Forui Lucide icons
 class IconMap {
@@ -76,4 +76,35 @@ class IconMap {
 
   // Additional icons for Purchase Request
   static IconData shoppingCart = FLucideIcons.shoppingCart;
+  static IconData shoppingCartOutline = FLucideIcons.shoppingCart;
+  static IconData inventory = FLucideIcons.package;
+  static IconData inventoryOutline = FLucideIcons.package;
+  static IconData receipt = FLucideIcons.receipt;
+  static IconData notes = FLucideIcons.fileText;
+
+  // Additional icons for UI
+  static IconData visibility = FLucideIcons.eye;
+  static IconData visibilityOff = FLucideIcons.eyeOff;
+  static IconData search = FLucideIcons.search;
+  static IconData circle = FLucideIcons.circle;
+  static IconData delete = FLucideIcons.trash2;
+  static IconData deleteOutline = FLucideIcons.trash2;
+  static IconData moreVertical = FLucideIcons.moreVertical;
+  static IconData plus = FLucideIcons.plus;
+  static IconData checkCircleOutline = FLucideIcons.checkCircle;
+  static IconData searchOff = FLucideIcons.searchX;
+  static IconData refresh = FLucideIcons.refreshCcw;
+
+  // Additional icons needed
+  static IconData xCircle = FLucideIcons.xCircle;
+  static IconData zoomIn = FLucideIcons.zoomIn;
+  static IconData zoomOut = FLucideIcons.zoomOut;
+
+  // Aliases
+  static IconData refreshCcw = FLucideIcons.refreshCcw;
+  static IconData logOut = FLucideIcons.logOut;
+  static IconData alertCircle = FLucideIcons.alertCircle;
+  static IconData mapPin = FLucideIcons.mapPin;
+  static IconData fileText = FLucideIcons.fileText;
+  static IconData calendar = FLucideIcons.calendar;
 }

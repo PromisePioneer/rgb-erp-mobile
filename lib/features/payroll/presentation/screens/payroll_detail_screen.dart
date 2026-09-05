@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:forui/forui.dart';
+
 import '../../../../core/core.dart';
 import '../../domain/models/payslip.dart';
 
@@ -22,12 +24,14 @@ class PayrollDetailScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = context.theme;
+
     return Scaffold(
-      backgroundColor: AppColors.slate100,
+      backgroundColor: theme.colors.muted,
       appBar: AppBar(
         title: Text(payslip.period),
-        backgroundColor: Colors.white,
-        foregroundColor: AppColors.slate800,
+        backgroundColor: theme.colors.background,
+        foregroundColor: theme.colors.foreground,
         elevation: 0,
       ),
       body: SingleChildScrollView(
@@ -46,8 +50,7 @@ class PayrollDetailScreen extends StatelessWidget {
               ),
               child: Text(
                 payslip.status,
-                style: TextStyle(
-                  fontSize: 12,
+                style: theme.typography.body.md.copyWith(
                   fontWeight: FontWeight.w600,
                   color: payslip.status == 'Paid'
                       ? AppColors.success
@@ -59,6 +62,7 @@ class PayrollDetailScreen extends StatelessWidget {
 
             // Earnings section
             _buildSection(
+              theme: theme,
               title: 'Pendapatan',
               icon: Icons.add_circle_outline,
               iconColor: AppColors.success,
@@ -70,6 +74,7 @@ class PayrollDetailScreen extends StatelessWidget {
 
             // Deductions section
             _buildSection(
+              theme: theme,
               title: 'Potongan',
               icon: Icons.remove_circle_outline,
               iconColor: AppColors.danger,
@@ -84,8 +89,8 @@ class PayrollDetailScreen extends StatelessWidget {
               width: double.infinity,
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [AppColors.primary, AppColors.primaryDark],
+                gradient: LinearGradient(
+                  colors: [theme.colors.primary, theme.colors.primary],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
@@ -93,20 +98,18 @@ class PayrollDetailScreen extends StatelessWidget {
               ),
               child: Column(
                 children: [
-                  const Text(
+                  Text(
                     'Gaji Bersih',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.white70,
+                    style: theme.typography.body.md.copyWith(
+                      color: theme.colors.primaryForeground.withAlpha(179),
                     ),
                   ),
                   const SizedBox(height: 8),
                   Text(
                     _formatCurrency(payslip.net),
-                    style: const TextStyle(
-                      fontSize: 28,
+                    style: theme.typography.display.xl2.copyWith(
                       fontWeight: FontWeight.bold,
-                      color: Colors.white,
+                      color: theme.colors.primaryForeground,
                     ),
                   ),
                 ],
@@ -119,6 +122,7 @@ class PayrollDetailScreen extends StatelessWidget {
   }
 
   Widget _buildSection({
+    required FThemeData theme,
     required String title,
     required IconData icon,
     required Color iconColor,
@@ -128,7 +132,7 @@ class PayrollDetailScreen extends StatelessWidget {
   }) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: theme.colors.background,
         borderRadius: BorderRadius.circular(16),
         boxShadow: AppShadows.card,
       ),
@@ -144,22 +148,21 @@ class PayrollDetailScreen extends StatelessWidget {
                 const SizedBox(width: 8),
                 Text(
                   title,
-                  style: const TextStyle(
-                    fontSize: 16,
+                  style: theme.typography.body.md.copyWith(
                     fontWeight: FontWeight.w600,
-                    color: AppColors.slate800,
+                    color: theme.colors.foreground,
                   ),
                 ),
               ],
             ),
           ),
-          const Divider(height: 1),
+          Divider(height: 1, color: theme.colors.border),
 
           // Items
-          ...items.map((item) => _buildLineItem(item.name, item.amount, isPositive)),
+          ...items.map((item) => _buildLineItem(theme, item.name, item.amount, isPositive)),
 
           // Total
-          const Divider(height: 1),
+          Divider(height: 1, color: theme.colors.border),
           Padding(
             padding: const EdgeInsets.all(16),
             child: Row(
@@ -167,16 +170,14 @@ class PayrollDetailScreen extends StatelessWidget {
               children: [
                 Text(
                   'Total $title',
-                  style: const TextStyle(
-                    fontSize: 14,
+                  style: theme.typography.body.md.copyWith(
                     fontWeight: FontWeight.w600,
-                    color: AppColors.slate800,
+                    color: theme.colors.foreground,
                   ),
                 ),
                 Text(
                   _formatCurrency(total),
-                  style: TextStyle(
-                    fontSize: 14,
+                  style: theme.typography.body.md.copyWith(
                     fontWeight: FontWeight.w600,
                     color: isPositive ? AppColors.success : AppColors.danger,
                   ),
@@ -189,7 +190,7 @@ class PayrollDetailScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildLineItem(String name, double amount, bool isPositive) {
+  Widget _buildLineItem(FThemeData theme, String name, double amount, bool isPositive) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       child: Row(
@@ -198,16 +199,14 @@ class PayrollDetailScreen extends StatelessWidget {
           Expanded(
             child: Text(
               name,
-              style: const TextStyle(
-                fontSize: 14,
-                color: AppColors.slate700,
+              style: theme.typography.body.md.copyWith(
+                color: theme.colors.foreground,
               ),
             ),
           ),
           Text(
             '${isPositive ? '+' : '-'} ${_formatCurrency(amount)}',
-            style: TextStyle(
-              fontSize: 14,
+            style: theme.typography.body.md.copyWith(
               color: isPositive ? AppColors.success : AppColors.danger,
             ),
           ),

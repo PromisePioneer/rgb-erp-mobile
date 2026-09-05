@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
+import 'package:forui/forui.dart';
+
 
 import '../../../../core/core.dart';
+import '../../../../shared/widgets/feedback/loading_indicator.dart';
 import '../providers/client_reports_provider.dart';
 
 /// Client reports list screen (Daily Tasks, Patrol, Field Reports)
@@ -112,20 +115,22 @@ class _ClientReportsScreenState extends State<ClientReportsScreen>
   @override
   Widget build(BuildContext context) {
     final state = context.watch<ClientReportsNotifier>().state;
+    final theme = FTheme.of(context);
 
     return Scaffold(
       appBar: AppBar(
         title: Text(_title),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.date_range),
-            onPressed: _selectDateRange,
-            tooltip: 'Filter Tanggal',
+          FButton.icon(
+            onPress: _selectDateRange,
+            child: const Icon(FLucideIcons.calendarRange),
           ),
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: _fetchData,
+          const SizedBox(width: 8),
+          FButton.icon(
+            onPress: _fetchData,
+            child: const Icon(FLucideIcons.refreshCcw),
           ),
+          const SizedBox(width: 8),
         ],
         bottom: TabBar(
           controller: _tabController,
@@ -146,12 +151,13 @@ class _ClientReportsScreenState extends State<ClientReportsScreen>
               children: [
                 Text(
                   '${DateFormat('dd MMM').format(_fromDate)} - ${DateFormat('dd MMM yyyy').format(_toDate)}',
-                  style: const TextStyle(color: AppColors.gray600),
+                  style: theme.typography.body.md.copyWith(color: AppColors.gray600),
                 ),
-                TextButton.icon(
-                  onPressed: _selectDateRange,
-                  icon: const Icon(Icons.edit, size: 16),
-                  label: const Text('Ubah'),
+                FButton(
+                  onPress: _selectDateRange,
+                  variant: FButtonVariant.ghost,
+                  prefix: const Icon(FLucideIcons.pencil, size: 16),
+                  child: const Text('Ubah'),
                 ),
               ],
             ),
@@ -160,9 +166,9 @@ class _ClientReportsScreenState extends State<ClientReportsScreen>
             child: TabBarView(
               controller: _tabController,
               children: [
-                _buildTasksTab(state),
-                _buildPatrolTab(state),
-                _buildFieldTab(state),
+                _buildTasksTab(state, theme),
+                _buildPatrolTab(state, theme),
+                _buildFieldTab(state, theme),
               ],
             ),
           ),
@@ -171,23 +177,23 @@ class _ClientReportsScreenState extends State<ClientReportsScreen>
     );
   }
 
-  Widget _buildTasksTab(ClientReportsState state) {
+  Widget _buildTasksTab(ClientReportsState state, FThemeData theme) {
     if (state.isLoadingTasks) {
       return const Center(child: LoadingIndicator());
     }
 
     if (state.tasksError != null) {
-      return _buildError(state.tasksError!, () => _fetchData());
+      return _buildError(state.tasksError!, () => _fetchData(), theme);
     }
 
     if (state.tasks.isEmpty) {
-      return const Center(
+      return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.task_alt, size: 64, color: AppColors.gray400),
-            SizedBox(height: AppSpacing.md),
-            Text('Belum ada tugas'),
+            const Icon(FLucideIcons.checkCircle2, size: 64, color: AppColors.gray400),
+            const SizedBox(height: AppSpacing.md),
+            Text('Belum ada tugas', style: theme.typography.body.md),
           ],
         ),
       );
@@ -200,29 +206,29 @@ class _ClientReportsScreenState extends State<ClientReportsScreen>
         itemCount: state.tasks.length,
         itemBuilder: (context, index) {
           final task = state.tasks[index];
-          return _TaskCard(task: task);
+          return _TaskCard(task: task, theme: theme);
         },
       ),
     );
   }
 
-  Widget _buildPatrolTab(ClientReportsState state) {
+  Widget _buildPatrolTab(ClientReportsState state, FThemeData theme) {
     if (state.isLoadingPatrol) {
       return const Center(child: LoadingIndicator());
     }
 
     if (state.patrolError != null) {
-      return _buildError(state.patrolError!, () => _fetchData());
+      return _buildError(state.patrolError!, () => _fetchData(), theme);
     }
 
     if (state.patrolReports.isEmpty) {
-      return const Center(
+      return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.security, size: 64, color: AppColors.gray400),
-            SizedBox(height: AppSpacing.md),
-            Text('Belum ada patrol'),
+            const Icon(FLucideIcons.shield, size: 64, color: AppColors.gray400),
+            const SizedBox(height: AppSpacing.md),
+            Text('Belum ada patrol', style: theme.typography.body.md),
           ],
         ),
       );
@@ -235,29 +241,29 @@ class _ClientReportsScreenState extends State<ClientReportsScreen>
         itemCount: state.patrolReports.length,
         itemBuilder: (context, index) {
           final report = state.patrolReports[index];
-          return _PatrolCard(report: report);
+          return _PatrolCard(report: report, theme: theme);
         },
       ),
     );
   }
 
-  Widget _buildFieldTab(ClientReportsState state) {
+  Widget _buildFieldTab(ClientReportsState state, FThemeData theme) {
     if (state.isLoadingField) {
       return const Center(child: LoadingIndicator());
     }
 
     if (state.fieldError != null) {
-      return _buildError(state.fieldError!, () => _fetchData());
+      return _buildError(state.fieldError!, () => _fetchData(), theme);
     }
 
     if (state.fieldReports.isEmpty) {
-      return const Center(
+      return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.report_problem_outlined, size: 64, color: AppColors.gray400),
-            SizedBox(height: AppSpacing.md),
-            Text('Belum ada field report'),
+            const Icon(FLucideIcons.alertTriangle, size: 64, color: AppColors.gray400),
+            const SizedBox(height: AppSpacing.md),
+            Text('Belum ada field report', style: theme.typography.body.md),
           ],
         ),
       );
@@ -270,23 +276,24 @@ class _ClientReportsScreenState extends State<ClientReportsScreen>
         itemCount: state.fieldReports.length,
         itemBuilder: (context, index) {
           final report = state.fieldReports[index];
-          return _FieldReportCard(report: report);
+          return _FieldReportCard(report: report, theme: theme);
         },
       ),
     );
   }
 
-  Widget _buildError(String error, VoidCallback onRetry) {
+  Widget _buildError(String error, VoidCallback onRetry, FThemeData theme) {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.error_outline, size: 64, color: AppColors.danger),
+          const Icon(FLucideIcons.alertCircle, size: 64, color: AppColors.danger),
           const SizedBox(height: AppSpacing.md),
-          Text('Gagal memuat: $error'),
+          Text('Gagal memuat: $error', style: theme.typography.body.md),
           const SizedBox(height: AppSpacing.lg),
-          ElevatedButton(
-            onPressed: onRetry,
+          FButton(
+            onPress: onRetry,
+            variant: FButtonVariant.primary,
             child: const Text('Coba Lagi'),
           ),
         ],
@@ -297,8 +304,9 @@ class _ClientReportsScreenState extends State<ClientReportsScreen>
 
 class _TaskCard extends StatelessWidget {
   final DailyTaskRecord task;
+  final FThemeData theme;
 
-  const _TaskCard({required this.task});
+  const _TaskCard({required this.task, required this.theme});
 
   @override
   Widget build(BuildContext context) {
@@ -321,10 +329,14 @@ class _TaskCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              CircleAvatar(
-                radius: 16,
-                backgroundColor: AppColors.info.withAlpha(26),
-                child: const Icon(Icons.task_alt, size: 16, color: AppColors.info),
+              Container(
+                width: 32,
+                height: 32,
+                decoration: BoxDecoration(
+                  color: AppColors.info.withAlpha(26),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: const Icon(FLucideIcons.checkCircle2, size: 16, color: AppColors.info),
               ),
               const SizedBox(width: AppSpacing.sm),
               Expanded(
@@ -333,34 +345,34 @@ class _TaskCard extends StatelessWidget {
                   children: [
                     Text(
                       task.itemName ?? 'Task',
-                      style: const TextStyle(fontWeight: FontWeight.w600),
+                      style: theme.typography.body.md.copyWith(fontWeight: FontWeight.w600),
                     ),
                     Text(
                       task.employeeName ?? '-',
-                      style: const TextStyle(fontSize: 12, color: AppColors.gray500),
+                      style: theme.typography.body.xs.copyWith(color: AppColors.gray500),
                     ),
                   ],
                 ),
               ),
-              _StatusBadge(status: task.status),
+              _StatusBadge(status: task.status, theme: theme),
             ],
           ),
           const SizedBox(height: AppSpacing.sm),
           Row(
             children: [
-              const Icon(Icons.calendar_today, size: 14, color: AppColors.gray500),
+              Icon(FLucideIcons.calendar, size: 14, color: AppColors.gray500),
               const SizedBox(width: 4),
               Text(
                 task.assignedDate ?? '-',
-                style: const TextStyle(fontSize: 12, color: AppColors.gray600),
+                style: theme.typography.body.xs.copyWith(color: AppColors.gray600),
               ),
               if (task.targetMinutes != null) ...[
                 const SizedBox(width: AppSpacing.md),
-                const Icon(Icons.timer_outlined, size: 14, color: AppColors.gray500),
+                Icon(FLucideIcons.timer, size: 14, color: AppColors.gray500),
                 const SizedBox(width: 4),
                 Text(
                   '${task.targetMinutes} min',
-                  style: const TextStyle(fontSize: 12, color: AppColors.gray600),
+                  style: theme.typography.body.xs.copyWith(color: AppColors.gray600),
                 ),
               ],
             ],
@@ -373,8 +385,9 @@ class _TaskCard extends StatelessWidget {
 
 class _PatrolCard extends StatelessWidget {
   final PatrolReportRecord report;
+  final FThemeData theme;
 
-  const _PatrolCard({required this.report});
+  const _PatrolCard({required this.report, required this.theme});
 
   @override
   Widget build(BuildContext context) {
@@ -397,10 +410,14 @@ class _PatrolCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              CircleAvatar(
-                radius: 16,
-                backgroundColor: AppColors.warning.withAlpha(26),
-                child: const Icon(Icons.security, size: 16, color: AppColors.warning),
+              Container(
+                width: 32,
+                height: 32,
+                decoration: BoxDecoration(
+                  color: AppColors.warning.withAlpha(26),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: const Icon(FLucideIcons.shield, size: 16, color: AppColors.warning),
               ),
               const SizedBox(width: AppSpacing.sm),
               Expanded(
@@ -409,33 +426,33 @@ class _PatrolCard extends StatelessWidget {
                   children: [
                     Text(
                       report.patrolRoundName ?? 'Patrol',
-                      style: const TextStyle(fontWeight: FontWeight.w600),
+                      style: theme.typography.body.md.copyWith(fontWeight: FontWeight.w600),
                     ),
                     Text(
                       '${report.employeeName ?? '-'} • ${report.areaName ?? '-'}',
-                      style: const TextStyle(fontSize: 12, color: AppColors.gray500),
+                      style: theme.typography.body.xs.copyWith(color: AppColors.gray500),
                     ),
                   ],
                 ),
               ),
-              _StatusBadge(status: report.status ?? 'pending'),
+              _StatusBadge(status: report.status ?? 'pending', theme: theme),
             ],
           ),
           const SizedBox(height: AppSpacing.sm),
           Row(
             children: [
-              const Icon(Icons.calendar_today, size: 14, color: AppColors.gray500),
+              Icon(FLucideIcons.calendar, size: 14, color: AppColors.gray500),
               const SizedBox(width: 4),
               Text(
                 report.patrolDate ?? '-',
-                style: const TextStyle(fontSize: 12, color: AppColors.gray600),
+                style: theme.typography.body.xs.copyWith(color: AppColors.gray600),
               ),
               const SizedBox(width: AppSpacing.md),
-              const Icon(Icons.qr_code_scanner, size: 14, color: AppColors.gray500),
+              Icon(FLucideIcons.qrCode, size: 14, color: AppColors.gray500),
               const SizedBox(width: 4),
               Text(
                 '${report.totalScans ?? 0} scans',
-                style: const TextStyle(fontSize: 12, color: AppColors.gray600),
+                style: theme.typography.body.xs.copyWith(color: AppColors.gray600),
               ),
             ],
           ),
@@ -447,8 +464,9 @@ class _PatrolCard extends StatelessWidget {
 
 class _FieldReportCard extends StatelessWidget {
   final FieldReportRecord report;
+  final FThemeData theme;
 
-  const _FieldReportCard({required this.report});
+  const _FieldReportCard({required this.report, required this.theme});
 
   @override
   Widget build(BuildContext context) {
@@ -471,10 +489,14 @@ class _FieldReportCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              CircleAvatar(
-                radius: 16,
-                backgroundColor: AppColors.danger.withAlpha(26),
-                child: const Icon(Icons.report_problem_outlined, size: 16, color: AppColors.danger),
+              Container(
+                width: 32,
+                height: 32,
+                decoration: BoxDecoration(
+                  color: AppColors.danger.withAlpha(26),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: const Icon(FLucideIcons.alertTriangle, size: 16, color: AppColors.danger),
               ),
               const SizedBox(width: AppSpacing.sm),
               Expanded(
@@ -483,13 +505,13 @@ class _FieldReportCard extends StatelessWidget {
                   children: [
                     Text(
                       report.note ?? 'Field Report',
-                      style: const TextStyle(fontWeight: FontWeight.w600),
+                      style: theme.typography.body.md.copyWith(fontWeight: FontWeight.w600),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
                     Text(
                       '${report.employeeName ?? '-'} • ${report.location ?? '-'}',
-                      style: const TextStyle(fontSize: 12, color: AppColors.gray500),
+                      style: theme.typography.body.xs.copyWith(color: AppColors.gray500),
                     ),
                   ],
                 ),
@@ -499,19 +521,19 @@ class _FieldReportCard extends StatelessWidget {
           const SizedBox(height: AppSpacing.sm),
           Row(
             children: [
-              const Icon(Icons.calendar_today, size: 14, color: AppColors.gray500),
+              Icon(FLucideIcons.calendar, size: 14, color: AppColors.gray500),
               const SizedBox(width: 4),
               Text(
                 report.reportDate ?? '-',
-                style: const TextStyle(fontSize: 12, color: AppColors.gray600),
+                style: theme.typography.body.xs.copyWith(color: AppColors.gray600),
               ),
               if (report.photoUrl != null) ...[
                 const SizedBox(width: AppSpacing.md),
-                const Icon(Icons.photo, size: 14, color: AppColors.gray500),
+                Icon(FLucideIcons.image, size: 14, color: AppColors.gray500),
                 const SizedBox(width: 4),
-                const Text(
+                Text(
                   'Ada foto',
-                  style: TextStyle(fontSize: 12, color: AppColors.gray600),
+                  style: theme.typography.body.xs.copyWith(color: AppColors.gray600),
                 ),
               ],
             ],
@@ -524,8 +546,9 @@ class _FieldReportCard extends StatelessWidget {
 
 class _StatusBadge extends StatelessWidget {
   final String status;
+  final FThemeData theme;
 
-  const _StatusBadge({required this.status});
+  const _StatusBadge({required this.status, required this.theme});
 
   @override
   Widget build(BuildContext context) {
@@ -563,7 +586,7 @@ class _StatusBadge extends StatelessWidget {
       ),
       child: Text(
         label,
-        style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: color),
+        style: theme.typography.body.xs.copyWith(fontWeight: FontWeight.w600, color: color),
       ),
     );
   }

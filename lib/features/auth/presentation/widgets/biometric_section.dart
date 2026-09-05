@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:forui/forui.dart';
+
 import '../../../../core/core.dart';
+import '../../../../shared/widgets/icons/forui_icon_map.dart';
 
 /// Biometric login section widget
 class BiometricSection extends StatelessWidget {
@@ -29,17 +32,6 @@ class BiometricSection extends StatelessWidget {
     }
   }
 
-  IconData get _biometricIcon {
-    switch (biometryType) {
-      case 'Face ID':
-        return Icons.face;
-      case 'Touch ID':
-        return Icons.fingerprint;
-      default:
-        return Icons.fingerprint;
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     if (!hasSavedCredentials && !enabled) {
@@ -65,7 +57,7 @@ class BiometricSection extends StatelessWidget {
                 ),
               ),
               child: Icon(
-                _biometricIcon,
+                IconMap.fingerprint,
                 size: 36,
                 color: AppColors.primary,
               ),
@@ -97,7 +89,7 @@ class BiometricSection extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Icon(
-                    _biometricIcon,
+                    IconMap.fingerprint,
                     size: 24,
                     color: AppColors.gray600,
                   ),
@@ -127,19 +119,15 @@ class BiometricSection extends StatelessWidget {
                 color: AppColors.gray500,
               ),
             ),
-            Switch(
+            FSwitch(
               value: enabled,
-              onChanged: hasSavedCredentials
+              onChange: hasSavedCredentials
                   ? (value) {
                       if (!value) {
                         onEnableBiometric?.call();
                       }
                     }
                   : null,
-              activeThumbColor: AppColors.primary,
-              activeTrackColor: AppColors.primary.withValues(alpha: 0.5),
-              inactiveThumbColor: AppColors.gray400,
-              inactiveTrackColor: AppColors.gray200,
             ),
           ],
         ),

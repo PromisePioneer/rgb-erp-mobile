@@ -1,6 +1,6 @@
 import 'package:dio/dio.dart';
 import '../../domain/entities/notification_entity.dart';
-import '../../../core/network/api_exception.dart';
+import '../../../../core/network/api_exception.dart';
 
 class NotificationRepository {
   final Dio _dio;

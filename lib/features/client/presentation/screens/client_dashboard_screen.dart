@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
+import 'package:forui/forui.dart';
+
 
 import '../../../../core/core.dart';
+import '../../../../shared/widgets/feedback/loading_indicator.dart';
+import '../../../../shared/widgets/icons/forui_icon_map.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../providers/client_dashboard_provider.dart';
 
@@ -28,24 +32,27 @@ class _ClientDashboardScreenState extends State<ClientDashboardScreen> {
   Widget build(BuildContext context) {
     final dashboardState = context.watch<ClientDashboardNotifier>().state;
     final data = dashboardState.data;
+    final theme = FTheme.of(context);
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('Dashboard Client'),
         automaticallyImplyLeading: false,
         actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: () {
+          FButton.icon(
+            onPress: () {
               context.read<ClientDashboardNotifier>().refresh();
             },
+            child: Icon(IconMap.refreshCcw),
           ),
-          IconButton(
-            icon: const Icon(Icons.logout),
-            onPressed: () {
+          const SizedBox(width: 8),
+          FButton.icon(
+            onPress: () {
               _handleLogout(context);
             },
+            child: Icon(IconMap.logOut),
           ),
+          const SizedBox(width: 8),
         ],
       ),
       body: RefreshIndicator(
@@ -59,7 +66,7 @@ class _ClientDashboardScreenState extends State<ClientDashboardScreen> {
                 : ListView(
                     padding: const EdgeInsets.all(AppSpacing.md),
                     children: [
-                      _buildWelcomeCard(context),
+                      _buildWelcomeCard(context, theme),
                       const SizedBox(height: AppSpacing.lg),
                       Row(
                         children: [
@@ -67,9 +74,10 @@ class _ClientDashboardScreenState extends State<ClientDashboardScreen> {
                             child: _StatCard(
                               title: 'Total Employee',
                               value: '${data?.totalEmployees ?? 0}',
-                              icon: Icons.people_outline,
+                              icon: IconMap.users,
                               color: AppColors.primary,
                               onTap: () => context.push('/client/employees'),
+                              theme: theme,
                             ),
                           ),
                           const SizedBox(width: AppSpacing.sm),
@@ -77,9 +85,10 @@ class _ClientDashboardScreenState extends State<ClientDashboardScreen> {
                             child: _StatCard(
                               title: 'Total Area',
                               value: '${data?.totalAreas ?? 0}',
-                              icon: Icons.location_on_outlined,
+                              icon: IconMap.mapPin,
                               color: AppColors.info,
                               onTap: () => context.push('/client/areas'),
+                              theme: theme,
                             ),
                           ),
                         ],
@@ -89,27 +98,30 @@ class _ClientDashboardScreenState extends State<ClientDashboardScreen> {
                         title: 'Hadir Hari Ini',
                         value: '${data?.attendanceToday.checkedIn ?? 0}',
                         subtitle: 'Pending: ${data?.attendanceToday.pending ?? 0}',
-                        icon: Icons.check_circle_outline,
+                        icon: IconMap.checkCircle,
                         color: AppColors.success,
                         onTap: () => context.push('/client/attendance'),
+                        theme: theme,
                       ),
                       const SizedBox(height: AppSpacing.md),
                       _StatCard(
                         title: 'Laporan Hari Ini',
                         value: '${(data?.tasksSummary.total ?? 0) + (data?.patrolSummary.total ?? 0) + (data?.fieldReportsToday ?? 0)}',
                         subtitle: 'Tugas: ${data?.tasksSummary.total ?? 0} • Patrol: ${data?.patrolSummary.total ?? 0} • Field: ${data?.fieldReportsToday ?? 0}',
-                        icon: Icons.summarize_outlined,
+                        icon: IconMap.fileText,
                         color: AppColors.info,
                         onTap: () => context.push('/client/tasks'),
+                        theme: theme,
                       ),
                       const SizedBox(height: AppSpacing.md),
                       _StatCard(
                         title: 'Jadwal Karyawan',
                         value: 'Calendar',
                         subtitle: 'Lihat jadwal dan kehadiran',
-                        icon: Icons.calendar_month_outlined,
+                        icon: IconMap.calendar,
                         color: AppColors.warning,
                         onTap: () => context.push('/client/schedules'),
+                        theme: theme,
                       ),
                     ],
                   ),
@@ -117,7 +129,7 @@ class _ClientDashboardScreenState extends State<ClientDashboardScreen> {
     );
   }
 
-  Widget _buildWelcomeCard(BuildContext context) {
+  Widget _buildWelcomeCard(BuildContext context, FThemeData theme) {
     return Container(
       padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
@@ -133,7 +145,7 @@ class _ClientDashboardScreenState extends State<ClientDashboardScreen> {
         children: [
           Text(
             'Selamat Datang!',
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
+            style: theme.typography.display.lg.copyWith(
                   color: Colors.white,
                   fontWeight: FontWeight.bold,
                 ),
@@ -141,7 +153,7 @@ class _ClientDashboardScreenState extends State<ClientDashboardScreen> {
           const SizedBox(height: AppSpacing.xs),
           Text(
             'Monitoring Karyawan Anda',
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+            style: theme.typography.body.md.copyWith(
                   color: Colors.white.withAlpha(230),
                 ),
           ),
@@ -155,7 +167,7 @@ class _ClientDashboardScreenState extends State<ClientDashboardScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.error_outline, size: 64, color: AppColors.danger),
+          Icon(IconMap.alertCircle, color: AppColors.danger, size: 64),
           const SizedBox(height: AppSpacing.md),
           Text(
             'Gagal memuat data',
@@ -168,10 +180,11 @@ class _ClientDashboardScreenState extends State<ClientDashboardScreen> {
             style: const TextStyle(color: AppColors.gray600),
           ),
           const SizedBox(height: AppSpacing.lg),
-          ElevatedButton(
-            onPressed: () {
+          FButton(
+            onPress: () {
               context.read<ClientDashboardNotifier>().fetchDashboard();
             },
+            variant: FButtonVariant.primary,
             child: const Text('Coba Lagi'),
           ),
         ],
@@ -182,19 +195,9 @@ class _ClientDashboardScreenState extends State<ClientDashboardScreen> {
   void _handleLogout(BuildContext context) async {
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Logout'),
-        content: const Text('Apakah Anda yakin ingin logout?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Batal'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('Logout'),
-          ),
-        ],
+      builder: (context) => _LogoutDialog(
+        onLogout: () => Navigator.pop(context, true),
+        onCancel: () => Navigator.pop(context, false),
       ),
     );
 
@@ -208,6 +211,75 @@ class _ClientDashboardScreenState extends State<ClientDashboardScreen> {
   }
 }
 
+class _LogoutDialog extends StatelessWidget {
+  final VoidCallback onLogout;
+  final VoidCallback onCancel;
+
+  const _LogoutDialog({
+    required this.onLogout,
+    required this.onCancel,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = FTheme.of(context);
+
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: theme.colors.background,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: theme.colors.border),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'Logout',
+                style: theme.typography.body.lg.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 12),
+              Text(
+                'Apakah Anda yakin ingin logout?',
+                style: theme.typography.body.md.copyWith(
+                  color: theme.colors.mutedForeground,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 24),
+              Row(
+                children: [
+                  Expanded(
+                    child: FButton(
+                      onPress: onCancel,
+                      variant: FButtonVariant.ghost,
+                      child: const Text('Batal'),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: FButton(
+                      onPress: onLogout,
+                      variant: FButtonVariant.primary,
+                      child: const Text('Logout'),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class _StatCard extends StatelessWidget {
   final String title;
   final String value;
@@ -215,6 +287,7 @@ class _StatCard extends StatelessWidget {
   final IconData icon;
   final Color color;
   final VoidCallback? onTap;
+  final FThemeData theme;
 
   const _StatCard({
     required this.title,
@@ -223,6 +296,7 @@ class _StatCard extends StatelessWidget {
     required this.icon,
     required this.color,
     this.onTap,
+    required this.theme,
   });
 
   @override
@@ -259,16 +333,13 @@ class _StatCard extends StatelessWidget {
                 children: [
                   Text(
                     title,
-                    style: const TextStyle(
+                    style: theme.typography.body.sm.copyWith(
                       color: AppColors.slate500,
-                      fontSize: 14,
                     ),
                   ),
                   Text(
                     value,
-                    style: const TextStyle(
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
+                    style: theme.typography.display.lg.copyWith(
                       color: AppColors.textPrimary,
                     ),
                   ),
@@ -276,9 +347,8 @@ class _StatCard extends StatelessWidget {
                     const SizedBox(height: 2),
                     Text(
                       subtitle!,
-                      style: const TextStyle(
+                      style: theme.typography.body.xs.copyWith(
                         color: AppColors.gray500,
-                        fontSize: 12,
                       ),
                     ),
                   ],
@@ -286,7 +356,7 @@ class _StatCard extends StatelessWidget {
               ),
             ),
             if (onTap != null)
-              const Icon(Icons.chevron_right, color: AppColors.gray400),
+              Icon(IconMap.chevronRight, color: AppColors.gray400),
           ],
         ),
       ),

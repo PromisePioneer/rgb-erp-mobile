@@ -30,47 +30,36 @@ class _SettingsScreenState extends State<SettingsScreen> {
       if (value) {
         await authNotifier.enableBiometric(authState.savedNik ?? '');
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Fingerprint berhasil diaktifkan'),
-              backgroundColor: AppColors.success,
-            ),
-          );
+          _showSnackBar('Fingerprint berhasil diaktifkan', AppColors.success);
         }
       } else {
         await authNotifier.disableBiometric();
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Fingerprint dinonaktifkan'),
-              backgroundColor: AppColors.info,
-            ),
-          );
+          _showSnackBar('Fingerprint dinonaktifkan', AppColors.info);
         }
       }
     } on ApiException catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(e.message),
-            backgroundColor: AppColors.danger,
-          ),
-        );
+        _showSnackBar(e.message, AppColors.danger);
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Terjadi kesalahan: $e'),
-            backgroundColor: AppColors.danger,
-          ),
-        );
+        _showSnackBar('Terjadi kesalahan: $e', AppColors.danger);
       }
     } finally {
       if (mounted) {
         setState(() => _isLoading = false);
       }
     }
+  }
+
+  void _showSnackBar(String message, Color backgroundColor) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: backgroundColor,
+      ),
+    );
   }
 
   @override
@@ -162,7 +151,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               'RGB ERP Mobile v1.0.0',
               style: TextStyle(
                 fontSize: 12,
-                color: AppColors.slate400,
+                color: AppColors.gray400,
               ),
             ),
           ),
@@ -273,11 +262,11 @@ class _SettingsTile extends StatelessWidget {
                   ],
                 ),
               ),
-              ?trailing,
+              if (trailing != null) trailing!,
               if (trailing == null && onTap != null)
                 Icon(
                   IconMap.chevronRight,
-                  color: AppColors.slate400,
+                  color: AppColors.gray400,
                 ),
             ],
           ),

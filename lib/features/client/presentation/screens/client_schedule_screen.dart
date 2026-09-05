@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import 'package:forui/forui.dart';
+
 
 import '../../../../core/core.dart';
+import '../../../../shared/widgets/feedback/loading_indicator.dart';
 import '../providers/client_schedule_provider.dart';
 
 /// Client schedule screen with calendar
@@ -58,6 +61,8 @@ class _ClientScheduleScreenState extends State<ClientScheduleScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = FTheme.of(context);
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Jadwal Karyawan'),
@@ -71,6 +76,7 @@ class _ClientScheduleScreenState extends State<ClientScheduleScreen> {
                 currentMonth: _currentMonth,
                 onPrevious: _previousMonth,
                 onNext: _nextMonth,
+                theme: theme,
               ),
               // Calendar Grid
               _CalendarGrid(
@@ -88,6 +94,7 @@ class _ClientScheduleScreenState extends State<ClientScheduleScreen> {
                   employees: notifier.employeeState.employees,
                   isLoading: notifier.employeeState.isLoading,
                   error: notifier.employeeState.error,
+                  theme: theme,
                   onRetry: () {
                     if (_selectedDate != null) {
                       notifier.fetchEmployeesByDate(_selectedDate!);
@@ -107,11 +114,13 @@ class _CalendarHeader extends StatelessWidget {
   final DateTime currentMonth;
   final VoidCallback onPrevious;
   final VoidCallback onNext;
+  final FThemeData theme;
 
   const _CalendarHeader({
     required this.currentMonth,
     required this.onPrevious,
     required this.onNext,
+    required this.theme,
   });
 
   @override
@@ -121,20 +130,17 @@ class _CalendarHeader extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          IconButton(
-            icon: const Icon(Icons.chevron_left),
-            onPressed: onPrevious,
+          FButton.icon(
+            onPress: onPrevious,
+            child: const Icon(FLucideIcons.chevronLeft),
           ),
           Text(
             DateFormat('MMMM yyyy', 'id_ID').format(currentMonth),
-            style: const TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-            ),
+            style: theme.typography.display.sm,
           ),
-          IconButton(
-            icon: const Icon(Icons.chevron_right),
-            onPressed: onNext,
+          FButton.icon(
+            onPress: onNext,
+            child: const Icon(FLucideIcons.chevronRight),
           ),
         ],
       ),
@@ -162,7 +168,7 @@ class _CalendarGrid extends StatelessWidget {
     final firstDayOfMonth = DateTime(currentMonth.year, currentMonth.month, 1);
     final lastDayOfMonth = DateTime(currentMonth.year, currentMonth.month + 1, 0);
     final daysInMonth = lastDayOfMonth.day;
-    final startWeekday = firstDayOfMonth.weekday; // 1 = Monday, 7 = Sunday
+    final startWeekday = firstDayOfMonth.weekday;
 
     final scheduleDatesSet = scheduleDates.map((d) => d.date.day).toSet();
     final scheduleCountMap = {for (var d in scheduleDates) d.date.day: d.count};
@@ -178,9 +184,8 @@ class _CalendarGrid extends StatelessWidget {
                       child: Center(
                         child: Text(
                           day,
-                          style: const TextStyle(
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
                             fontWeight: FontWeight.bold,
-                            fontSize: 12,
                             color: AppColors.gray500,
                           ),
                         ),
@@ -205,7 +210,7 @@ class _CalendarGrid extends StatelessWidget {
               crossAxisCount: 7,
               childAspectRatio: 1,
             ),
-            itemCount: 42, // 6 weeks
+            itemCount: 42,
             itemBuilder: (context, index) {
               final dayOffset = index - (startWeekday - 1);
               if (dayOffset < 1 || dayOffset > daysInMonth) {
@@ -285,6 +290,7 @@ class _EmployeesList extends StatelessWidget {
   final bool isLoading;
   final String? error;
   final VoidCallback onRetry;
+  final FThemeData theme;
 
   const _EmployeesList({
     required this.selectedDate,
@@ -292,20 +298,21 @@ class _EmployeesList extends StatelessWidget {
     required this.isLoading,
     required this.error,
     required this.onRetry,
+    required this.theme,
   });
 
   @override
   Widget build(BuildContext context) {
     if (selectedDate == null) {
-      return const Center(
+      return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.calendar_today, size: 48, color: AppColors.gray300),
-            SizedBox(height: AppSpacing.sm),
+            const Icon(FLucideIcons.calendar, size: 48, color: AppColors.gray300),
+            const SizedBox(height: AppSpacing.sm),
             Text(
               'Pilih tanggal untuk melihat jadwal',
-              style: TextStyle(color: AppColors.gray500),
+              style: theme.typography.body.md.copyWith(color: AppColors.gray500),
             ),
           ],
         ),
@@ -321,12 +328,13 @@ class _EmployeesList extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.error_outline, size: 48, color: AppColors.danger),
+            const Icon(FLucideIcons.alertCircle, size: 48, color: AppColors.danger),
             const SizedBox(height: AppSpacing.sm),
-            Text('Error: $error'),
+            Text('Error: $error', style: theme.typography.body.md),
             const SizedBox(height: AppSpacing.md),
-            ElevatedButton(
-              onPressed: onRetry,
+            FButton(
+              onPress: onRetry,
+              variant: FButtonVariant.primary,
               child: const Text('Coba Lagi'),
             ),
           ],
@@ -339,11 +347,11 @@ class _EmployeesList extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.event_busy, size: 48, color: AppColors.gray300),
+            const Icon(FLucideIcons.calendarX, size: 48, color: AppColors.gray300),
             const SizedBox(height: AppSpacing.sm),
             Text(
               'Tidak ada jadwal pada ${DateFormat('dd MMMM yyyy', 'id_ID').format(selectedDate!)}',
-              style: const TextStyle(color: AppColors.gray500),
+              style: theme.typography.body.md.copyWith(color: AppColors.gray500),
               textAlign: TextAlign.center,
             ),
           ],
@@ -358,10 +366,7 @@ class _EmployeesList extends StatelessWidget {
           padding: const EdgeInsets.all(AppSpacing.md),
           child: Text(
             'Jadwal ${DateFormat('dd MMMM yyyy', 'id_ID').format(selectedDate!)}',
-            style: const TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-            ),
+            style: theme.typography.display.sm,
           ),
         ),
         Expanded(
@@ -370,7 +375,7 @@ class _EmployeesList extends StatelessWidget {
             itemCount: employees.length,
             itemBuilder: (context, index) {
               final emp = employees[index];
-              return _EmployeeScheduleCard(employee: emp);
+              return _EmployeeScheduleCard(employee: emp, theme: theme);
             },
           ),
         ),
@@ -381,8 +386,9 @@ class _EmployeesList extends StatelessWidget {
 
 class _EmployeeScheduleCard extends StatelessWidget {
   final ScheduledEmployee employee;
+  final FThemeData theme;
 
-  const _EmployeeScheduleCard({required this.employee});
+  const _EmployeeScheduleCard({required this.employee, required this.theme});
 
   @override
   Widget build(BuildContext context) {
@@ -403,14 +409,20 @@ class _EmployeeScheduleCard extends StatelessWidget {
       child: Row(
         children: [
           // Avatar
-          CircleAvatar(
-            radius: 24,
-            backgroundColor: AppColors.gray200,
-            child: Text(
-              _getInitials(employee.employeeName),
-              style: const TextStyle(
-                fontWeight: FontWeight.bold,
-                color: AppColors.gray600,
+          Container(
+            width: 48,
+            height: 48,
+            decoration: BoxDecoration(
+              color: AppColors.gray200,
+              borderRadius: BorderRadius.circular(24),
+            ),
+            child: Center(
+              child: Text(
+                _getInitials(employee.employeeName),
+                style: theme.typography.body.md.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.gray600,
+                ),
               ),
             ),
           ),
@@ -422,10 +434,7 @@ class _EmployeeScheduleCard extends StatelessWidget {
               children: [
                 Text(
                   employee.employeeName,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w600,
-                    fontSize: 15,
-                  ),
+                  style: theme.typography.body.md.copyWith(fontWeight: FontWeight.w600),
                 ),
                 const SizedBox(height: 2),
                 if (employee.role != null && employee.role!.isNotEmpty && employee.role != '-')
@@ -438,38 +447,31 @@ class _EmployeeScheduleCard extends StatelessWidget {
                     ),
                     child: Text(
                       employee.role!,
-                      style: const TextStyle(
+                      style: theme.typography.body.xs.copyWith(
                         color: AppColors.primary,
-                        fontSize: 11,
                         fontWeight: FontWeight.w500,
                       ),
                     ),
                   ),
                 Row(
                   children: [
-                    const Icon(Icons.schedule, size: 14, color: AppColors.gray500),
+                    Icon(FLucideIcons.clock, size: 14, color: AppColors.gray500),
                     const SizedBox(width: 4),
                     Text(
                       '${employee.shiftName} (${employee.shiftStart} - ${employee.shiftEnd})',
-                      style: const TextStyle(
-                        color: AppColors.gray500,
-                        fontSize: 12,
-                      ),
+                      style: theme.typography.body.xs.copyWith(color: AppColors.gray500),
                     ),
                   ],
                 ),
                 const SizedBox(height: 2),
                 Row(
                   children: [
-                    const Icon(Icons.location_on, size: 14, color: AppColors.gray500),
+                    Icon(FLucideIcons.mapPin, size: 14, color: AppColors.gray500),
                     const SizedBox(width: 4),
                     Expanded(
                       child: Text(
                         '${employee.areaName} - ${employee.posName}',
-                        style: const TextStyle(
-                          color: AppColors.gray500,
-                          fontSize: 12,
-                        ),
+                        style: theme.typography.body.xs.copyWith(color: AppColors.gray500),
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
@@ -487,10 +489,9 @@ class _EmployeeScheduleCard extends StatelessWidget {
             ),
             child: Text(
               employee.status.toUpperCase(),
-              style: TextStyle(
-                color: _getStatusColor(employee.status),
-                fontSize: 10,
+              style: theme.typography.body.xs.copyWith(
                 fontWeight: FontWeight.bold,
+                color: _getStatusColor(employee.status),
               ),
             ),
           ),

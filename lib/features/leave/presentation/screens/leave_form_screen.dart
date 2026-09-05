@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/core.dart';
+import '../../../../shared/widgets/buttons/primary_button.dart';
+import '../../../../shared/widgets/feedback/loading_indicator.dart';
+import '../../../../shared/widgets/icons/forui_icon_map.dart';
 import '../providers/leave_provider.dart';
 
 /// Leave form screen for submitting a new leave request
@@ -193,8 +196,8 @@ class _LeaveFormScreenState extends State<LeaveFormScreen> {
             ),
             const SizedBox(height: 16),
 
-            // Reason text field
-            TextFormField(
+            // Reason text field using Material TextField
+            TextField(
               controller: _reasonController,
               enabled: !isSubmitting,
               maxLines: 4,
@@ -207,41 +210,21 @@ class _LeaveFormScreenState extends State<LeaveFormScreen> {
                 ),
               ),
               onChanged: (_) => setState(() => _reasonError = null),
-              validator: (_) => null,
             ),
             const SizedBox(height: 24),
 
             // Submit button
             SizedBox(
               width: double.infinity,
-              child: ElevatedButton(
-                onPressed: isSubmitting || !_canSubmit ? null : _submit,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary,
-                  disabledBackgroundColor: AppColors.slate300,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                child: isSubmitting
-                    ? const SizedBox(
-                        width: 24,
-                        height: 24,
-                        child: LoadingIndicator(
-                          strokeWidth: 2,
-                          color: Colors.white,
-                        ),
-                      )
-                    : const Text(
-                        'Ajukan Cuti',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-              ),
+              child: isSubmitting
+                  ? const Center(
+                      child: LoadingIndicator(size: 24),
+                    )
+                  : PrimaryButton(
+                      label: 'Ajukan Cuti',
+                      onPressed: _canSubmit ? _submit : null,
+                      isLoading: isSubmitting,
+                    ),
             ),
           ],
         ),
@@ -275,19 +258,19 @@ class _LeaveFormScreenState extends State<LeaveFormScreen> {
             ),
             child: Row(
               children: [
-                Icon(Icons.calendar_today, size: 20, color: AppColors.slate400),
+                Icon(IconMap.calendarToday, size: 20, color: AppColors.slate500),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
                     value ?? 'Pilih tanggal',
                     style: TextStyle(
                       fontSize: 16,
-                      color: value == null ? AppColors.slate400 : AppColors.slate800,
+                      color: value == null ? AppColors.slate500 : AppColors.slate800,
                     ),
                   ),
                 ),
                 if (onTap != null)
-                  Icon(Icons.chevron_right, size: 24, color: AppColors.slate400),
+                  Icon(IconMap.chevronRight, size: 24, color: AppColors.slate500),
               ],
             ),
           ),

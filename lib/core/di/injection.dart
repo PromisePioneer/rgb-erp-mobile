@@ -24,9 +24,9 @@ class AuthApi {
       final response = await _dio.post(
         ApiEndpoints.login,
         data: {
-          'email': code, // Backend expects 'email' field, can be NIK or email
+          'code': code, // Backend expects 'code' field
           'password': password,
-          'fcm_token': ?fcmToken,
+          'fcm_token': fcmToken,
         },
       );
       return response.data;
@@ -60,7 +60,7 @@ class AuthApi {
         ApiEndpoints.biometricLogin,
         data: {
           'code': code,
-          'biometric_token': ?biometricToken,
+          'biometric_token': biometricToken,
         },
       );
       return response.data;

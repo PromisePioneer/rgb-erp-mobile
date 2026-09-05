@@ -3,7 +3,7 @@ import 'package:forui/forui.dart';
 
 import '../../../../core/core.dart';
 
-/// Confirmation dialog helper
+/// Confirmation dialog helper using Container-based design
 class ConfirmDialog extends StatelessWidget {
   final String title;
   final String message;
@@ -28,34 +28,67 @@ class ConfirmDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(
-      shape: RoundedRectangleBorder(
-        borderRadius: AppRadius.radiusLg,
-      ),
-      title: Text(
-        title,
-        textAlign: TextAlign.center,
-      ),
-      content: Text(
-        message,
-        textAlign: TextAlign.center,
-      ),
-      actionsAlignment: MainAxisAlignment.spaceEvenly,
-      actionsPadding: const EdgeInsets.fromLTRB(24, 0, 24, 16),
-      actions: [
-        if (showCancel) ...[
-          FButton(
-            onPress: onCancel ?? () => Navigator.pop(context),
-            variant: FButtonVariant.ghost,
-            child: Text(cancelText),
+    final theme = context.theme;
+
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: theme.colors.background,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: theme.colors.border),
           ),
-        ],
-        FButton(
-          onPress: onConfirm ?? () => Navigator.pop(context, true),
-          variant: isDanger ? FButtonVariant.destructive : FButtonVariant.primary,
-          child: Text(confirmText),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Title
+              Text(
+                title,
+                style: theme.typography.body.lg.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 12),
+
+              // Message
+              Text(
+                message,
+                style: theme.typography.body.md.copyWith(
+                  color: theme.colors.mutedForeground,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 24),
+
+              // Actions
+              Row(
+                children: [
+                  if (showCancel) ...[
+                    Expanded(
+                      child: FButton(
+                        onPress: onCancel ?? () => Navigator.pop(context),
+                        variant: FButtonVariant.outline,
+                        child: Text(cancelText),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                  ],
+                  Expanded(
+                    child: FButton(
+                      onPress: onConfirm ?? () => Navigator.pop(context, true),
+                      variant: isDanger ? FButtonVariant.destructive : FButtonVariant.primary,
+                      child: Text(confirmText),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
-      ],
+      ),
     );
   }
 

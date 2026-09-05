@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/core.dart';
+import '../../../../shared/widgets/buttons/primary_button.dart';
+import '../../../../shared/widgets/feedback/loading_indicator.dart';
+import '../../../../shared/widgets/icons/forui_icon_map.dart';
 import '../../../../shared/widgets/layout/top_gradient_background.dart';
 import '../../domain/models/approval.dart';
 import '../providers/approval_provider.dart';
@@ -32,7 +35,7 @@ class _ApprovalListScreenState extends State<ApprovalListScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Padding(
+              Padding(
                 padding: EdgeInsets.fromLTRB(16, 16, 16, 8),
                 child: Text(
                   'Persetujuan',
@@ -47,7 +50,7 @@ class _ApprovalListScreenState extends State<ApprovalListScreen> {
                 child: Consumer<ApprovalNotifier>(
                   builder: (context, notifier, child) {
                     if (notifier.state.isLoading) {
-                      return const Center(child: LoadingIndicator());
+                      return Center(child: LoadingIndicator());
                     }
                     if (notifier.state.error != null) {
                       return _buildError(notifier);
@@ -68,18 +71,28 @@ class _ApprovalListScreenState extends State<ApprovalListScreen> {
 
   Widget _buildError(ApprovalNotifier notifier) {
     return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const Icon(Icons.error_outline, size: 64, color: AppColors.danger),
-          const SizedBox(height: 16),
-          Text(notifier.state.error!, textAlign: TextAlign.center),
-          const SizedBox(height: 16),
-          ElevatedButton(
-            onPressed: () => notifier.loadApprovals(),
-            child: const Text('Coba Lagi'),
-          ),
-        ],
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.lg),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(IconMap.errorOutline, size: 64, color: AppColors.danger),
+            const SizedBox(height: 16),
+            Text(
+              notifier.state.error!,
+              textAlign: TextAlign.center,
+              style: const TextStyle(color: AppColors.slate500),
+            ),
+            const SizedBox(height: 16),
+            SizedBox(
+              width: 150,
+              child: PrimaryButton(
+                label: 'Coba Lagi',
+                onPressed: () => notifier.loadApprovals(),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -88,8 +101,8 @@ class _ApprovalListScreenState extends State<ApprovalListScreen> {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
-        children: const [
-          Icon(Icons.check_circle_outline, size: 64, color: AppColors.slate300),
+        children: [
+          Icon(IconMap.checkCircleOutline, size: 64, color: AppColors.slate300),
           SizedBox(height: 16),
           Text(
             'Tidak ada persetujuan tertunda',
@@ -182,13 +195,13 @@ class _ApprovalListScreenState extends State<ApprovalListScreen> {
     IconData icon;
     Color color;
     if (type.contains('Purchase')) {
-      icon = Icons.shopping_cart;
+      icon = IconMap.shoppingCart;
       color = AppColors.primary;
     } else if (type.contains('Leave') || type.contains('Cuti')) {
-      icon = Icons.beach_access;
+      icon = IconMap.beachAccess;
       color = AppColors.info;
     } else {
-      icon = Icons.approval;
+      icon = IconMap.checklist;
       color = AppColors.warning;
     }
     return Container(

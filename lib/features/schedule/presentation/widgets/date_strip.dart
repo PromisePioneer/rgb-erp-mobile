@@ -47,11 +47,11 @@ class _DateStripState extends State<DateStrip> {
     if (todayIndex != -1 && _scrollController.hasClients) {
       // Calculate offset to center today
       final screenWidth = MediaQuery.of(context).size.width;
-      final itemWidth = 56.0; // width of each date item
+      const itemWidth = 56.0; // width of each date item
       final offset = (todayIndex * itemWidth) - (screenWidth / 2) + (itemWidth / 2);
 
       _scrollController.animateTo(
-        offset.clamp(0, _scrollController.position.maxScrollExtent),
+        offset.clamp(0.0, _scrollController.position.maxScrollExtent),
         duration: const Duration(milliseconds: 300),
         curve: Curves.easeInOut,
       );

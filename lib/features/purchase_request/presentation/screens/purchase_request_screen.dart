@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+
 import '../../../../core/core.dart';
+import '../../../../shared/widgets/buttons/primary_button.dart';
+import '../../../../shared/widgets/feedback/loading_indicator.dart';
+import '../../../../shared/widgets/icons/forui_icon_map.dart';
 import '../../../../shared/widgets/layout/top_gradient_background.dart';
 import '../../domain/models/models.dart';
 import '../providers/purchase_request_provider.dart';
@@ -81,7 +85,7 @@ class _PurchaseRequestScreenState extends State<PurchaseRequestScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Header
-              const Padding(
+              Padding(
                 padding: EdgeInsets.fromLTRB(16, 16, 16, 8),
                 child: Text(
                   'Purchase Request',
@@ -100,10 +104,10 @@ class _PurchaseRequestScreenState extends State<PurchaseRequestScreen> {
                   controller: _searchController,
                   decoration: InputDecoration(
                     hintText: 'Cari kode atau supplier...',
-                    prefixIcon: const Icon(Icons.search, color: AppColors.slate400),
+                    prefixIcon: Icon(IconMap.search, color: AppColors.gray400),
                     suffixIcon: _searchController.text.isNotEmpty
                         ? IconButton(
-                            icon: const Icon(Icons.clear, color: AppColors.slate400),
+                            icon: Icon(IconMap.close, color: AppColors.gray400),
                             onPressed: () {
                               _searchController.clear();
                               _onSearch('');
@@ -135,23 +139,10 @@ class _PurchaseRequestScreenState extends State<PurchaseRequestScreen> {
                   itemBuilder: (context, index) {
                     final option = _statusOptions[index];
                     final isSelected = _selectedStatus == option['value'];
-                    return FilterChip(
-                      label: Text(option['label']!),
-                      selected: isSelected,
-                      onSelected: (_) => _onStatusChanged(option['value']),
-                      backgroundColor: Colors.white,
-                      selectedColor: AppColors.primary.withAlpha(26),
-                      checkmarkColor: AppColors.primary,
-                      labelStyle: TextStyle(
-                        color: isSelected ? AppColors.primary : AppColors.slate600,
-                        fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(20),
-                        side: BorderSide(
-                          color: isSelected ? AppColors.primary : AppColors.slate200,
-                        ),
-                      ),
+                    return _StatusChip(
+                      label: option['label']!,
+                      isSelected: isSelected,
+                      onTap: () => _onStatusChanged(option['value']),
                     );
                   },
                 ),
@@ -166,7 +157,7 @@ class _PurchaseRequestScreenState extends State<PurchaseRequestScreen> {
                     final state = notifier.state;
 
                     if (state.isLoading && state.items.isEmpty) {
-                      return const Center(child: LoadingIndicator());
+                      return Center(child: LoadingIndicator());
                     }
 
                     if (state.error != null && state.items.isEmpty) {
@@ -186,12 +177,10 @@ class _PurchaseRequestScreenState extends State<PurchaseRequestScreen> {
         ),
         floatingActionButton: Padding(
           padding: const EdgeInsets.only(bottom: 70),
-          child: FloatingActionButton.extended(
+          child: _FAB(
             onPressed: () => context.push('/purchase-request/form'),
-            backgroundColor: AppColors.primary,
-            foregroundColor: Colors.white,
-            icon: const Icon(Icons.add),
-            label: const Text('Buat PR'),
+            icon: IconMap.plus,
+            label: 'Buat PR',
           ),
         ),
       ),
@@ -205,7 +194,7 @@ class _PurchaseRequestScreenState extends State<PurchaseRequestScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.error_outline, size: 64, color: AppColors.danger),
+            Icon(IconMap.errorOutline, size: 64, color: AppColors.danger),
             const SizedBox(height: AppSpacing.md),
             Text(
               notifier.state.error!,
@@ -213,9 +202,12 @@ class _PurchaseRequestScreenState extends State<PurchaseRequestScreen> {
               style: const TextStyle(color: AppColors.slate500),
             ),
             const SizedBox(height: AppSpacing.lg),
-            ElevatedButton(
-              onPressed: () => notifier.loadPurchaseRequests(refresh: true),
-              child: const Text('Coba Lagi'),
+            SizedBox(
+              width: 150,
+              child: PrimaryButton(
+                label: 'Coba Lagi',
+                onPressed: () => notifier.loadPurchaseRequests(refresh: true),
+              ),
             ),
           ],
         ),
@@ -228,16 +220,16 @@ class _PurchaseRequestScreenState extends State<PurchaseRequestScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.shopping_cart_outlined, size: 64, color: AppColors.slate300),
-          const SizedBox(height: AppSpacing.md),
-          const Text(
+          Icon(IconMap.shoppingCartOutline, size: 64, color: AppColors.slate300),
+          SizedBox(height: AppSpacing.md),
+          Text(
             'Belum ada purchase request',
             style: TextStyle(fontSize: 16, color: AppColors.slate500),
           ),
-          const SizedBox(height: 8),
-          const Text(
+          SizedBox(height: 8),
+          Text(
             'Tekan tombol + untuk membuat baru',
-            style: TextStyle(fontSize: 14, color: AppColors.slate400),
+            style: TextStyle(fontSize: 14, color: AppColors.gray400),
           ),
         ],
       ),
@@ -251,7 +243,7 @@ class _PurchaseRequestScreenState extends State<PurchaseRequestScreen> {
       itemCount: items.length + (hasMore ? 1 : 0),
       itemBuilder: (context, index) {
         if (index == items.length) {
-          return const Center(
+          return Center(
             child: Padding(
               padding: EdgeInsets.all(16),
               child: LoadingIndicator(),
@@ -330,7 +322,7 @@ class _PurchaseRequestScreenState extends State<PurchaseRequestScreen> {
                   const SizedBox(height: 8),
                   Row(
                     children: [
-                      Icon(Icons.business, size: 16, color: AppColors.slate400),
+                      Icon(IconMap.business, size: 16, color: AppColors.gray400),
                       const SizedBox(width: 6),
                       Expanded(
                         child: Text(
@@ -360,13 +352,13 @@ class _PurchaseRequestScreenState extends State<PurchaseRequestScreen> {
                     ),
                     Row(
                       children: [
-                        Icon(Icons.inventory_2_outlined, size: 14, color: AppColors.slate400),
+                        Icon(IconMap.inventoryOutline, size: 14, color: AppColors.gray400),
                         const SizedBox(width: 4),
                         Text(
                           '${pr.details.length} item',
                           style: const TextStyle(
                             fontSize: 12,
-                            color: AppColors.slate400,
+                            color: AppColors.gray400,
                           ),
                         ),
                       ],
@@ -405,5 +397,91 @@ class _PurchaseRequestScreenState extends State<PurchaseRequestScreen> {
       default:
         return AppColors.warningBg;
     }
+  }
+}
+
+/// Custom status chip widget
+class _StatusChip extends StatelessWidget {
+  final String label;
+  final bool isSelected;
+  final VoidCallback onTap;
+
+  const _StatusChip({
+    required this.label,
+    required this.isSelected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(20),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          decoration: BoxDecoration(
+            color: isSelected ? AppColors.primary.withAlpha(26) : Colors.white,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: isSelected ? AppColors.primary : AppColors.slate200,
+            ),
+          ),
+          child: Text(
+            label,
+            style: TextStyle(
+              color: isSelected ? AppColors.primary : AppColors.slate600,
+              fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+              fontSize: 14,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Custom FAB widget
+class _FAB extends StatelessWidget {
+  final VoidCallback onPressed;
+  final IconData icon;
+  final String label;
+
+  const _FAB({
+    required this.onPressed,
+    required this.icon,
+    required this.label,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: AppColors.primary,
+      borderRadius: BorderRadius.circular(16),
+      elevation: 4,
+      child: InkWell(
+        onTap: onPressed,
+        borderRadius: BorderRadius.circular(16),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, color: Colors.white, size: 20),
+              const SizedBox(width: 8),
+              Text(
+                label,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 14,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }

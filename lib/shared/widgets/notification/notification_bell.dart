@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:forui/forui.dart';
 import 'package:provider/provider.dart';
+
+import '../../../../core/core.dart';
 import '../../../features/notification/presentation/providers/notification_provider.dart';
-import '../../../core/constants/app_constants.dart';
 
 /// Notification bell widget with badge count
 /// Can be added to AppBar actions
@@ -11,20 +13,34 @@ class NotificationBell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<NotificationProvider>(
+    final theme = context.theme;
+
+    return Consumer<NotificationProvider?>(
       builder: (context, provider, _) {
-        return IconButton(
-          icon: Stack(
+        if (provider == null) {
+          return const SizedBox.shrink();
+        }
+
+        return GestureDetector(
+          onTap: () => context.push('/notifications'),
+          child: Stack(
             children: [
-              const Icon(Icons.notifications_outlined),
+              Container(
+                padding: const EdgeInsets.all(8),
+                child: Icon(
+                  Icons.notifications_outlined,
+                  color: theme.colors.primaryForeground,
+                  size: 24,
+                ),
+              ),
               if (provider.unreadCount > 0)
                 Positioned(
-                  right: 0,
-                  top: 0,
+                  right: 4,
+                  top: 4,
                   child: Container(
                     padding: const EdgeInsets.all(4),
-                    decoration: const BoxDecoration(
-                      color: AppColors.danger,
+                    decoration: BoxDecoration(
+                      color: theme.colors.error,
                       shape: BoxShape.circle,
                     ),
                     constraints: const BoxConstraints(
@@ -33,9 +49,8 @@ class NotificationBell extends StatelessWidget {
                     ),
                     child: Text(
                       _formatCount(provider.unreadCount),
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 9,
+                      style: theme.typography.body.xs.copyWith(
+                        color: theme.colors.primaryForeground,
                         fontWeight: FontWeight.bold,
                       ),
                       textAlign: TextAlign.center,
@@ -44,9 +59,6 @@ class NotificationBell extends StatelessWidget {
                 ),
             ],
           ),
-          onPressed: () => context.push('/notifications'),
-          tooltip: 'Notifikasi',
-          color: Colors.white,
         );
       },
     );

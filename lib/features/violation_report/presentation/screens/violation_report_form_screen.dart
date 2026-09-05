@@ -82,63 +82,117 @@ class _ViolationReportFormScreenState extends State<ViolationReportFormScreen> {
   }
 
   void _showErrorDialog(String title, String message) {
-    final theme = FTheme.of(context);
+    final theme = context.theme;
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: AppRadius.radiusLg),
-        title: Row(
-          children: [
-            Icon(IconMap.errorOutline, color: theme.colors.destructive),
-            const SizedBox(width: 8),
-            Text(title),
-          ],
-        ),
-        content: Text(message),
-        actions: [
-          FButton(
-            onPress: () => Navigator.pop(ctx),
-            variant: FButtonVariant.ghost,
-            child: const Text('Tutup'),
+      builder: (ctx) => Center(
+        child: Material(
+          color: Colors.transparent,
+          child: Container(
+            margin: const EdgeInsets.all(AppSpacing.lg),
+            padding: const EdgeInsets.all(AppSpacing.lg),
+            decoration: BoxDecoration(
+              color: theme.colors.card,
+              borderRadius: AppRadius.radiusLg,
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Icon(IconMap.errorOutline, color: theme.colors.destructive),
+                    const SizedBox(width: AppSpacing.sm),
+                    Expanded(
+                      child: Text(
+                        title,
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: theme.colors.foreground,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: AppSpacing.md),
+                Text(
+                  message,
+                  style: TextStyle(color: theme.colors.mutedForeground),
+                ),
+                const SizedBox(height: AppSpacing.lg),
+                SizedBox(
+                  width: double.infinity,
+                  child: FButton(
+                    onPress: () => Navigator.pop(ctx),
+                    variant: FButtonVariant.ghost,
+                    child: const Text('Tutup'),
+                  ),
+                ),
+              ],
+            ),
           ),
-        ],
+        ),
       ),
     );
   }
 
   void _showSuccessDialog() {
-    final theme = FTheme.of(context);
+    final theme = context.theme;
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (ctx) => AlertDialog(
-        title: Row(
-          children: [
-            Icon(IconMap.checkCircle, color: theme.colors.primary),
-            const SizedBox(width: 8),
-            const Text('Berhasil'),
-          ],
-        ),
-        content: const Text('Temuan pelanggaran berhasil disimpan.'),
-        actions: [
-          SizedBox(
-            width: double.infinity,
-            child: PrimaryButton(
-              label: 'OK',
-              onPressed: () {
-                Navigator.pop(ctx);
-                context.pop();
-              },
+      builder: (ctx) => Center(
+        child: Material(
+          color: Colors.transparent,
+          child: Container(
+            margin: const EdgeInsets.all(AppSpacing.lg),
+            padding: const EdgeInsets.all(AppSpacing.lg),
+            decoration: BoxDecoration(
+              color: theme.colors.card,
+              borderRadius: AppRadius.radiusLg,
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(IconMap.checkCircle, size: 48, color: theme.colors.primary),
+                const SizedBox(height: AppSpacing.md),
+                Text(
+                  'Berhasil',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: theme.colors.foreground,
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                Text(
+                  'Temuan pelanggaran berhasil disimpan.',
+                  style: TextStyle(color: theme.colors.mutedForeground),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: AppSpacing.lg),
+                SizedBox(
+                  width: double.infinity,
+                  child: PrimaryButton(
+                    label: 'OK',
+                    onPressed: () {
+                      Navigator.pop(ctx);
+                      context.pop();
+                    },
+                  ),
+                ),
+              ],
             ),
           ),
-        ],
+        ),
       ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    final theme = FTheme.of(context);
+    final theme = context.theme;
     return Scaffold(
       backgroundColor: theme.colors.muted,
       appBar: AppBar(
@@ -236,7 +290,7 @@ class _ViolationReportFormScreenState extends State<ViolationReportFormScreen> {
   }
 
   Widget _buildSection(String label, Widget child) {
-    final theme = FTheme.of(context);
+    final theme = context.theme;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -256,7 +310,7 @@ class _ViolationReportFormScreenState extends State<ViolationReportFormScreen> {
   }
 
   Widget _buildAreaDropdown(ViolationReportNotifier notifier) {
-    final theme = FTheme.of(context);
+    final theme = context.theme;
     final areas = notifier.state.areas;
     final selected = notifier.state.selectedArea;
     final isLoading = notifier.state.isLoadingAreas;
@@ -269,7 +323,7 @@ class _ViolationReportFormScreenState extends State<ViolationReportFormScreen> {
           padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
           decoration: BoxDecoration(
             color: theme.colors.card,
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: AppRadius.radiusMd,
             border: error != null ? Border.all(color: theme.colors.destructive) : null,
           ),
           child: DropdownButtonHideUnderline(
@@ -328,7 +382,7 @@ class _ViolationReportFormScreenState extends State<ViolationReportFormScreen> {
   }
 
   Widget _buildEmployeeDropdown(ViolationReportNotifier notifier) {
-    final theme = FTheme.of(context);
+    final theme = context.theme;
     final employees = notifier.state.employees;
     final selected = notifier.state.selectedEmployee;
     final isLoading = notifier.state.isLoadingEmployees;
@@ -339,7 +393,7 @@ class _ViolationReportFormScreenState extends State<ViolationReportFormScreen> {
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
       decoration: BoxDecoration(
         color: theme.colors.card,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: AppRadius.radiusMd,
         border: error != null ? Border.all(color: theme.colors.destructive) : null,
       ),
       child: DropdownButtonHideUnderline(
@@ -374,7 +428,7 @@ class _ViolationReportFormScreenState extends State<ViolationReportFormScreen> {
   }
 
   Widget _buildCategoryDropdown(ViolationReportNotifier notifier) {
-    final theme = FTheme.of(context);
+    final theme = context.theme;
     final types = notifier.state.violationTypes;
     final selected = notifier.state.selectedCategory;
 
@@ -382,7 +436,7 @@ class _ViolationReportFormScreenState extends State<ViolationReportFormScreen> {
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
       decoration: BoxDecoration(
         color: theme.colors.card,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: AppRadius.radiusMd,
       ),
       child: DropdownButtonHideUnderline(
         child: DropdownButton<ViolationType>(
@@ -407,7 +461,7 @@ class _ViolationReportFormScreenState extends State<ViolationReportFormScreen> {
   }
 
   Widget _buildViolationTypeDropdown(ViolationReportNotifier notifier) {
-    final theme = FTheme.of(context);
+    final theme = context.theme;
     final children = notifier.state.selectedCategory?.children ?? [];
     final selected = notifier.state.selectedViolationType;
 
@@ -416,7 +470,7 @@ class _ViolationReportFormScreenState extends State<ViolationReportFormScreen> {
         padding: const EdgeInsets.all(AppSpacing.md),
         decoration: BoxDecoration(
           color: theme.colors.card,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: AppRadius.radiusMd,
         ),
         child: Text(
           'Tidak ada sub-kategori',
@@ -429,7 +483,7 @@ class _ViolationReportFormScreenState extends State<ViolationReportFormScreen> {
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
       decoration: BoxDecoration(
         color: theme.colors.card,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: AppRadius.radiusMd,
       ),
       child: DropdownButtonHideUnderline(
         child: DropdownButton<ViolationType>(
@@ -454,14 +508,14 @@ class _ViolationReportFormScreenState extends State<ViolationReportFormScreen> {
   }
 
   Widget _buildPhotoSection(ViolationReportNotifier notifier) {
-    final theme = FTheme.of(context);
+    final theme = context.theme;
     final photos = notifier.state.photos;
 
     return Container(
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
         color: theme.colors.card,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: AppRadius.radiusMd,
       ),
       child: Column(
         children: [
@@ -513,10 +567,10 @@ class _ViolationReportFormScreenState extends State<ViolationReportFormScreen> {
                         height: 100,
                         margin: EdgeInsets.only(right: AppSpacing.sm),
                         decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(8),
+                          borderRadius: AppRadius.radiusMd,
                         ),
                         child: ClipRRect(
-                          borderRadius: BorderRadius.circular(8),
+                          borderRadius: AppRadius.radiusMd,
                           child: Image.file(
                             File(photos[i].path),
                             fit: BoxFit.cover,
@@ -563,47 +617,33 @@ class _ViolationReportFormScreenState extends State<ViolationReportFormScreen> {
   }
 
   Widget _buildNotesField(ViolationReportNotifier notifier) {
-    final theme = FTheme.of(context);
-    return TextField(
-      controller: _notesController,
-      maxLines: 3,
-      decoration: InputDecoration(
-        hintText: 'Tambahkan catatan...',
-        hintStyle: TextStyle(color: theme.colors.mutedForeground),
-        filled: true,
-        fillColor: theme.colors.card,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide.none,
-        ),
-        contentPadding: const EdgeInsets.all(AppSpacing.md),
+    return FTextField(
+      control: FTextFieldControl.managed(
+        controller: _notesController,
+        onChange: (value) => notifier.updateNotes(value.text),
       ),
-      onChanged: (v) => notifier.updateNotes(v),
+      size: FTextFieldSizeVariant.md,
+      hint: 'Tambahkan catatan...',
+      maxLines: 3,
+      textInputAction: TextInputAction.newline,
     );
   }
 
   Widget _buildActionField(ViolationReportNotifier notifier) {
-    final theme = FTheme.of(context);
-    return TextField(
-      controller: _actionController,
-      maxLines: 3,
-      decoration: InputDecoration(
-        hintText: 'Tindakan yang dilakukan...',
-        hintStyle: TextStyle(color: theme.colors.mutedForeground),
-        filled: true,
-        fillColor: theme.colors.card,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide.none,
-        ),
-        contentPadding: const EdgeInsets.all(AppSpacing.md),
+    return FTextField(
+      control: FTextFieldControl.managed(
+        controller: _actionController,
+        onChange: (value) => notifier.updateAction(value.text),
       ),
-      onChanged: (v) => notifier.updateAction(v),
+      size: FTextFieldSizeVariant.md,
+      hint: 'Tindakan yang dilakukan...',
+      maxLines: 3,
+      textInputAction: TextInputAction.newline,
     );
   }
 
   Widget _buildLocationStatus(ViolationReportNotifier notifier) {
-    final theme = FTheme.of(context);
+    final theme = context.theme;
     final location = notifier.state.location;
     final error = notifier.state.locationError;
 
@@ -611,7 +651,7 @@ class _ViolationReportFormScreenState extends State<ViolationReportFormScreen> {
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
         color: location != null ? theme.colors.primary.withAlpha(25) : theme.colors.destructive.withAlpha(25),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: AppRadius.radiusMd,
         border: Border.all(
           color: location != null ? theme.colors.primary : theme.colors.destructive,
         ),
@@ -635,8 +675,9 @@ class _ViolationReportFormScreenState extends State<ViolationReportFormScreen> {
             ),
           ),
           if (location == null)
-            TextButton(
-              onPressed: () => notifier.getLocation(),
+            FButton(
+              onPress: () => notifier.getLocation(),
+              variant: FButtonVariant.ghost,
               child: Text(
                 'Coba Lagi',
                 style: TextStyle(color: theme.colors.destructive),

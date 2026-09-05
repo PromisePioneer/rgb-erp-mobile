@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
+import 'package:forui/forui.dart';
+
 
 import '../../../../core/core.dart';
+import '../../../../shared/widgets/feedback/loading_indicator.dart';
 import '../../../client/presentation/providers/client_attendance_provider.dart';
 
 /// Client attendance list screen
@@ -60,20 +63,22 @@ class _ClientAttendanceScreenState extends State<ClientAttendanceScreen> with Si
   @override
   Widget build(BuildContext context) {
     final state = context.watch<ClientAttendanceNotifier>().state;
+    final theme = FTheme.of(context);
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('Attendance'),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.date_range),
-            onPressed: _selectDateRange,
-            tooltip: 'Filter Tanggal',
+          FButton.icon(
+            onPress: _selectDateRange,
+            child: const Icon(FLucideIcons.calendarRange),
           ),
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: _fetchData,
+          const SizedBox(width: 8),
+          FButton.icon(
+            onPress: _fetchData,
+            child: const Icon(FLucideIcons.refreshCcw),
           ),
+          const SizedBox(width: 8),
         ],
         bottom: TabBar(
           controller: _tabController,
@@ -94,12 +99,13 @@ class _ClientAttendanceScreenState extends State<ClientAttendanceScreen> with Si
               children: [
                 Text(
                   '${DateFormat('dd MMM yyyy').format(_fromDate)} - ${DateFormat('dd MMM yyyy').format(_toDate)}',
-                  style: const TextStyle(color: AppColors.gray600),
+                  style: theme.typography.body.md.copyWith(color: AppColors.gray600),
                 ),
-                TextButton.icon(
-                  onPressed: _selectDateRange,
-                  icon: const Icon(Icons.edit, size: 16),
-                  label: const Text('Ubah'),
+                FButton(
+                  onPress: _selectDateRange,
+                  variant: FButtonVariant.ghost,
+                  prefix: const Icon(FLucideIcons.pencil, size: 16),
+                  child: const Text('Ubah'),
                 ),
               ],
             ),
@@ -109,12 +115,12 @@ class _ClientAttendanceScreenState extends State<ClientAttendanceScreen> with Si
             child: state.isLoading && state.attendanceData == null
                 ? const Center(child: LoadingIndicator())
                 : state.error != null && state.attendanceData == null
-                    ? _buildError(state.error!)
+                    ? _buildError(state.error!, theme)
                     : TabBarView(
                         controller: _tabController,
                         children: [
-                          _buildTodayTab(state),
-                          _buildHistoryTab(state),
+                          _buildTodayTab(state, theme),
+                          _buildHistoryTab(state, theme),
                         ],
                       ),
           ),
@@ -123,20 +129,20 @@ class _ClientAttendanceScreenState extends State<ClientAttendanceScreen> with Si
     );
   }
 
-  Widget _buildTodayTab(ClientAttendanceState state) {
+  Widget _buildTodayTab(ClientAttendanceState state, FThemeData theme) {
     final todayData = state.attendanceData.where((e) {
       final today = DateFormat('yyyy-MM-dd').format(DateTime.now());
       return e.capturedAt?.startsWith(today) ?? false;
     }).toList() ?? [];
 
     if (todayData.isEmpty) {
-      return const Center(
+      return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.event_busy, size: 64, color: AppColors.gray400),
-            SizedBox(height: AppSpacing.md),
-            Text('Belum ada data absensi hari ini'),
+            const Icon(FLucideIcons.calendarX, size: 64, color: AppColors.gray400),
+            const SizedBox(height: AppSpacing.md),
+            Text('Belum ada data absensi hari ini', style: theme.typography.body.md),
           ],
         ),
       );
@@ -149,23 +155,23 @@ class _ClientAttendanceScreenState extends State<ClientAttendanceScreen> with Si
         itemCount: todayData.length,
         itemBuilder: (context, index) {
           final item = todayData[index];
-          return _AttendanceCard(item: item);
+          return _AttendanceCard(item: item, theme: theme);
         },
       ),
     );
   }
 
-  Widget _buildHistoryTab(ClientAttendanceState state) {
+  Widget _buildHistoryTab(ClientAttendanceState state, FThemeData theme) {
     final data = state.attendanceData ?? [];
 
     if (data.isEmpty) {
-      return const Center(
+      return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.history, size: 64, color: AppColors.gray400),
-            SizedBox(height: AppSpacing.md),
-            Text('Belum ada data absensi'),
+            const Icon(FLucideIcons.history, size: 64, color: AppColors.gray400),
+            const SizedBox(height: AppSpacing.md),
+            Text('Belum ada data absensi', style: theme.typography.body.md),
           ],
         ),
       );
@@ -193,13 +199,13 @@ class _ClientAttendanceScreenState extends State<ClientAttendanceScreen> with Si
                 padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
                 child: Text(
                   DateFormat('EEEE, dd MMM yyyy').format(DateTime.parse(date)),
-                  style: const TextStyle(
+                  style: theme.typography.body.md.copyWith(
                     fontWeight: FontWeight.bold,
                     color: AppColors.textPrimary,
                   ),
                 ),
               ),
-              ...items.map((item) => _AttendanceCard(item: item)),
+              ...items.map((item) => _AttendanceCard(item: item, theme: theme)),
               const SizedBox(height: AppSpacing.sm),
             ],
           );
@@ -208,17 +214,18 @@ class _ClientAttendanceScreenState extends State<ClientAttendanceScreen> with Si
     );
   }
 
-  Widget _buildError(String error) {
+  Widget _buildError(String error, FThemeData theme) {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.error_outline, size: 64, color: AppColors.danger),
+          const Icon(FLucideIcons.alertCircle, size: 64, color: AppColors.danger),
           const SizedBox(height: AppSpacing.md),
-          Text('Gagal memuat data: $error'),
+          Text('Gagal memuat data: $error', style: theme.typography.body.md),
           const SizedBox(height: AppSpacing.lg),
-          ElevatedButton(
-            onPressed: _fetchData,
+          FButton(
+            onPress: _fetchData,
+            variant: FButtonVariant.primary,
             child: const Text('Coba Lagi'),
           ),
         ],
@@ -229,8 +236,9 @@ class _ClientAttendanceScreenState extends State<ClientAttendanceScreen> with Si
 
 class _AttendanceCard extends StatelessWidget {
   final dynamic item;
+  final FThemeData theme;
 
-  const _AttendanceCard({required this.item});
+  const _AttendanceCard({required this.item, required this.theme});
 
   @override
   Widget build(BuildContext context) {
@@ -253,11 +261,21 @@ class _AttendanceCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              CircleAvatar(
-                backgroundColor: AppColors.primary.withAlpha(26),
-                child: Text(
-                  (item.employeeName ?? '?')[0].toUpperCase(),
-                  style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold),
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withAlpha(26),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Center(
+                  child: Text(
+                    (item.employeeName ?? '?')[0].toUpperCase(),
+                    style: theme.typography.body.md.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.primary,
+                    ),
+                  ),
                 ),
               ),
               const SizedBox(width: AppSpacing.sm),
@@ -267,35 +285,35 @@ class _AttendanceCard extends StatelessWidget {
                   children: [
                     Text(
                       item.employeeName ?? 'Unknown',
-                      style: const TextStyle(fontWeight: FontWeight.w600),
+                      style: theme.typography.body.md.copyWith(fontWeight: FontWeight.w600),
                     ),
                     Text(
                       item.employeeCode ?? '',
-                      style: const TextStyle(fontSize: 12, color: AppColors.gray500),
+                      style: theme.typography.body.xs.copyWith(color: AppColors.gray500),
                     ),
                   ],
                 ),
               ),
-              _StatusChip(type: item.type),
+              _StatusChip(type: item.type, theme: theme),
             ],
           ),
           const SizedBox(height: AppSpacing.sm),
           Row(
             children: [
-              const Icon(Icons.location_on_outlined, size: 16, color: AppColors.gray500),
+              Icon(FLucideIcons.mapPin, size: 16, color: AppColors.gray500),
               const SizedBox(width: 4),
               Expanded(
                 child: Text(
                   item.areaName ?? '-',
-                  style: const TextStyle(fontSize: 12, color: AppColors.gray600),
+                  style: theme.typography.body.xs.copyWith(color: AppColors.gray600),
                 ),
               ),
               if (item.capturedAt != null) ...[
-                const Icon(Icons.access_time, size: 16, color: AppColors.gray500),
+                Icon(FLucideIcons.clock, size: 16, color: AppColors.gray500),
                 const SizedBox(width: 4),
                 Text(
                   DateFormat('HH:mm').format(DateTime.parse(item.capturedAt!)),
-                  style: const TextStyle(fontSize: 12, color: AppColors.gray600),
+                  style: theme.typography.body.xs.copyWith(color: AppColors.gray600),
                 ),
               ],
             ],
@@ -308,8 +326,9 @@ class _AttendanceCard extends StatelessWidget {
 
 class _StatusChip extends StatelessWidget {
   final String type;
+  final FThemeData theme;
 
-  const _StatusChip({required this.type});
+  const _StatusChip({required this.type, required this.theme});
 
   @override
   Widget build(BuildContext context) {
@@ -322,8 +341,7 @@ class _StatusChip extends StatelessWidget {
       ),
       child: Text(
         isCheckIn ? 'Masuk' : 'Pulang',
-        style: TextStyle(
-          fontSize: 12,
+        style: theme.typography.body.xs.copyWith(
           fontWeight: FontWeight.w600,
           color: isCheckIn ? AppColors.success : AppColors.warning,
         ),

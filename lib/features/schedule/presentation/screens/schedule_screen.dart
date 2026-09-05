@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/core.dart';
+import '../../../../shared/widgets/buttons/primary_button.dart';
+import '../../../../shared/widgets/feedback/loading_indicator.dart';
+import '../../../../shared/widgets/icons/forui_icon_map.dart';
 import '../../../../shared/widgets/layout/top_gradient_background.dart';
 import '../providers/schedule_provider.dart';
 import '../widgets/date_strip.dart';
@@ -99,8 +102,8 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(
-              Icons.error_outline,
+            Icon(
+              IconMap.errorOutline,
               size: 64,
               color: AppColors.danger,
             ),
@@ -111,9 +114,9 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
               style: const TextStyle(color: AppColors.slate500),
             ),
             const SizedBox(height: AppSpacing.lg),
-            ElevatedButton(
+            PrimaryButton(
+              label: 'Coba Lagi',
               onPressed: () => notifier.loadSchedules(),
-              child: const Text('Coba Lagi'),
             ),
           ],
         ),
@@ -127,7 +130,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(
-            Icons.calendar_today,
+            IconMap.calendarToday,
             size: 64,
             color: AppColors.slate300,
           ),
@@ -186,12 +189,12 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                   width: 36,
                   height: 36,
                   decoration: BoxDecoration(
-                    color: AppColors.indigo100,
+                    color: AppColors.teal50,
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: const Icon(
-                    Icons.access_time,
-                    color: AppColors.indigo600,
+                  child: Icon(
+                    IconMap.accessTime,
+                    color: AppColors.teal600,
                     size: 20,
                   ),
                 ),
@@ -219,8 +222,8 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                   color: AppColors.teal100,
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: const Icon(
-                  Icons.location_on,
+                child: Icon(
+                  IconMap.locationOn,
                   color: AppColors.teal600,
                   size: 20,
                 ),

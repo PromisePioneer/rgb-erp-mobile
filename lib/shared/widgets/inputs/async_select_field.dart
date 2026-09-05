@@ -1,6 +1,6 @@
 import 'dart:async';
-
 import 'package:flutter/material.dart';
+import 'package:forui/forui.dart';
 
 import '../../../../core/core.dart';
 
@@ -292,17 +292,17 @@ class _AsyncSelectFieldState extends State<AsyncSelectField> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = context.theme;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         if (widget.label != null) ...[
           Text(
             widget.label!.toUpperCase(),
-            style: const TextStyle(
-              fontSize: 12,
+            style: theme.typography.body.sm.copyWith(
               fontWeight: FontWeight.w600,
-              color: AppColors.slate700,
-              letterSpacing: 0.5,
+              color: theme.colors.foreground,
             ),
           ),
           const SizedBox(height: 8),
@@ -314,16 +314,16 @@ class _AsyncSelectFieldState extends State<AsyncSelectField> {
             child: Container(
               constraints: const BoxConstraints(minHeight: 48),
               decoration: BoxDecoration(
-                color: widget.disabled ? AppColors.slate50 : Colors.white,
+                color: widget.disabled ? theme.colors.muted : theme.colors.background,
                 borderRadius: BorderRadius.circular(10),
                 border: Border.all(
-                  color: _isOpen ? AppColors.primary : AppColors.slate300,
+                  color: _isOpen ? theme.colors.primary : theme.colors.border,
                   width: _isOpen ? 1.5 : 1,
                 ),
               ),
               child: widget.selectedIds.isNotEmpty
-                  ? _buildSelectedChips()
-                  : _buildSearchField(),
+                  ? _buildSelectedChips(theme)
+                  : _buildSearchField(theme),
             ),
           ),
         ),
@@ -331,7 +331,7 @@ class _AsyncSelectFieldState extends State<AsyncSelectField> {
     );
   }
 
-  Widget _buildSelectedChips() {
+  Widget _buildSelectedChips(FThemeData theme) {
     // For single-select, show as a text with clear button
     if (!widget.multiSelect && widget.selectedIds.length == 1) {
       final selectedId = widget.selectedIds.first;
@@ -350,30 +350,25 @@ class _AsyncSelectFieldState extends State<AsyncSelectField> {
               child: isLoading
                   ? Row(
                       children: [
-                        SizedBox(
+                        const SizedBox(
                           width: 16,
                           height: 16,
-                          child: LoadingIndicator(
-                            strokeWidth: 2,
-                            color: AppColors.slate400,
-                          ),
+                          child: CircularProgressIndicator(strokeWidth: 2),
                         ),
                         const SizedBox(width: 8),
                         Text(
                           'Memuat...',
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: AppColors.slate400,
+                          style: theme.typography.body.md.copyWith(
+                            color: theme.colors.mutedForeground,
                           ),
                         ),
                       ],
                     )
                   : Text(
                       option.name,
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: option.name == '...' ? AppColors.slate400 : AppColors.slate800,
+                      style: theme.typography.body.md.copyWith(
                         fontWeight: FontWeight.w500,
+                        color: option.name == '...' ? theme.colors.mutedForeground : theme.colors.foreground,
                       ),
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -384,13 +379,13 @@ class _AsyncSelectFieldState extends State<AsyncSelectField> {
                 child: Container(
                   padding: const EdgeInsets.all(4),
                   decoration: BoxDecoration(
-                    color: AppColors.slate100,
+                    color: theme.colors.muted,
                     shape: BoxShape.circle,
                   ),
                   child: Icon(
                     Icons.close,
                     size: 16,
-                    color: AppColors.slate600,
+                    color: theme.colors.mutedForeground,
                   ),
                 ),
               ),
@@ -431,12 +426,11 @@ class _AsyncSelectFieldState extends State<AsyncSelectField> {
                     enabled: !widget.disabled,
                     onChanged: _onSearchChanged,
                     onTap: _openDropdown,
-                    style: const TextStyle(fontSize: 13),
+                    style: theme.typography.body.md,
                     decoration: InputDecoration(
                       hintText: 'Cari...',
-                      hintStyle: TextStyle(
-                        fontSize: 13,
-                        color: AppColors.slate400,
+                      hintStyle: theme.typography.body.md.copyWith(
+                        color: theme.colors.mutedForeground,
                       ),
                       border: InputBorder.none,
                       enabledBorder: InputBorder.none,
@@ -445,7 +439,7 @@ class _AsyncSelectFieldState extends State<AsyncSelectField> {
                       isDense: true,
                       contentPadding: const EdgeInsets.symmetric(vertical: 4),
                       filled: true,
-                      fillColor: AppColors.slate100,
+                      fillColor: theme.colors.muted,
                     ),
                   ),
                 ),
@@ -456,14 +450,14 @@ class _AsyncSelectFieldState extends State<AsyncSelectField> {
     );
   }
 
-  Widget _buildSearchField() {
+  Widget _buildSearchField(FThemeData theme) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12),
       child: Row(
         children: [
           Icon(
             Icons.search,
-            color: AppColors.slate400,
+            color: theme.colors.mutedForeground,
             size: 20,
           ),
           const SizedBox(width: 8),
@@ -474,12 +468,11 @@ class _AsyncSelectFieldState extends State<AsyncSelectField> {
               enabled: !widget.disabled,
               onChanged: _onSearchChanged,
               onTap: _openDropdown,
-              style: const TextStyle(fontSize: 14),
+              style: theme.typography.body.md,
               decoration: InputDecoration(
                 hintText: widget.placeholder,
-                hintStyle: const TextStyle(
-                  fontSize: 14,
-                  color: AppColors.slate400,
+                hintStyle: theme.typography.body.md.copyWith(
+                  color: theme.colors.mutedForeground,
                 ),
                 border: InputBorder.none,
                 enabledBorder: InputBorder.none,
@@ -496,16 +489,13 @@ class _AsyncSelectFieldState extends State<AsyncSelectField> {
               height: 20,
               child: Padding(
                 padding: EdgeInsets.all(2),
-                child: LoadingIndicator(
-                  strokeWidth: 2,
-                  color: AppColors.primary,
-                ),
+                child: CircularProgressIndicator(strokeWidth: 2),
               ),
             )
           else
             Icon(
               _isOpen ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
-              color: AppColors.slate400,
+              color: theme.colors.mutedForeground,
               size: 22,
             ),
         ],
@@ -526,13 +516,14 @@ class _SelectChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = context.theme;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
-        color: AppColors.primary.withAlpha(20),
+        color: theme.colors.primary.withAlpha(20),
         borderRadius: BorderRadius.circular(8),
         border: Border.all(
-          color: AppColors.primary.withAlpha(50),
+          color: theme.colors.primary.withAlpha(50),
           width: 1,
         ),
       ),
@@ -541,10 +532,9 @@ class _SelectChip extends StatelessWidget {
         children: [
           Text(
             label,
-            style: const TextStyle(
-              fontSize: 13,
+            style: theme.typography.body.md.copyWith(
               fontWeight: FontWeight.w500,
-              color: AppColors.primary,
+              color: theme.colors.primary,
             ),
           ),
           if (onDelete != null) ...[
@@ -554,13 +544,13 @@ class _SelectChip extends StatelessWidget {
               child: Container(
                 padding: const EdgeInsets.all(2),
                 decoration: BoxDecoration(
-                  color: AppColors.primary.withAlpha(30),
+                  color: theme.colors.primary.withAlpha(30),
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(
+                child: Icon(
                   Icons.close,
                   size: 12,
-                  color: AppColors.primary,
+                  color: theme.colors.primary,
                 ),
               ),
             ),
@@ -602,6 +592,7 @@ class _DropdownOverlay extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = context.theme;
     final mediaQuery = MediaQuery.of(context);
     final keyboardHeight = mediaQuery.viewInsets.bottom;
     final screenHeight = mediaQuery.size.height;
@@ -650,21 +641,23 @@ class _DropdownOverlay extends StatelessWidget {
             link: layerLink,
             showWhenUnlinked: false,
             offset: Offset(0, offsetY),
-            child: Material(
-              elevation: 8,
-              borderRadius: BorderRadius.circular(12),
-              shadowColor: Colors.black26,
-              child: Container(
-                constraints: BoxConstraints(
-                  maxHeight: maxHeight.clamp(100.0, _dropdownHeight),
-                ),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: AppColors.slate200),
-                ),
-                child: _buildContent(isKeyboardOpen),
+            child: Container(
+              constraints: BoxConstraints(
+                maxHeight: maxHeight.clamp(100.0, _dropdownHeight),
               ),
+              decoration: BoxDecoration(
+                color: theme.colors.background,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: theme.colors.border),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withAlpha(20),
+                    blurRadius: 8,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: _buildContent(theme, isKeyboardOpen),
             ),
           ),
         ),
@@ -672,32 +665,26 @@ class _DropdownOverlay extends StatelessWidget {
     );
   }
 
-  Widget _buildContent(bool isKeyboardOpen) {
+  Widget _buildContent(FThemeData theme, bool isKeyboardOpen) {
     if (isLoading && options.isEmpty) {
       return Container(
         padding: const EdgeInsets.all(24),
-        child: const Center(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              SizedBox(
-                width: 32,
-                height: 32,
-                child: LoadingIndicator(
-                  strokeWidth: 2.5,
-                  color: AppColors.primary,
-                ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const SizedBox(
+              width: 32,
+              height: 32,
+              child: CircularProgressIndicator(),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              'Memuat data...',
+              style: theme.typography.body.md.copyWith(
+                color: theme.colors.mutedForeground,
               ),
-              SizedBox(height: 12),
-              Text(
-                'Memuat data...',
-                style: TextStyle(
-                  fontSize: 13,
-                  color: AppColors.slate500,
-                ),
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
       );
     }
@@ -710,26 +697,22 @@ class _DropdownOverlay extends StatelessWidget {
           children: [
             Icon(
               Icons.error_outline,
-              color: AppColors.danger,
+              color: theme.colors.error,
               size: 32,
             ),
             const SizedBox(height: 8),
             Text(
               error!,
-              style: const TextStyle(
-                color: AppColors.danger,
-                fontSize: 13,
+              style: theme.typography.body.md.copyWith(
+                color: theme.colors.error,
               ),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 12),
-            TextButton.icon(
-              onPressed: onRetry,
-              icon: const Icon(Icons.refresh, size: 16),
-              label: const Text('Coba lagi'),
-              style: TextButton.styleFrom(
-                foregroundColor: AppColors.primary,
-              ),
+            FButton(
+              onPress: onRetry,
+              variant: FButtonVariant.ghost,
+              child: const Text('Coba lagi'),
             ),
           ],
         ),
@@ -744,15 +727,14 @@ class _DropdownOverlay extends StatelessWidget {
           children: [
             Icon(
               Icons.search_off,
-              color: AppColors.slate400,
+              color: theme.colors.mutedForeground,
               size: 32,
             ),
             const SizedBox(height: 8),
-            const Text(
+            Text(
               'Tidak ada hasil',
-              style: TextStyle(
-                color: AppColors.slate500,
-                fontSize: 13,
+              style: theme.typography.body.md.copyWith(
+                color: theme.colors.mutedForeground,
               ),
             ),
           ],
@@ -772,17 +754,17 @@ class _DropdownOverlay extends StatelessWidget {
         itemCount: options.length,
         separatorBuilder: (context, index) => Divider(
           height: 1,
-          color: AppColors.slate100,
+          color: theme.colors.border,
         ),
         itemBuilder: (context, index) {
           final option = options[index];
           final isSelected = selectedIds.contains(option.id);
 
-          return InkWell(
+          return GestureDetector(
             onTap: () => onToggle(option),
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              color: isSelected ? AppColors.primary.withAlpha(15) : null,
+              color: isSelected ? theme.colors.primary.withAlpha(15) : null,
               child: Row(
                 children: [
                   // Checkbox indicator
@@ -790,18 +772,18 @@ class _DropdownOverlay extends StatelessWidget {
                     width: 20,
                     height: 20,
                     decoration: BoxDecoration(
-                      color: isSelected ? AppColors.primary : Colors.transparent,
+                      color: isSelected ? theme.colors.primary : Colors.transparent,
                       borderRadius: BorderRadius.circular(4),
                       border: Border.all(
-                        color: isSelected ? AppColors.primary : AppColors.slate300,
+                        color: isSelected ? theme.colors.primary : theme.colors.border,
                         width: 1.5,
                       ),
                     ),
                     child: isSelected
-                        ? const Icon(
+                        ? Icon(
                             Icons.check,
                             size: 14,
-                            color: Colors.white,
+                            color: theme.colors.primaryForeground,
                           )
                         : null,
                   ),
@@ -812,9 +794,8 @@ class _DropdownOverlay extends StatelessWidget {
                       children: [
                         Text(
                           option.name,
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: isSelected ? AppColors.primary : AppColors.slate800,
+                          style: theme.typography.body.md.copyWith(
+                            color: isSelected ? theme.colors.primary : theme.colors.foreground,
                             fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
                           ),
                         ),
@@ -822,9 +803,8 @@ class _DropdownOverlay extends StatelessWidget {
                           const SizedBox(height: 2),
                           Text(
                             option.description!,
-                            style: const TextStyle(
-                              fontSize: 12,
-                              color: AppColors.slate500,
+                            style: theme.typography.body.xs.copyWith(
+                              color: theme.colors.mutedForeground,
                             ),
                           ),
                         ],

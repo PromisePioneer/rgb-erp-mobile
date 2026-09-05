@@ -21,7 +21,7 @@ class ViolationReportDetailScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = FTheme.of(context);
+    final theme = context.theme;
     return TopGradientBackground(
       gradientHeight: 120,
       child: Scaffold(
@@ -135,7 +135,7 @@ class ViolationReportDetailScreen extends StatelessWidget {
   }
 
   Widget _buildSectionTitle(String title, BuildContext context) {
-    final theme = FTheme.of(context);
+    final theme = context.theme;
     return Text(
       title,
       style: TextStyle(
@@ -147,7 +147,7 @@ class ViolationReportDetailScreen extends StatelessWidget {
   }
 
   Widget _buildHeaderCard(ViolationReportResult violation, BuildContext context) {
-    final theme = FTheme.of(context);
+    final theme = context.theme;
     return Container(
       width: double.infinity,
       padding: EdgeInsets.all(AppSpacing.lg),
@@ -157,7 +157,7 @@ class ViolationReportDetailScreen extends StatelessWidget {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: AppRadius.radiusLg,
         boxShadow: [
           BoxShadow(
             color: theme.colors.destructive.withAlpha(128),
@@ -178,7 +178,7 @@ class ViolationReportDetailScreen extends StatelessWidget {
                 ),
                 decoration: BoxDecoration(
                   color: theme.colors.destructiveForeground.withAlpha(51),
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: AppRadius.radiusMd,
                 ),
                 child: Text(
                   'ID #${violation.id}',
@@ -241,7 +241,7 @@ class ViolationReportDetailScreen extends StatelessWidget {
             padding: EdgeInsets.all(AppSpacing.sm),
             decoration: BoxDecoration(
               color: theme.colors.destructiveForeground.withAlpha(26),
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: AppRadius.radiusMd,
             ),
             child: Row(
               children: [
@@ -264,13 +264,13 @@ class ViolationReportDetailScreen extends StatelessWidget {
   }
 
   Widget _buildInfoCard(List<_InfoItem> items, BuildContext context) {
-    final theme = FTheme.of(context);
+    final theme = context.theme;
     return Container(
       width: double.infinity,
       padding: EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
         color: theme.colors.card,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: AppRadius.radiusMd,
         boxShadow: AppShadows.card,
       ),
       child: Column(
@@ -288,7 +288,7 @@ class ViolationReportDetailScreen extends StatelessWidget {
                     height: 40,
                     decoration: BoxDecoration(
                       color: theme.colors.muted,
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: AppRadius.radiusMd,
                     ),
                     child: Icon(item.icon, color: theme.colors.mutedForeground, size: 20),
                   ),
@@ -326,13 +326,13 @@ class ViolationReportDetailScreen extends StatelessWidget {
   }
 
   Widget _buildTextCard(String text, BuildContext context) {
-    final theme = FTheme.of(context);
+    final theme = context.theme;
     return Container(
       width: double.infinity,
       padding: EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
         color: theme.colors.card,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: AppRadius.radiusMd,
         boxShadow: AppShadows.card,
       ),
       child: Text(
@@ -347,13 +347,13 @@ class ViolationReportDetailScreen extends StatelessWidget {
   }
 
   Widget _buildPhotoGallery(List<ViolationPhoto> photos, BuildContext context) {
-    final theme = FTheme.of(context);
+    final theme = context.theme;
     return Container(
       width: double.infinity,
       padding: EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
         color: theme.colors.card,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: AppRadius.radiusMd,
         boxShadow: AppShadows.card,
       ),
       child: Column(
@@ -380,10 +380,10 @@ class ViolationReportDetailScreen extends StatelessWidget {
                 child: Container(
                   decoration: BoxDecoration(
                     color: theme.colors.muted,
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: AppRadius.radiusMd,
                   ),
                   child: ClipRRect(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: AppRadius.radiusMd,
                     child: photo.url != null
                         ? Image.network(
                             photo.url!,
@@ -418,7 +418,7 @@ class ViolationReportDetailScreen extends StatelessWidget {
   }
 
   Widget _buildPhotoError(BuildContext context) {
-    final theme = FTheme.of(context);
+    final theme = context.theme;
     return Container(
       color: theme.colors.muted,
       child: Center(
@@ -432,7 +432,7 @@ class ViolationReportDetailScreen extends StatelessWidget {
   }
 
   void _showPhotoDialog(BuildContext context, String url) {
-    final theme = FTheme.of(context);
+    final theme = context.theme;
     showDialog(
       context: context,
       builder: (ctx) => Dialog(
@@ -456,7 +456,7 @@ class ViolationReportDetailScreen extends StatelessWidget {
                   maxHeight: MediaQuery.of(context).size.height * 0.8,
                 ),
                 child: ClipRRect(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: AppRadius.radiusMd,
                   child: Image.network(
                     url,
                     fit: BoxFit.contain,

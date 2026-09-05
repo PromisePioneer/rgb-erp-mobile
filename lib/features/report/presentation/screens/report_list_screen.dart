@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import 'package:forui/forui.dart';
 
 import '../../../../core/core.dart';
 import '../../../../shared/widgets/buttons/primary_button.dart';
@@ -28,16 +29,17 @@ class _ReportListScreenState extends State<ReportListScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = context.theme;
     return Scaffold(
-      backgroundColor: AppColors.slate100,
+      backgroundColor: theme.colors.muted,
       appBar: AppBar(
         title: const Text('Laporan Mutasi'),
-        backgroundColor: Colors.white,
-        foregroundColor: AppColors.slate800,
+        backgroundColor: theme.colors.card,
+        foregroundColor: theme.colors.foreground,
         elevation: 0,
         actions: [
           IconButton(
-            icon: const Icon(Icons.refresh),
+            icon: Icon(IconMap.refresh),
             onPressed: () => context.read<ReportNotifier>().loadReportsByArea(),
           ),
         ],
@@ -55,12 +57,12 @@ class _ReportListScreenState extends State<ReportListScreen> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(IconMap.errorOutline, size: 48, color: AppColors.danger),
+                  Icon(IconMap.errorOutline, size: 48, color: theme.colors.destructive),
                   const SizedBox(height: AppSpacing.md),
                   Text(
                     notifier.state.areasError!,
                     textAlign: TextAlign.center,
-                    style: TextStyle(color: AppColors.danger),
+                    style: TextStyle(color: theme.colors.destructive),
                   ),
                   const SizedBox(height: AppSpacing.md),
                   SizedBox(
@@ -84,12 +86,12 @@ class _ReportListScreenState extends State<ReportListScreen> {
                   Icon(
                     IconMap.calendarToday,
                     size: 64,
-                    color: AppColors.gray400,
+                    color: theme.colors.mutedForeground,
                   ),
                   const SizedBox(height: AppSpacing.md),
                   Text(
                     'Belum ada laporan mutasi',
-                    style: TextStyle(fontSize: 16, color: AppColors.gray500),
+                    style: TextStyle(fontSize: 16, color: theme.colors.mutedForeground),
                   ),
                   const SizedBox(height: AppSpacing.md),
                 ],
@@ -99,7 +101,6 @@ class _ReportListScreenState extends State<ReportListScreen> {
 
           return RefreshIndicator(
             onRefresh: () => notifier.loadReportsByArea(),
-            color: AppColors.primary,
             child: ListView.builder(
               padding: const EdgeInsets.all(AppSpacing.md),
               itemCount: notifier.state.areas.length,
@@ -115,36 +116,39 @@ class _ReportListScreenState extends State<ReportListScreen> {
         padding: EdgeInsets.only(bottom: MediaQuery.of(context).padding.bottom),
         child: FloatingActionButton(
           onPressed: () => context.push('/report/form'),
-          backgroundColor: AppColors.primary,
-          child: const Icon(Icons.add, color: Colors.white),
+          backgroundColor: theme.colors.primary,
+          foregroundColor: theme.colors.primaryForeground,
+          child: Icon(IconMap.add),
         ),
       ),
     );
   }
 
   Widget _buildAreaSection(ReportArea area) {
+    final theme = context.theme;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // Area header
         Container(
+          width: double.infinity,
           padding: const EdgeInsets.symmetric(
             horizontal: AppSpacing.md,
             vertical: AppSpacing.sm,
           ),
           decoration: BoxDecoration(
-            color: AppColors.primary,
-            borderRadius: BorderRadius.circular(8),
+            color: theme.colors.primary,
+            borderRadius: AppRadius.radiusMd,
           ),
           child: Row(
             children: [
-              Icon(IconMap.locationOn, color: Colors.white, size: 18),
+              Icon(IconMap.locationOn, color: theme.colors.primaryForeground, size: 18),
               const SizedBox(width: AppSpacing.sm),
               Expanded(
                 child: Text(
                   area.areaName,
-                  style: const TextStyle(
-                    color: Colors.white,
+                  style: TextStyle(
+                    color: theme.colors.primaryForeground,
                     fontWeight: FontWeight.w600,
                     fontSize: 14,
                   ),
@@ -153,12 +157,12 @@ class _ReportListScreenState extends State<ReportListScreen> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                 decoration: BoxDecoration(
-                  color: Colors.white.withAlpha(51),
+                  color: theme.colors.primaryForeground.withAlpha(51),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(
                   '${area.count} laporan',
-                  style: const TextStyle(color: Colors.white, fontSize: 12),
+                  style: TextStyle(color: theme.colors.primaryForeground, fontSize: 12),
                 ),
               ),
             ],
@@ -175,12 +179,13 @@ class _ReportListScreenState extends State<ReportListScreen> {
   }
 
   Widget _buildReportCard(Report report) {
+    final theme = context.theme;
     return Container(
       margin: const EdgeInsets.only(bottom: AppSpacing.sm),
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
+        color: theme.colors.card,
+        borderRadius: AppRadius.radiusMd,
         boxShadow: AppShadows.card,
       ),
       child: Column(
@@ -188,21 +193,21 @@ class _ReportListScreenState extends State<ReportListScreen> {
         children: [
           Row(
             children: [
-              Icon(IconMap.calendarToday, size: 14, color: AppColors.gray400),
+              Icon(IconMap.calendarToday, size: 14, color: theme.colors.mutedForeground),
               const SizedBox(width: 4),
               Text(
                 '${report.date} ${report.time}',
-                style: TextStyle(fontSize: 12, color: AppColors.gray500),
+                style: TextStyle(fontSize: 12, color: theme.colors.mutedForeground),
               ),
               const Spacer(),
               if (report.image != null)
-                Icon(IconMap.cameraAlt, size: 14, color: AppColors.gray400),
+                Icon(IconMap.cameraAlt, size: 14, color: theme.colors.mutedForeground),
             ],
           ),
           const SizedBox(height: AppSpacing.sm),
           Text(
             report.description,
-            style: const TextStyle(fontSize: 14, color: AppColors.slate800),
+            style: TextStyle(fontSize: 14, color: theme.colors.foreground),
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
           ),
@@ -212,13 +217,13 @@ class _ReportListScreenState extends State<ReportListScreen> {
               Icon(
                 IconMap.locationOn,
                 size: 14,
-                color: AppColors.gray400,
+                color: theme.colors.mutedForeground,
               ),
               const SizedBox(width: 4),
               Expanded(
                 child: Text(
                   report.location,
-                  style: TextStyle(fontSize: 12, color: AppColors.gray500),
+                  style: TextStyle(fontSize: 12, color: theme.colors.mutedForeground),
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
@@ -228,11 +233,11 @@ class _ReportListScreenState extends State<ReportListScreen> {
             const SizedBox(height: AppSpacing.xs),
             Row(
               children: [
-                Icon(IconMap.person, size: 14, color: AppColors.gray400),
+                Icon(IconMap.person, size: 14, color: theme.colors.mutedForeground),
                 const SizedBox(width: 4),
                 Text(
                   report.employeeName!,
-                  style: TextStyle(fontSize: 12, color: AppColors.gray500),
+                  style: TextStyle(fontSize: 12, color: theme.colors.mutedForeground),
                 ),
               ],
             ),

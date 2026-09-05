@@ -29,7 +29,7 @@ class AppBottomNavBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = FTheme.of(context);
+    final theme = context.theme;
     return Container(
       height: 64 + MediaQuery.of(context).padding.bottom,
       decoration: BoxDecoration(
@@ -130,7 +130,7 @@ class AppBottomNavBar extends StatelessWidget {
   }
 
   void _showScanBottomSheet(BuildContext context) {
-    final theme = FTheme.of(context);
+    final theme = context.theme;
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
@@ -160,10 +160,8 @@ class AppBottomNavBar extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Text(
                 'Pilih Metode Scan',
-                style: TextStyle(
-                  fontSize: 18,
+                style: theme.typography.body.lg.copyWith(
                   fontWeight: FontWeight.bold,
-                  color: theme.colors.foreground,
                 ),
               ),
             ),
@@ -227,7 +225,7 @@ class _NavItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = FTheme.of(context);
+    final theme = context.theme;
     final activeColor = theme.colors.primaryForeground;
     final inactiveColor = theme.colors.primaryForeground.withAlpha(179); // 70% opacity
 
@@ -247,8 +245,7 @@ class _NavItem extends StatelessWidget {
             const SizedBox(height: 4),
             Text(
               label,
-              style: TextStyle(
-                fontSize: 10,
+              style: theme.typography.body.xs.copyWith(
                 fontWeight: isActive ? FontWeight.w600 : FontWeight.normal,
                 color: isActive ? activeColor : inactiveColor,
               ),
@@ -284,61 +281,55 @@ class _ScanOptionTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = FTheme.of(context);
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
-        child: Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: theme.colors.muted,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: theme.colors.border),
-          ),
-          child: Row(
-            children: [
-              Container(
-                width: 48,
-                height: 48,
-                decoration: BoxDecoration(
-                  color: iconBg,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Icon(icon, color: iconColor, size: 26),
+    final theme = context.theme;
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: theme.colors.muted,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: theme.colors.border),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                color: iconBg,
+                borderRadius: BorderRadius.circular(12),
               ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w600,
-                        color: theme.colors.foreground,
-                      ),
+              child: Icon(icon, color: iconColor, size: 26),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: theme.typography.body.md.copyWith(
+                      fontWeight: FontWeight.w600,
+                      color: theme.colors.foreground,
                     ),
-                    const SizedBox(height: 2),
-                    Text(
-                      subtitle,
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: theme.colors.mutedForeground,
-                      ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    subtitle,
+                    style: theme.typography.body.xs.copyWith(
+                      color: theme.colors.mutedForeground,
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
-              Icon(
-                Icons.chevron_right,
-                color: theme.colors.mutedForeground,
-                size: 24,
-              ),
-            ],
-          ),
+            ),
+            Icon(
+              Icons.chevron_right,
+              color: theme.colors.mutedForeground,
+              size: 24,
+            ),
+          ],
         ),
       ),
     );

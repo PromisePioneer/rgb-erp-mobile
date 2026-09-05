@@ -73,136 +73,212 @@ class _ShiftResponseDialogState extends State<ShiftResponseDialog> {
   Future<String?> _showRejectReasonDialog() async {
     return showDialog<String>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Row(
-          children: [
-            Icon(IconMap.warningRounded, color: AppColors.warning),
-            const SizedBox(width: AppSpacing.sm),
-            const Text('Alasan Penolakan'),
-          ],
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text('Mohon isi alasan penolakan shift:'),
-            const SizedBox(height: AppSpacing.md),
-            TextField(
-              controller: _reasonController,
-              decoration: const InputDecoration(
-                hintText: 'Contoh: Sakit, Urusan keluarga, dll',
-                border: OutlineInputBorder(),
+      builder: (context) {
+        final theme = context.theme;
+        return Center(
+          child: Material(
+            color: Colors.transparent,
+            child: Container(
+              margin: const EdgeInsets.all(AppSpacing.lg),
+              padding: const EdgeInsets.all(AppSpacing.lg),
+              decoration: BoxDecoration(
+                color: theme.colors.card,
+                borderRadius: AppRadius.radiusLg,
               ),
-              maxLines: 3,
-              maxLength: 255,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Header
+                  Row(
+                    children: [
+                      Icon(IconMap.warningRounded, color: AppColors.warning),
+                      const SizedBox(width: AppSpacing.sm),
+                      Expanded(
+                        child: Text(
+                          'Alasan Penolakan',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: theme.colors.foreground,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+
+                  // Description
+                  Text(
+                    'Mohon isi alasan penolakan shift:',
+                    style: TextStyle(color: theme.colors.mutedForeground),
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+
+                  // Text field
+                  FTextField(
+                    control: FTextFieldControl.managed(controller: _reasonController),
+                    size: FTextFieldSizeVariant.md,
+                    hint: 'Contoh: Sakit, Urusan keluarga, dll',
+                    maxLines: 3,
+                    maxLength: 255,
+                    textInputAction: TextInputAction.done,
+                  ),
+                  const SizedBox(height: AppSpacing.lg),
+
+                  // Actions
+                  Row(
+                    children: [
+                      Expanded(
+                        child: FButton(
+                          onPress: () => Navigator.pop(context),
+                          variant: FButtonVariant.ghost,
+                          child: const Text('Batal'),
+                        ),
+                      ),
+                      const SizedBox(width: AppSpacing.sm),
+                      Expanded(
+                        child: FButton(
+                          onPress: () {
+                            final reason = _reasonController.text.trim();
+                            if (reason.isEmpty) {
+                              return;
+                            }
+                            _reasonController.clear();
+                            Navigator.pop(context, reason);
+                          },
+                          variant: FButtonVariant.destructive,
+                          child: const Text('Tolak Shift'),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
-          ],
-        ),
-        actions: [
-          FButton(
-            onPress: () => Navigator.pop(context),
-            variant: FButtonVariant.ghost,
-            child: const Text('Batal'),
           ),
-          FButton(
-            onPress: () {
-              final reason = _reasonController.text.trim();
-              if (reason.isEmpty) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Harap isi alasan penolakan')),
-                );
-                return;
-              }
-              Navigator.pop(context, reason);
-            },
-            variant: FButtonVariant.destructive,
-            child: const Text('Tolak Shift'),
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    final theme = FTheme.of(context);
+    final theme = context.theme;
 
-    return AlertDialog(
-      title: Row(
-        children: [
-          Icon(IconMap.schedule, color: theme.colors.primary),
-          const SizedBox(width: AppSpacing.sm),
-          const Expanded(child: Text('Konfirmasi Jadwal Shift')),
-        ],
-      ),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(AppSpacing.md),
-            decoration: BoxDecoration(
-              color: AppColors.sky50,
-              borderRadius: AppRadius.radiusMd,
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildInfoRow(IconMap.calendarToday, 'Tanggal', widget.shift.date),
-                const SizedBox(height: AppSpacing.sm),
-                if (widget.shift.areaName != null)
-                  _buildInfoRow(IconMap.locationOn, 'Area', widget.shift.areaName!),
-                const SizedBox(height: AppSpacing.sm),
-                if (widget.shift.posName != null)
-                  _buildInfoRow(IconMap.place, 'POS', widget.shift.posName!),
-                const SizedBox(height: AppSpacing.sm),
-                if (widget.shift.shiftName != null)
-                  _buildInfoRow(IconMap.accessTime, 'Shift', widget.shift.shiftName!),
-                const SizedBox(height: AppSpacing.sm),
-                _buildInfoRow(IconMap.schedule, 'Jam Mulai', widget.shift.shiftStartTime),
-              ],
-            ),
+    return Center(
+      child: Material(
+        color: Colors.transparent,
+        child: Container(
+          margin: const EdgeInsets.all(AppSpacing.lg),
+          padding: const EdgeInsets.all(AppSpacing.lg),
+          decoration: BoxDecoration(
+            color: theme.colors.card,
+            borderRadius: AppRadius.radiusLg,
           ),
-          const SizedBox(height: AppSpacing.lg),
-          Container(
-            padding: const EdgeInsets.all(AppSpacing.md),
-            decoration: BoxDecoration(
-              color: AppColors.amber50,
-              borderRadius: AppRadius.radiusMd,
-              border: Border.all(color: AppColors.amber200),
-            ),
-            child: Row(
-              children: [
-                Icon(IconMap.infoOutline, color: AppColors.amber600, size: 20),
-                const SizedBox(width: AppSpacing.sm),
-                const Expanded(
-                  child: Text(
-                    'Jika ditolak, sistem akan mencari backup secara otomatis.',
-                    style: TextStyle(
-                      color: AppColors.amber600,
-                      fontSize: 12,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Header
+              Row(
+                children: [
+                  Icon(IconMap.schedule, color: theme.colors.primary),
+                  const SizedBox(width: AppSpacing.sm),
+                  Expanded(
+                    child: Text(
+                      'Konfirmasi Jadwal Shift',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: theme.colors.foreground,
+                      ),
                     ),
                   ),
+                ],
+              ),
+              const SizedBox(height: AppSpacing.lg),
+
+              // Schedule details
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(AppSpacing.md),
+                decoration: BoxDecoration(
+                  color: AppColors.teal50,
+                  borderRadius: AppRadius.radiusMd,
                 ),
-              ],
-            ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildInfoRow(IconMap.calendarToday, 'Tanggal', widget.shift.date),
+                    const SizedBox(height: AppSpacing.sm),
+                    if (widget.shift.areaName != null)
+                      _buildInfoRow(IconMap.locationOn, 'Area', widget.shift.areaName!),
+                    const SizedBox(height: AppSpacing.sm),
+                    if (widget.shift.posName != null)
+                      _buildInfoRow(IconMap.place, 'POS', widget.shift.posName!),
+                    const SizedBox(height: AppSpacing.sm),
+                    if (widget.shift.shiftName != null)
+                      _buildInfoRow(IconMap.accessTime, 'Shift', widget.shift.shiftName!),
+                    const SizedBox(height: AppSpacing.sm),
+                    _buildInfoRow(IconMap.schedule, 'Jam Mulai', widget.shift.shiftStartTime),
+                  ],
+                ),
+              ),
+              const SizedBox(height: AppSpacing.lg),
+
+              // Info text
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(AppSpacing.md),
+                decoration: BoxDecoration(
+                  color: AppColors.warningBg,
+                  borderRadius: AppRadius.radiusMd,
+                  border: Border.all(color: AppColors.warning.withAlpha(76)),
+                ),
+                child: Row(
+                  children: [
+                    Icon(IconMap.infoOutline, color: AppColors.amber500, size: 20),
+                    const SizedBox(width: AppSpacing.sm),
+                    Expanded(
+                      child: Text(
+                        'Jika ditolak, sistem akan mencari backup secara otomatis.',
+                        style: TextStyle(
+                          color: AppColors.amber500,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: AppSpacing.lg),
+
+              // Action buttons
+              Row(
+                children: [
+                  Expanded(
+                    child: SecondaryButton(
+                      label: 'TOLAK',
+                      onPressed: _isLoading ? null : _reject,
+                      isDanger: true,
+                      isLoading: _isLoading,
+                    ),
+                  ),
+                  const SizedBox(width: AppSpacing.md),
+                  Expanded(
+                    child: PrimaryButton(
+                      label: 'TERIMA',
+                      onPressed: _isLoading ? null : _accept,
+                      isLoading: _isLoading,
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ),
-        ],
+        ),
       ),
-      actions: [
-        // Reject button
-        SecondaryButton(
-          label: 'TOLAK',
-          onPressed: _isLoading ? null : _reject,
-          isDanger: true,
-          isLoading: _isLoading,
-        ),
-        // Accept button
-        PrimaryButton(
-          label: 'TERIMA',
-          onPressed: _isLoading ? null : _accept,
-          isLoading: _isLoading,
-        ),
-      ],
     );
   }
 

@@ -1,7 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import 'package:forui/forui.dart';
+
 import '../../../../core/core.dart';
+import '../../../../shared/widgets/buttons/primary_button.dart';
+import '../../../../shared/widgets/feedback/loading_indicator.dart';
+import '../../../../shared/widgets/icons/forui_icon_map.dart';
 import '../../domain/models/models.dart';
 import '../providers/purchase_request_provider.dart';
 
@@ -29,7 +34,7 @@ class _PurchaseRequestDetailScreenState extends State<PurchaseRequestDetailScree
     return Scaffold(
       backgroundColor: AppColors.slate100,
       appBar: AppBar(
-        title: const Text('Detail Purchase Request'),
+        title: Text('Detail Purchase Request'),
         backgroundColor: Colors.white,
         foregroundColor: AppColors.slate800,
         elevation: 0,
@@ -37,39 +42,11 @@ class _PurchaseRequestDetailScreenState extends State<PurchaseRequestDetailScree
           Consumer<PurchaseRequestNotifier>(
             builder: (context, notifier, child) {
               final item = notifier.state.selectedItem;
-              if (item == null || !item.canEdit) return const SizedBox.shrink();
+              if (item == null || !item.canEdit) return SizedBox.shrink();
 
-              return PopupMenuButton<String>(
-                icon: const Icon(Icons.more_vert),
-                onSelected: (value) {
-                  if (value == 'edit') {
-                    context.push('/purchase-request/form?edit=${item.id}');
-                  } else if (value == 'delete') {
-                    _showDeleteDialog(context, notifier);
-                  }
-                },
-                itemBuilder: (context) => [
-                  const PopupMenuItem(
-                    value: 'edit',
-                    child: Row(
-                      children: [
-                        Icon(Icons.edit, size: 20),
-                        SizedBox(width: 12),
-                        Text('Edit'),
-                      ],
-                    ),
-                  ),
-                  const PopupMenuItem(
-                    value: 'delete',
-                    child: Row(
-                      children: [
-                        Icon(Icons.delete, size: 20, color: AppColors.danger),
-                        SizedBox(width: 12),
-                        Text('Hapus', style: TextStyle(color: AppColors.danger)),
-                      ],
-                    ),
-                  ),
-                ],
+              return _MoreMenu(
+                onEdit: () => context.push('/purchase-request/form?edit=${item.id}'),
+                onDelete: () => _showDeleteDialog(context, notifier),
               );
             },
           ),
@@ -78,7 +55,7 @@ class _PurchaseRequestDetailScreenState extends State<PurchaseRequestDetailScree
       body: Consumer<PurchaseRequestNotifier>(
         builder: (context, notifier, child) {
           if (notifier.state.isLoading) {
-            return const Center(child: LoadingIndicator());
+            return Center(child: LoadingIndicator());
           }
 
           if (notifier.state.error != null && notifier.state.selectedItem == null) {
@@ -103,17 +80,20 @@ class _PurchaseRequestDetailScreenState extends State<PurchaseRequestDetailScree
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.error_outline, size: 64, color: AppColors.danger),
-            const SizedBox(height: AppSpacing.md),
+            Icon(IconMap.errorOutline, size: 64, color: AppColors.danger),
+            SizedBox(height: AppSpacing.md),
             Text(
               notifier.state.error!,
               textAlign: TextAlign.center,
               style: const TextStyle(color: AppColors.slate500),
             ),
-            const SizedBox(height: AppSpacing.lg),
-            ElevatedButton(
-              onPressed: () => notifier.loadDetail(widget.purchaseRequestId),
-              child: const Text('Coba Lagi'),
+            SizedBox(height: AppSpacing.lg),
+            SizedBox(
+              width: 150,
+              child: PrimaryButton(
+                label: 'Coba Lagi',
+                onPressed: () => notifier.loadDetail(widget.purchaseRequestId),
+              ),
             ),
           ],
         ),
@@ -122,11 +102,11 @@ class _PurchaseRequestDetailScreenState extends State<PurchaseRequestDetailScree
   }
 
   Widget _buildEmptyState() {
-    return const Center(
+    return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.search_off, size: 64, color: AppColors.slate300),
+          Icon(IconMap.searchOff, size: 64, color: AppColors.slate300),
           SizedBox(height: AppSpacing.md),
           Text(
             'Purchase request tidak ditemukan',
@@ -146,16 +126,16 @@ class _PurchaseRequestDetailScreenState extends State<PurchaseRequestDetailScree
             children: [
               // Header card
               _buildHeaderCard(item),
-              const SizedBox(height: 16),
+              SizedBox(height: 16),
 
               // Details card
               _buildDetailsCard(item),
-              const SizedBox(height: 16),
+              SizedBox(height: 16),
 
               // Approval timeline
               if (item.approvals.isNotEmpty) ...[
                 _buildApprovalCard(item),
-                const SizedBox(height: 16),
+                SizedBox(height: 16),
               ],
 
               // Submit button
@@ -210,11 +190,11 @@ class _PurchaseRequestDetailScreenState extends State<PurchaseRequestDetailScree
               ),
             ],
           ),
-          const SizedBox(height: 12),
+          SizedBox(height: 12),
           Row(
             children: [
-              Icon(Icons.calendar_today, size: 16, color: AppColors.slate400),
-              const SizedBox(width: 8),
+              Icon(IconMap.calendarToday, size: 16, color: AppColors.gray400),
+              SizedBox(width: 8),
               Text(
                 item.formattedDate,
                 style: const TextStyle(
@@ -225,11 +205,11 @@ class _PurchaseRequestDetailScreenState extends State<PurchaseRequestDetailScree
             ],
           ),
           if (item.supplier != null && item.supplier!.isNotEmpty) ...[
-            const SizedBox(height: 8),
+            SizedBox(height: 8),
             Row(
               children: [
-                Icon(Icons.business, size: 16, color: AppColors.slate400),
-                const SizedBox(width: 8),
+                Icon(IconMap.business, size: 16, color: AppColors.gray400),
+                SizedBox(width: 8),
                 Expanded(
                   child: Text(
                     item.supplier!,
@@ -246,7 +226,7 @@ class _PurchaseRequestDetailScreenState extends State<PurchaseRequestDetailScree
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
+              Text(
                 'Total',
                 style: TextStyle(
                   fontSize: 16,
@@ -282,9 +262,9 @@ class _PurchaseRequestDetailScreenState extends State<PurchaseRequestDetailScree
         children: [
           Row(
             children: [
-              const Icon(Icons.inventory_2_outlined, size: 20, color: AppColors.slate600),
-              const SizedBox(width: 8),
-              const Text(
+              Icon(IconMap.inventoryOutline, size: 20, color: AppColors.slate600),
+              SizedBox(width: 8),
+              Text(
                 'Daftar Produk',
                 style: TextStyle(
                   fontSize: 16,
@@ -302,20 +282,20 @@ class _PurchaseRequestDetailScreenState extends State<PurchaseRequestDetailScree
               ),
             ],
           ),
-          const SizedBox(height: 12),
+          SizedBox(height: 12),
           ...item.details.map((detail) => _buildDetailItem(detail)),
           if (item.notes != null && item.notes!.isNotEmpty) ...[
             const Divider(height: 24),
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Icon(Icons.notes, size: 16, color: AppColors.slate400),
-                const SizedBox(width: 8),
+                Icon(IconMap.notes, size: 16, color: AppColors.gray400),
+                SizedBox(width: 8),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
+                      Text(
                         'Keterangan',
                         style: TextStyle(
                           fontSize: 12,
@@ -323,7 +303,7 @@ class _PurchaseRequestDetailScreenState extends State<PurchaseRequestDetailScree
                           color: AppColors.slate500,
                         ),
                       ),
-                      const SizedBox(height: 4),
+                      SizedBox(height: 4),
                       Text(
                         item.notes!,
                         style: const TextStyle(
@@ -362,7 +342,7 @@ class _PurchaseRequestDetailScreenState extends State<PurchaseRequestDetailScree
                     color: AppColors.slate800,
                   ),
                 ),
-                const SizedBox(height: 2),
+                SizedBox(height: 2),
                 Text(
                   '${detail.formattedQty} x ${detail.formattedTotal}',
                   style: const TextStyle(
@@ -397,9 +377,9 @@ class _PurchaseRequestDetailScreenState extends State<PurchaseRequestDetailScree
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Row(
+          Row(
             children: [
-              Icon(Icons.approval, size: 20, color: AppColors.slate600),
+              Icon(IconMap.checklist, size: 20, color: AppColors.slate600),
               SizedBox(width: 8),
               Text(
                 'Riwayat Persetujuan',
@@ -411,7 +391,7 @@ class _PurchaseRequestDetailScreenState extends State<PurchaseRequestDetailScree
               ),
             ],
           ),
-          const SizedBox(height: 16),
+          SizedBox(height: 16),
           ...item.approvals.asMap().entries.map((entry) {
             final index = entry.key;
             final approval = entry.value;
@@ -429,20 +409,20 @@ class _PurchaseRequestDetailScreenState extends State<PurchaseRequestDetailScree
     final isRejected = approval.isRejected;
 
     Color dotColor;
-    IconData? icon;
+    IconData icon;
 
     if (isApproved) {
       dotColor = AppColors.success;
-      icon = Icons.check;
+      icon = IconMap.check;
     } else if (isRejected) {
       dotColor = AppColors.danger;
-      icon = Icons.close;
+      icon = IconMap.close;
     } else if (isPending) {
       dotColor = AppColors.warning;
-      icon = Icons.schedule;
+      icon = IconMap.schedule;
     } else {
       dotColor = AppColors.slate300;
-      icon = null;
+      icon = IconMap.circle;
     }
 
     return Row(
@@ -457,9 +437,7 @@ class _PurchaseRequestDetailScreenState extends State<PurchaseRequestDetailScree
                 color: dotColor.withAlpha(26),
                 shape: BoxShape.circle,
               ),
-              child: icon != null
-                  ? Icon(icon, size: 16, color: dotColor)
-                  : null,
+              child: Icon(icon, size: 16, color: dotColor),
             ),
             if (!isLast)
               Container(
@@ -469,7 +447,7 @@ class _PurchaseRequestDetailScreenState extends State<PurchaseRequestDetailScree
               ),
           ],
         ),
-        const SizedBox(width: 12),
+        SizedBox(width: 12),
         Expanded(
           child: Padding(
             padding: const EdgeInsets.only(bottom: 16),
@@ -484,7 +462,7 @@ class _PurchaseRequestDetailScreenState extends State<PurchaseRequestDetailScree
                     color: AppColors.slate800,
                   ),
                 ),
-                const SizedBox(height: 2),
+                SizedBox(height: 2),
                 Text(
                   approval.statusLabel,
                   style: TextStyle(
@@ -494,17 +472,17 @@ class _PurchaseRequestDetailScreenState extends State<PurchaseRequestDetailScree
                   ),
                 ),
                 if (approval.formattedActedAt != null) ...[
-                  const SizedBox(height: 4),
+                  SizedBox(height: 4),
                   Text(
                     approval.formattedActedAt!,
                     style: const TextStyle(
                       fontSize: 12,
-                      color: AppColors.slate400,
+                      color: AppColors.gray400,
                     ),
                   ),
                 ],
                 if (approval.note != null && approval.note!.isNotEmpty) ...[
-                  const SizedBox(height: 4),
+                  SizedBox(height: 4),
                   Text(
                     approval.note!,
                     style: const TextStyle(
@@ -532,7 +510,7 @@ class _PurchaseRequestDetailScreenState extends State<PurchaseRequestDetailScree
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const Text(
+          Text(
             'Ajukan untuk persetujuan?',
             style: TextStyle(
               fontSize: 14,
@@ -540,39 +518,32 @@ class _PurchaseRequestDetailScreenState extends State<PurchaseRequestDetailScree
             ),
             textAlign: TextAlign.center,
           ),
-          const SizedBox(height: 12),
-          ElevatedButton(
-            onPressed: notifier.state.isSubmitting
-                ? null
-                : () => _submitForApproval(notifier),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primary,
-              disabledBackgroundColor: AppColors.slate300,
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(vertical: 14),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
+          SizedBox(height: 12),
+          SizedBox(
+            height: 48,
+            child: FButton(
+              onPress: notifier.state.isSubmitting
+                  ? null
+                  : () => _submitForApproval(notifier),
+              variant: FButtonVariant.primary,
+              child: notifier.state.isSubmitting
+                  ? SizedBox(
+                      width: 24,
+                      height: 24,
+                      child: LoadingIndicator(
+                      ),
+                    )
+                  : Text(
+                      'Ajukan Persetujuan',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
             ),
-            child: notifier.state.isSubmitting
-                ? const SizedBox(
-                    width: 24,
-                    height: 24,
-                    child: LoadingIndicator(
-                      strokeWidth: 2,
-                      color: Colors.white,
-                    ),
-                  )
-                : const Text(
-                    'Ajukan Persetujuan',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
           ),
           if (notifier.state.submitError != null) ...[
-            const SizedBox(height: 8),
+            SizedBox(height: 8),
             Text(
               notifier.state.submitError!,
               style: const TextStyle(
@@ -612,42 +583,87 @@ class _PurchaseRequestDetailScreenState extends State<PurchaseRequestDetailScree
   void _showDeleteDialog(BuildContext context, PurchaseRequestNotifier notifier) {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Hapus Purchase Request?'),
-        content: const Text(
-          'Purchase request akan dihapus. Tindakan ini tidak dapat dibatalkan.',
+      builder: (dialogContext) => Dialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Batal'),
-          ),
-          TextButton(
-            onPressed: () async {
-              Navigator.pop(context);
-              final success = await notifier.deletePurchaseRequest(widget.purchaseRequestId);
-              if (!mounted) return;
-              if (success) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Purchase request berhasil dihapus'),
-                    backgroundColor: AppColors.success,
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                IconMap.warning,
+                size: 48,
+                color: AppColors.danger,
+              ),
+              SizedBox(height: 16),
+              Text(
+                'Hapus Purchase Request?',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.slate800,
+                ),
+              ),
+              SizedBox(height: 8),
+              Text(
+                'Purchase request akan dihapus. Tindakan ini tidak dapat dibatalkan.',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 14,
+                  color: AppColors.slate500,
+                ),
+              ),
+              SizedBox(height: 24),
+              Row(
+                children: [
+                  Expanded(
+                    child: SizedBox(
+                      height: 44,
+                      child: FButton(
+                        onPress: () => Navigator.pop(dialogContext),
+                        variant: FButtonVariant.outline,
+                        child: Text('Batal'),
+                      ),
+                    ),
                   ),
-                );
-                context.pop();
-              } else {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(notifier.state.deleteError ?? 'Gagal menghapus'),
-                    backgroundColor: AppColors.danger,
+                  SizedBox(width: 12),
+                  Expanded(
+                    child: SizedBox(
+                      height: 44,
+                      child: FButton(
+                        onPress: () async {
+                          Navigator.pop(dialogContext);
+                          final success = await notifier.deletePurchaseRequest(widget.purchaseRequestId);
+                          if (!mounted) return;
+                          if (success) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Purchase request berhasil dihapus'),
+                                backgroundColor: AppColors.success,
+                              ),
+                            );
+                            context.pop();
+                          } else {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(notifier.state.deleteError ?? 'Gagal menghapus'),
+                                backgroundColor: AppColors.danger,
+                              ),
+                            );
+                          }
+                        },
+                        variant: FButtonVariant.destructive,
+                        child: Text('Hapus'),
+                      ),
+                    ),
                   ),
-                );
-              }
-            },
-            style: TextButton.styleFrom(foregroundColor: AppColors.danger),
-            child: const Text('Hapus'),
+                ],
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
@@ -676,5 +692,52 @@ class _PurchaseRequestDetailScreenState extends State<PurchaseRequestDetailScree
       default:
         return AppColors.warningBg;
     }
+  }
+}
+
+/// More menu popup
+class _MoreMenu extends StatelessWidget {
+  final VoidCallback onEdit;
+  final VoidCallback onDelete;
+
+  const _MoreMenu({
+    required this.onEdit,
+    required this.onDelete,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return PopupMenuButton<String>(
+      icon: Icon(IconMap.moreVertical),
+      onSelected: (value) {
+        if (value == 'edit') {
+          onEdit();
+        } else if (value == 'delete') {
+          onDelete();
+        }
+      },
+      itemBuilder: (context) => [
+        PopupMenuItem(
+          value: 'edit',
+          child: Row(
+            children: [
+              Icon(IconMap.pencil, size: 20, color: AppColors.slate600),
+              SizedBox(width: 12),
+              Text('Edit'),
+            ],
+          ),
+        ),
+        PopupMenuItem(
+          value: 'delete',
+          child: Row(
+            children: [
+              Icon(IconMap.delete, size: 20, color: AppColors.danger),
+              SizedBox(width: 12),
+              Text('Hapus', style: TextStyle(color: AppColors.danger)),
+            ],
+          ),
+        ),
+      ],
+    );
   }
 }
