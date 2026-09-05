@@ -199,7 +199,7 @@ class _FaceCaptureScreenState extends State<FaceCaptureScreen> {
 
     if (!_isInitialized || _controller == null) {
       return const Center(
-        child: CircularProgressIndicator(color: Colors.white),
+        child: LoadingIndicator(color: Colors.white),
       );
     }
 

@@ -137,7 +137,7 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
                 loadingBuilder: (context, child, loadingProgress) {
                   if (loadingProgress == null) return child;
                   return const Center(
-                    child: CircularProgressIndicator(color: Colors.white),
+                    child: LoadingIndicator(color: Colors.white),
                   );
                 },
                 errorBuilder: (context, error, stackTrace) {

@@ -25,7 +25,7 @@ class ClientAreaListScreen extends StatelessWidget {
       body: Consumer<ClientDashboardNotifier>(
         builder: (context, notifier, child) {
           if (notifier.isLoadingAreas) {
-            return const Center(child: CircularProgressIndicator());
+            return const Center(child: LoadingIndicator());
           }
 
           if (notifier.areasError != null) {

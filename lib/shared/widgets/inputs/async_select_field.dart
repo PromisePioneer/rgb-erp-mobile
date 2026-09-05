@@ -353,7 +353,7 @@ class _AsyncSelectFieldState extends State<AsyncSelectField> {
                         SizedBox(
                           width: 16,
                           height: 16,
-                          child: CircularProgressIndicator(
+                          child: LoadingIndicator(
                             strokeWidth: 2,
                             color: AppColors.slate400,
                           ),
@@ -496,7 +496,7 @@ class _AsyncSelectFieldState extends State<AsyncSelectField> {
               height: 20,
               child: Padding(
                 padding: EdgeInsets.all(2),
-                child: CircularProgressIndicator(
+                child: LoadingIndicator(
                   strokeWidth: 2,
                   color: AppColors.primary,
                 ),
@@ -683,7 +683,7 @@ class _DropdownOverlay extends StatelessWidget {
               SizedBox(
                 width: 32,
                 height: 32,
-                child: CircularProgressIndicator(
+                child: LoadingIndicator(
                   strokeWidth: 2.5,
                   color: AppColors.primary,
                 ),

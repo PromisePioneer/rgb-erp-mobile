@@ -47,7 +47,7 @@ class _ApprovalListScreenState extends State<ApprovalListScreen> {
                 child: Consumer<ApprovalNotifier>(
                   builder: (context, notifier, child) {
                     if (notifier.state.isLoading) {
-                      return const Center(child: CircularProgressIndicator());
+                      return const Center(child: LoadingIndicator());
                     }
                     if (notifier.state.error != null) {
                       return _buildError(notifier);

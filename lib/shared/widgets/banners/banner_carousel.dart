@@ -85,7 +85,7 @@ class _BannerCarouselState extends State<BannerCarousel> {
                             return Container(
                               color: AppColors.slate200,
                               child: Center(
-                                child: CircularProgressIndicator(
+                                child: LoadingIndicator(
                                   value: loadingProgress.expectedTotalBytes != null
                                       ? loadingProgress.cumulativeBytesLoaded /
                                           loadingProgress.expectedTotalBytes!

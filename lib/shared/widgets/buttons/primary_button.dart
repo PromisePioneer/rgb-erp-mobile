@@ -33,7 +33,7 @@ class PrimaryButton extends StatelessWidget {
             ? const SizedBox(
                 width: 24,
                 height: 24,
-                child: CircularProgressIndicator(
+                child: LoadingIndicator(
                   strokeWidth: 2,
                 ),
               )
@@ -85,7 +85,7 @@ class SecondaryButton extends StatelessWidget {
             ? const SizedBox(
                 width: 24,
                 height: 24,
-                child: CircularProgressIndicator(
+                child: LoadingIndicator(
                   strokeWidth: 2,
                 ),
               )
@@ -126,7 +126,7 @@ class LoadingTextButton extends StatelessWidget {
           ? const SizedBox(
               width: 16,
               height: 16,
-              child: CircularProgressIndicator(strokeWidth: 2),
+              child: LoadingIndicator(strokeWidth: 2),
             )
           : Text(label),
     );

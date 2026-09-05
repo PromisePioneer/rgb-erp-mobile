@@ -60,7 +60,7 @@ class _PayrollScreenState extends State<PayrollScreen> {
                 child: Consumer<PayrollNotifier>(
                   builder: (context, notifier, child) {
                     if (notifier.state.isLoading) {
-                      return const Center(child: CircularProgressIndicator());
+                      return const Center(child: LoadingIndicator());
                     }
 
                     if (notifier.state.error != null) {

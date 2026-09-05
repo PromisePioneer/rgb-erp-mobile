@@ -53,7 +53,7 @@ class _ClientDashboardScreenState extends State<ClientDashboardScreen> {
           await context.read<ClientDashboardNotifier>().refresh();
         },
         child: dashboardState.isLoading && data == null
-            ? const Center(child: CircularProgressIndicator())
+            ? const Center(child: LoadingIndicator())
             : dashboardState.error != null && data == null
                 ? _buildError(dashboardState.error!)
                 : ListView(

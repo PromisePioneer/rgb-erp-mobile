@@ -1417,7 +1417,7 @@ class _TaskAssignmentFormScreenState extends State<TaskAssignmentFormScreen> {
                           ? const SizedBox(
                         width: 20,
                         height: 20,
-                        child: CircularProgressIndicator(
+                        child: LoadingIndicator(
                           strokeWidth: 2,
                           color: Colors.white,
                         ),

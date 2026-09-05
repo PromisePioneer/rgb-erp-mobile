@@ -179,7 +179,7 @@ class _ShiftConfirmDialogContentState extends State<_ShiftConfirmDialogContent> 
               ? const SizedBox(
                   width: 20,
                   height: 20,
-                  child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                  child: LoadingIndicator(strokeWidth: 2, color: Colors.white))
               : const Text('TERIMA'),
         ),
       ],
@@ -365,7 +365,7 @@ class _BackupOfferDialogContentState extends State<_BackupOfferDialogContent> {
               ? const SizedBox(
                   width: 20,
                   height: 20,
-                  child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                  child: LoadingIndicator(strokeWidth: 2, color: Colors.white))
               : const Text('TERIMA'),
         ),
       ],

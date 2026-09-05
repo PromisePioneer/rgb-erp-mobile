@@ -78,7 +78,7 @@ class _PurchaseRequestDetailScreenState extends State<PurchaseRequestDetailScree
       body: Consumer<PurchaseRequestNotifier>(
         builder: (context, notifier, child) {
           if (notifier.state.isLoading) {
-            return const Center(child: CircularProgressIndicator());
+            return const Center(child: LoadingIndicator());
           }
 
           if (notifier.state.error != null && notifier.state.selectedItem == null) {
@@ -558,7 +558,7 @@ class _PurchaseRequestDetailScreenState extends State<PurchaseRequestDetailScree
                 ? const SizedBox(
                     width: 24,
                     height: 24,
-                    child: CircularProgressIndicator(
+                    child: LoadingIndicator(
                       strokeWidth: 2,
                       color: Colors.white,
                     ),

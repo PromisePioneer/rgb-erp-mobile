@@ -383,7 +383,7 @@ class ApprovalDetailScreen extends StatelessWidget {
                     ? const SizedBox(
                         width: 20,
                         height: 20,
-                        child: CircularProgressIndicator(
+                        child: LoadingIndicator(
                           strokeWidth: 2,
                           color: Colors.white,
                         ),

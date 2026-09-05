@@ -173,7 +173,7 @@ class _ClientReportsScreenState extends State<ClientReportsScreen>
 
   Widget _buildTasksTab(ClientReportsState state) {
     if (state.isLoadingTasks) {
-      return const Center(child: CircularProgressIndicator());
+      return const Center(child: LoadingIndicator());
     }
 
     if (state.tasksError != null) {
@@ -208,7 +208,7 @@ class _ClientReportsScreenState extends State<ClientReportsScreen>
 
   Widget _buildPatrolTab(ClientReportsState state) {
     if (state.isLoadingPatrol) {
-      return const Center(child: CircularProgressIndicator());
+      return const Center(child: LoadingIndicator());
     }
 
     if (state.patrolError != null) {
@@ -243,7 +243,7 @@ class _ClientReportsScreenState extends State<ClientReportsScreen>
 
   Widget _buildFieldTab(ClientReportsState state) {
     if (state.isLoadingField) {
-      return const Center(child: CircularProgressIndicator());
+      return const Center(child: LoadingIndicator());
     }
 
     if (state.fieldError != null) {

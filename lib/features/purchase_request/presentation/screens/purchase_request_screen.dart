@@ -166,7 +166,7 @@ class _PurchaseRequestScreenState extends State<PurchaseRequestScreen> {
                     final state = notifier.state;
 
                     if (state.isLoading && state.items.isEmpty) {
-                      return const Center(child: CircularProgressIndicator());
+                      return const Center(child: LoadingIndicator());
                     }
 
                     if (state.error != null && state.items.isEmpty) {
@@ -254,7 +254,7 @@ class _PurchaseRequestScreenState extends State<PurchaseRequestScreen> {
           return const Center(
             child: Padding(
               padding: EdgeInsets.all(16),
-              child: CircularProgressIndicator(),
+              child: LoadingIndicator(),
             ),
           );
         }

@@ -23,7 +23,7 @@ class ClientEmployeeListScreen extends StatelessWidget {
       body: Consumer<ClientDashboardNotifier>(
         builder: (context, notifier, child) {
           if (notifier.isLoadingEmployees) {
-            return const Center(child: CircularProgressIndicator());
+            return const Center(child: LoadingIndicator());
           }
 
           if (notifier.employeesError != null) {

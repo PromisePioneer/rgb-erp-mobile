@@ -49,7 +49,7 @@ class _LeaveScreenState extends State<LeaveScreen> {
                 child: Consumer<LeaveNotifier>(
                   builder: (context, notifier, child) {
                     if (notifier.state.isLoading) {
-                      return const Center(child: CircularProgressIndicator());
+                      return const Center(child: LoadingIndicator());
                     }
 
                     if (notifier.state.error != null) {

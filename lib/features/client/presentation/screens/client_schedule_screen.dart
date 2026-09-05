@@ -194,7 +194,7 @@ class _CalendarGrid extends StatelessWidget {
         if (isLoading)
           const Padding(
             padding: EdgeInsets.all(AppSpacing.md),
-            child: CircularProgressIndicator(),
+            child: LoadingIndicator(),
           )
         else
           GridView.builder(
@@ -313,7 +313,7 @@ class _EmployeesList extends StatelessWidget {
     }
 
     if (isLoading) {
-      return const Center(child: CircularProgressIndicator());
+      return const Center(child: LoadingIndicator());
     }
 
     if (error != null) {

@@ -107,7 +107,7 @@ class _ClientAttendanceScreenState extends State<ClientAttendanceScreen> with Si
           // Tab content
           Expanded(
             child: state.isLoading && state.attendanceData == null
-                ? const Center(child: CircularProgressIndicator())
+                ? const Center(child: LoadingIndicator())
                 : state.error != null && state.attendanceData == null
                     ? _buildError(state.error!)
                     : TabBarView(

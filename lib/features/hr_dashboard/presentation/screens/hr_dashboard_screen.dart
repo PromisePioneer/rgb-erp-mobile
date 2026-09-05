@@ -628,7 +628,7 @@ class _HRDashboardScreenState extends State<HRDashboardScreen> {
                 SizedBox(
                   width: 72,
                   height: 72,
-                  child: CircularProgressIndicator(
+                  child: LoadingIndicator(
                     value: _panicProgress / 100,
                     strokeWidth: 4,
                     backgroundColor: Colors.white.withAlpha(89),

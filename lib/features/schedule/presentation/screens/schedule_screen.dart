@@ -68,7 +68,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                   // Schedule content
                   Expanded(
                     child: notifier.state.isLoading
-                        ? const Center(child: CircularProgressIndicator())
+                        ? const Center(child: LoadingIndicator())
                         : notifier.state.error != null
                             ? _buildError(notifier)
                             : notifier.state.schedulesForSelectedDate.isEmpty
