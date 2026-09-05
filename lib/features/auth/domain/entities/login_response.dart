@@ -16,18 +16,28 @@ class LoginResponse extends Equatable {
   });
 
   factory LoginResponse.fromJson(Map<String, dynamic> json) {
-    final userType = json['user_type'] as String? ?? 'employee';
+    final userType = json['user_type'] as String? ?? 'user';
     final accessToken = json['access_token'] as String?;
 
     if (accessToken == null || accessToken.isEmpty) {
       throw Exception('Invalid login response: missing access token');
     }
 
-    // Handle employee login
-    if (userType == 'employee' && json['employee'] != null) {
+    // Handle employee/user login (API returns "user" type for employees)
+    if ((userType == 'employee' || userType == 'user') && json['employee'] != null) {
       return LoginResponse(
         userType: 'employee',
         user: User.fromJson(json['employee'] as Map<String, dynamic>),
+        accessToken: accessToken,
+        tokenType: json['token_type'] as String? ?? 'Bearer',
+      );
+    }
+
+    // Also handle case where user data is in "user" field directly
+    if ((userType == 'employee' || userType == 'user') && json['user'] != null) {
+      return LoginResponse(
+        userType: 'employee',
+        user: User.fromJson(json['user'] as Map<String, dynamic>),
         accessToken: accessToken,
         tokenType: json['token_type'] as String? ?? 'Bearer',
       );
