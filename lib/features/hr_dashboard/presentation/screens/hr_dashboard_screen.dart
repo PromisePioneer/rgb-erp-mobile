@@ -500,10 +500,16 @@ class _HRDashboardScreenState extends State<HRDashboardScreen> {
     final user = context.watch<AuthNotifier>().state.user;
     final theme = context.theme;
 
+    // Debug: log user privileges
+    print('MENU: user = ${user?.name}');
+    print('MENU: privileges = ${user?.privileges?.length ?? 0}');
+    print('MENU: role = ${user?.role}');
+
     // Filter menu items based on user privileges
     List<Map<String, dynamic>> filteredMenuItems;
     if (user != null) {
       final filtered = filterMenuByPrivileges(_menuItems, user);
+      print('MENU: filtered count = ${filtered.length}');
       filteredMenuItems = filtered.map((item) {
         return {
           'label': item.label,

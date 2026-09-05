@@ -208,7 +208,11 @@ class AuthNotifier extends ChangeNotifier {
 
       
       final response = await _repository.login(credentials);
-      
+
+      print('LOGIN: privileges count = ${response.user?.privileges?.length ?? 0}');
+      print('LOGIN: role = ${response.user?.role}');
+      print('LOGIN: isTeamLeader = ${response.user?.role?.toLowerCase() == 'team leader'}');
+      print('LOGIN: has daily_task_assign = ${response.user?.privileges?.contains('daily_task_assign') ?? false}');
 
       _state = _state.copyWith(
         user: response.user,
