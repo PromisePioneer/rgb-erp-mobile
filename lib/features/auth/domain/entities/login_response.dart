@@ -29,12 +29,19 @@ class LoginResponse extends Equatable {
       final userData = json['user'] as Map<String, dynamic>?;
       final employeeData = json['employee'] as Map<String, dynamic>;
 
+      // Get privileges from user field
+      final privileges = userData?['privileges'] as List<dynamic>?;
+      final privilegesList = privileges?.map((e) => e.toString()).toList() ?? <String>[];
+
+      // Debug log
+      print('DEBUG login: userType=$userType, privileges=${privilegesList.length}');
+
       // Create merged user data with privileges from user field
       final mergedUserData = <String, dynamic>{
         ...employeeData,
         if (userData != null) ...userData,
         // Ensure privileges come from user field, not employee
-        'privileges': userData?['privileges'] ?? [],
+        'privileges': privilegesList,
       };
 
       return LoginResponse(
