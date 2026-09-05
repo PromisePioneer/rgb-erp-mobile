@@ -25,16 +25,28 @@ class LoginResponse extends Equatable {
 
     // Handle employee/user login (API returns "user" type for employees)
     if ((userType == 'employee' || userType == 'user') && json['employee'] != null) {
+      // Merge employee data with user data to get privileges
+      final userData = json['user'] as Map<String, dynamic>?;
+      final employeeData = json['employee'] as Map<String, dynamic>;
+
+      // Create merged user data with privileges from user field
+      final mergedUserData = <String, dynamic>{
+        ...employeeData,
+        if (userData != null) ...userData,
+        // Ensure privileges come from user field, not employee
+        'privileges': userData?['privileges'] ?? [],
+      };
+
       return LoginResponse(
         userType: 'employee',
-        user: User.fromJson(json['employee'] as Map<String, dynamic>),
+        user: User.fromJson(mergedUserData),
         accessToken: accessToken,
         tokenType: json['token_type'] as String? ?? 'Bearer',
       );
     }
 
-    // Also handle case where user data is in "user" field directly
-    if ((userType == 'employee' || userType == 'user') && json['user'] != null) {
+    // Also handle case where user data is in "user" field directly (no employee)
+    if ((userType == 'employee' || userType == 'user') && json['user'] != null && json['employee'] == null) {
       return LoginResponse(
         userType: 'employee',
         user: User.fromJson(json['user'] as Map<String, dynamic>),
