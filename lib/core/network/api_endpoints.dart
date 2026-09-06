@@ -148,15 +148,6 @@ class ApiEndpoints {
   static const String productAreasByArea = '/product-areas/area';
 
   // ====================
-  // Unified Inventory (Warehouse + Area tracking)
-  // ====================
-  static const String inventoryByArea = '/inventory-items/by-area';
-  static const String inventoryScan = '/inventory-items/scan';
-  static const String inventoryMovements = '/inventory-items';
-  static const String inventoryCondition = '/inventory-items/condition';
-  static const String inventoryTransfer = '/inventory-items/transfer';
-
-  // ====================
   // Client API Endpoints (Mobile App for Clients)
   // ====================
   static const String clientDashboard = '/client/dashboard';

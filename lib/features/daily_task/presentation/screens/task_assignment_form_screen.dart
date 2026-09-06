@@ -365,10 +365,8 @@ class _TaskAssignmentFormScreenState extends State<TaskAssignmentFormScreen> {
             .isNotEmpty;
         return hasTargetMinutes && hasNotes;
       case 2:
-      // Step 3: Alat, Chemical, dan APD wajib (Mesin optional)
-        return _selectedToolIds.isNotEmpty &&
-            _selectedChemicalIds.isNotEmpty &&
-            _selectedPpeIds.isNotEmpty;
+      // Step 3: Semua field opsional (Alat, Chemical, APD, Mesin)
+        return true;
       case 3:
         return true;
       default:
@@ -391,9 +389,6 @@ class _TaskAssignmentFormScreenState extends State<TaskAssignmentFormScreen> {
           break;
         case 1:
           message = 'Target durasi dan catatan wajib diisi';
-          break;
-        case 2:
-          message = 'Alat, chemical, dan APD wajib dipilih';
           break;
         default:
           message = 'Lengkapi data yang diperlukan';
@@ -566,7 +561,8 @@ class _TaskAssignmentFormScreenState extends State<TaskAssignmentFormScreen> {
             label: 'ROLE/JABATAN',
             placeholder: 'Pilih role untuk filter tugas',
             loadOptions: (query) async {
-              final roles = notifier.roles;
+              // Fetch roles from API directly
+              final roles = await notifier.searchRoles(query: query.isEmpty ? null : query);
 
               // Calculate hierarchy levels
               final roleMap = {for (var r in roles) r.id: r};
@@ -709,10 +705,9 @@ class _TaskAssignmentFormScreenState extends State<TaskAssignmentFormScreen> {
         FormFieldCard(
           child: AsyncSelectField(
             label: 'JENIS TUGAS',
-            placeholder: _selectedRoleIds.isEmpty
-                ? 'Pilih role terlebih dahulu'
-                : 'Pilih Jenis Tugas',
+            placeholder: 'Pilih Jenis Tugas',
             loadOptions: (query) async {
+              // Get role filter if available
               final roleIds = _selectedRoleIds.isNotEmpty
                   ? _selectedRoleIds.toList()
                   : null;
@@ -738,7 +733,7 @@ class _TaskAssignmentFormScreenState extends State<TaskAssignmentFormScreen> {
               });
             },
             multiSelect: false,
-            disabled: isSubmitting || _selectedRoleIds.isEmpty,
+            disabled: isSubmitting,
           ),
         ),
         const SizedBox(height: 16),

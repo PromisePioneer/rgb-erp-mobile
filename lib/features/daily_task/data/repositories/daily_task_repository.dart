@@ -91,21 +91,58 @@ class DailyTaskRepository {
     }
   }
 
+  /// Search roles by query
+  Future<List<DailyTaskRole>> searchRoles({String? query}) async {
+    try {
+      final response = await api.getRoles(query: query);
+
+      final data = response['data'];
+
+      if (data == null) return [];
+      final list = data is List ? data : [];
+
+      final result = list.map((json) => DailyTaskRole.fromJson(_toMap(json))).toList();
+
+      return result;
+    } on ApiException {
+      rethrow;
+    } catch (e) {
+      throw ApiException(
+        message: 'Gagal memuat daftar role: $e',
+        statusCode: 500,
+      );
+    }
+  }
+
+  /// Map integer category type to string for inventory API
+  String? _mapCategoryTypeToString(int? categoryType) {
+    switch (categoryType) {
+      case 1:
+        return 'tools';
+      case 2:
+        return 'chemicals';
+      case 3:
+        return 'ppes';
+      case 4:
+        return 'machines';
+      default:
+        return null;
+    }
+  }
+
   Future<List<DailyTaskTool>> getTools({String? query, int? areaId, int? categoryType}) async {
     try {
       // If areaId is provided, fetch from unified inventory API
       if (areaId != null) {
-        final response = await api.getInventoryByArea(
+        final response = await api.getDailyTaskInventoryByArea(
           areaId: areaId,
           query: query,
-          categoryType: 'tools',
+          categoryType: _mapCategoryTypeToString(categoryType) ?? 'tools',
         );
         final data = response['data'];
         if (data == null) return [];
         final list = data is List ? data : [];
-        return list
-            .map((json) => DailyTaskTool.fromJson(_toMap(json)))
-            .toList();
+        return list.map((json) => DailyTaskTool.fromJson(_toMap(json))).toList();
       }
       // Otherwise, use original endpoint
       final response = await api.getTools(query: query);
@@ -127,17 +164,15 @@ class DailyTaskRepository {
     try {
       // If areaId is provided, fetch from unified inventory API
       if (areaId != null) {
-        final response = await api.getInventoryByArea(
+        final response = await api.getDailyTaskInventoryByArea(
           areaId: areaId,
           query: query,
-          categoryType: 'chemicals',
+          categoryType: _mapCategoryTypeToString(categoryType) ?? 'chemicals',
         );
         final data = response['data'];
         if (data == null) return [];
         final list = data is List ? data : [];
-        return list
-            .map((json) => DailyTaskChemical.fromJson(_toMap(json)))
-            .toList();
+        return list.map((json) => DailyTaskChemical.fromJson(_toMap(json))).toList();
       }
       // Otherwise, use original endpoint
       final response = await api.getChemicals(query: query);
@@ -159,17 +194,15 @@ class DailyTaskRepository {
     try {
       // If areaId is provided, fetch from unified inventory API
       if (areaId != null) {
-        final response = await api.getInventoryByArea(
+        final response = await api.getDailyTaskInventoryByArea(
           areaId: areaId,
           query: query,
-          categoryType: 'ppes',
+          categoryType: _mapCategoryTypeToString(categoryType) ?? 'ppes',
         );
         final data = response['data'];
         if (data == null) return [];
         final list = data is List ? data : [];
-        return list
-            .map((json) => DailyTaskPpe.fromJson(_toMap(json)))
-            .toList();
+        return list.map((json) => DailyTaskPpe.fromJson(_toMap(json))).toList();
       }
       // Otherwise, use original endpoint
       final response = await api.getPpes(query: query);
@@ -191,17 +224,15 @@ class DailyTaskRepository {
     try {
       // If areaId is provided, fetch from unified inventory API
       if (areaId != null) {
-        final response = await api.getInventoryByArea(
+        final response = await api.getDailyTaskInventoryByArea(
           areaId: areaId,
           query: query,
-          categoryType: 'machines',
+          categoryType: _mapCategoryTypeToString(categoryType) ?? 'machines',
         );
         final data = response['data'];
         if (data == null) return [];
         final list = data is List ? data : [];
-        return list
-            .map((json) => DailyTaskMachine.fromJson(_toMap(json)))
-            .toList();
+        return list.map((json) => DailyTaskMachine.fromJson(_toMap(json))).toList();
       }
       // Otherwise, use original endpoint
       final response = await api.getMachines(query: query);

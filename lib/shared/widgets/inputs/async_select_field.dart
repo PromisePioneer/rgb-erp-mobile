@@ -587,8 +587,8 @@ class _DropdownOverlay extends StatelessWidget {
     required this.fieldSize,
   });
 
-  static const double _dropdownHeight = 280;
-  static const double _dropdownMaxHeightWithKeyboard = 200;
+  static const double _dropdownHeight = 200;
+  static const double _dropdownMaxHeightWithKeyboard = 150;
 
   @override
   Widget build(BuildContext context) {

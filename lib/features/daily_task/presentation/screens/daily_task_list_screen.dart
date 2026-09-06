@@ -104,27 +104,17 @@ class _DailyTaskListScreenState extends State<DailyTaskListScreen>
       ),
       floatingActionButton: canAssignTask
           ? Padding(
-              padding: EdgeInsets.only(bottom: MediaQuery.of(context).padding.bottom),
-              child: Container(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [theme.colors.primary, theme.colors.primary.withAlpha(204)],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  borderRadius: BorderRadius.circular(28),
-                  boxShadow: [
-                    BoxShadow(
-                      color: theme.colors.primary.withAlpha(77),
-                      blurRadius: 8,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
+              padding: EdgeInsets.only(
+                right: 16,
+                bottom: MediaQuery.of(context).padding.bottom + 16,
+              ),
+              child: SizedBox(
+                width: 180,
                 child: FButton(
                   onPress: () => context.push('/daily-task-assignment/new'),
                   variant: FButtonVariant.primary,
                   child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Icon(IconMap.plus, size: 20, color: Colors.white),

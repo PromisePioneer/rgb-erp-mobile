@@ -996,9 +996,14 @@ class DailyTaskApi {
  }
 
  /// GET /daily-task/roles - Get available roles for daily task items
- Future<Map<String, dynamic>> getRoles() async {
+ /// Optional: pass q parameter for search
+ Future<Map<String, dynamic>> getRoles({String? query}) async {
   try {
-   final response = await _dio.get(ApiEndpoints.dailyTaskRoles);
+   final queryParams = query != null && query.isNotEmpty ? {'q': query} : null;
+   final response = await _dio.get(
+    ApiEndpoints.dailyTaskRoles,
+    queryParameters: queryParams,
+   );
    return response.data as Map<String, dynamic>;
   } on DioException catch (e) {
    throw ApiException.fromDioException(e);
@@ -1091,13 +1096,13 @@ class DailyTaskApi {
  }
 
  // ====================
- // Unified Inventory API Methods
- // These use the new /inventory-items endpoint which combines warehouse + area tracking
+ // Daily Task Inventory API Methods
+ // Mobile endpoint: /daily-task/inventory/by-area/{areaId}
  // ====================
 
- /// GET /inventory-items/by-area/{areaId} - Get inventory items by area (unified)
- /// This is the new unified endpoint for mobile daily task
- Future<Map<String, dynamic>> getInventoryByArea({
+ /// GET /daily-task/inventory/by-area/{areaId} - Get inventory items by area
+ /// Used for daily task equipment selection (tools, chemicals, ppes, machines)
+ Future<Map<String, dynamic>> getDailyTaskInventoryByArea({
    required int areaId,
    String? query,
    String? categoryType,
@@ -1112,90 +1117,14 @@ class DailyTaskApi {
      }
 
      final queryString = queryParts.isNotEmpty ? '?${queryParts.join('&')}' : '';
-     final url = '${ApiEndpoints.inventoryByArea}/$areaId$queryString';
+     final url = '${ApiEndpoints.dailyTaskInventoryByArea}/$areaId$queryString';
 
-     debugPrint('DailyTaskApi.getInventoryByArea: calling $url');
+     debugPrint('DailyTaskApi.getDailyTaskInventoryByArea: calling $url');
 
      final response = await _dio.get(url);
      return response.data as Map<String, dynamic>;
    } on DioException catch (e) {
-     debugPrint('DailyTaskApi.getInventoryByArea: DioException - $e');
-     throw ApiException.fromDioException(e);
-   }
- }
-
- /// GET /inventory-items/scan/{qrCode} - Scan QR code for quick lookup
- Future<Map<String, dynamic>> scanInventoryItem(String qrCode) async {
-   try {
-     final url = '${ApiEndpoints.inventoryScan}/${Uri.encodeComponent(qrCode)}';
-     debugPrint('DailyTaskApi.scanInventoryItem: calling $url');
-     final response = await _dio.get(url);
-     return response.data as Map<String, dynamic>;
-   } on DioException catch (e) {
-     debugPrint('DailyTaskApi.scanInventoryItem: DioException - $e');
-     throw ApiException.fromDioException(e);
-   }
- }
-
- /// GET /inventory-items/{qrCode}/movements - Get movement history for an item
- Future<Map<String, dynamic>> getInventoryMovements(String qrCode) async {
-   try {
-     final url = '${ApiEndpoints.inventoryMovements}/${Uri.encodeComponent(qrCode)}/movements';
-     debugPrint('DailyTaskApi.getInventoryMovements: calling $url');
-     final response = await _dio.get(url);
-     return response.data as Map<String, dynamic>;
-   } on DioException catch (e) {
-     debugPrint('DailyTaskApi.getInventoryMovements: DioException - $e');
-     throw ApiException.fromDioException(e);
-   }
- }
-
- /// POST /inventory-items/condition - Update item condition from daily task
- Future<Map<String, dynamic>> updateInventoryCondition({
-   required String qrCode,
-   required String condition,
-   double? currentStock,
-   String? notes,
- }) async {
-   try {
-     final response = await _dio.post(
-       ApiEndpoints.inventoryCondition,
-       data: {
-         'qr_code': qrCode,
-         'condition': condition,
-         if (currentStock != null) 'current_stock': currentStock,
-         if (notes != null) 'notes': notes,
-       },
-     );
-     return response.data as Map<String, dynamic>;
-   } on DioException catch (e) {
-     debugPrint('DailyTaskApi.updateInventoryCondition: DioException - $e');
-     throw ApiException.fromDioException(e);
-   }
- }
-
- /// POST /inventory-items/transfer - Transfer item between locations
- Future<Map<String, dynamic>> transferInventoryItem({
-   required String qrCode,
-   required String locationType,
-   required int locationId,
-   String? condition,
-   String? notes,
- }) async {
-   try {
-     final response = await _dio.post(
-       ApiEndpoints.inventoryTransfer,
-       data: {
-         'qr_code': qrCode,
-         'location_type': locationType,
-         'location_id': locationId,
-         if (condition != null) 'condition': condition,
-         if (notes != null) 'notes': notes,
-       },
-     );
-     return response.data as Map<String, dynamic>;
-   } on DioException catch (e) {
-     debugPrint('DailyTaskApi.transferInventoryItem: DioException - $e');
+     debugPrint('DailyTaskApi.getDailyTaskInventoryByArea: DioException - $e');
      throw ApiException.fromDioException(e);
    }
  }

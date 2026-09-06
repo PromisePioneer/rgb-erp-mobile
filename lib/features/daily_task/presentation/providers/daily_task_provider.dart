@@ -284,6 +284,15 @@ class DailyTaskNotifier extends ChangeNotifier {
     }
   }
 
+  /// Search roles by name (for async select)
+  Future<List<DailyTaskRole>> searchRoles({String? query}) async {
+    try {
+      return await _repository.searchRoles(query: query);
+    } catch (e) {
+      return [];
+    }
+  }
+
   /// Search employees for mobile assign (for async select)
   /// Optionally filter by role_ids
   Future<List<Map<String, dynamic>>> searchMobileAssignEmployees(String query, {List<int>? roleIds}) async {
