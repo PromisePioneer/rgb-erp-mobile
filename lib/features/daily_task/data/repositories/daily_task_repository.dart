@@ -287,22 +287,16 @@ class DailyTaskRepository {
     }
   }
 
+  /// Start task - kondisi awal di-set otomatis oleh backend
   Future<DailyTask> startTask({
     required int taskId,
     required List<String> photos,
-    List<Map<String, String>>? toolConditions,
-    List<Map<String, String>>? ppeConditions,
-    List<Map<String, String>>? machineConditions,
-    List<Map<String, String>>? chemicalConditions,
   }) async {
     try {
       final response = await api.startTask(
         taskId: taskId,
         photos: photos,
-        toolConditions: toolConditions,
-        ppeConditions: ppeConditions,
-        machineConditions: machineConditions,
-        chemicalConditions: chemicalConditions,
+        // toolConditions, ppeConditions, machineConditions, chemicalConditions di-set otomatis oleh backend
       );
       final data = response['data'];
       if (data == null) {

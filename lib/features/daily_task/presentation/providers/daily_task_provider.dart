@@ -309,10 +309,7 @@ class DailyTaskNotifier extends ChangeNotifier {
   Future<bool> startTask({
     required int taskId,
     required List<String> photos,
-    List<Map<String, String>>? toolConditions,
-    List<Map<String, String>>? ppeConditions,
-    List<Map<String, String>>? machineConditions,
-    List<Map<String, String>>? chemicalConditions,
+    // Kondisi awal di-set otomatis oleh backend dari inventory items
   }) async {
     _isSubmitting = true;
     _error = null;
@@ -322,10 +319,6 @@ class DailyTaskNotifier extends ChangeNotifier {
       final task = await _repository.startTask(
         taskId: taskId,
         photos: photos,
-        toolConditions: toolConditions,
-        ppeConditions: ppeConditions,
-        machineConditions: machineConditions,
-        chemicalConditions: chemicalConditions,
       );
 
       _todayTasks = _todayTasks.map((t) => t.id == taskId ? task : t).toList();

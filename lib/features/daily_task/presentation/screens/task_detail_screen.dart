@@ -7,6 +7,7 @@ import 'package:forui/forui.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../../../../core/core.dart';
+import '../../../../shared/constants/condition_constants.dart';
 import '../../../../shared/widgets/buttons/primary_button.dart';
 import '../../../../shared/widgets/dialogs/alert_dialogs.dart';
 import '../../../../shared/widgets/feedback/loading_indicator.dart';
@@ -37,8 +38,8 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
   final _notesController = TextEditingController();
 
   // Condition tracking state
-  // For tools, PPEs, and Machines: excellent, good, fair, poor, replace
-  // For chemicals: full, half, low
+  // Non-chemical (tool/ppe/machine): sangat_baik, baik, cukup_baik, kurang_baik, rusak
+  // Chemical: full, half, quarter, habis
   final Map<int, String> _initialToolConditions = {};
   final Map<int, String> _initialPpeConditions = {};
   final Map<int, String> _initialMachineConditions = {};
@@ -202,33 +203,11 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
   }
 
   /// Validate that final condition is not better than initial condition
-  /// Tools/PPE/Machine: SB > B > CB > KB > Ganti
-  /// Chemical: Full > Setengah > 1/4
+  /// Non-chemical (tool/ppe/machine): sangat_baik > baik > cukup_baik > kurang_baik > rusak
+  /// Chemical: full > half > quarter > habis
   String? _validateConditionProgression() {
     final task = context.read<DailyTaskNotifier>().selectedTask;
     if (task == null) return null;
-
-    // Helper to compare conditions for tools/PPE
-    int conditionRankTool(String? condition) {
-      switch (condition) {
-        case 'excellent': return 5; // SB (≥85%)
-        case 'good': return 4;       // B (≥65%)
-        case 'fair': return 3;       // CB (≥45%)
-        case 'poor': return 2;        // KB (≥25%)
-        case 'replace': return 1;     // Ganti (<25%)
-        default: return 0;
-      }
-    }
-
-    // Helper to compare conditions for chemicals
-    int conditionRankChemical(String? condition) {
-      switch (condition) {
-        case 'full': return 3;     // Full (≥75%)
-        case 'half': return 2;     // Setengah (≥50%)
-        case 'low': return 1;      // 1/4 (<50%)
-        default: return 0;
-      }
-    }
 
     // Check tools
     if (task.tools != null) {
@@ -236,7 +215,7 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
         final initial = _initialToolConditions[tool.id];
         final finalCond = _finalToolConditions[tool.id];
         if (initial != null && finalCond != null) {
-          if (conditionRankTool(finalCond) > conditionRankTool(initial)) {
+          if (ItemConditions.isBetterThan(finalCond, initial)) {
             return 'Kondisi akhir ${tool.name} tidak boleh lebih baik dari kondisi awal.\n'
                 'Contoh: Jika kondisi awal CB, tidak boleh pilih SB atau B.';
           }
@@ -250,7 +229,7 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
         final initial = _initialPpeConditions[ppe.id];
         final finalCond = _finalPpeConditions[ppe.id];
         if (initial != null && finalCond != null) {
-          if (conditionRankTool(finalCond) > conditionRankTool(initial)) {
+          if (ItemConditions.isBetterThan(finalCond, initial)) {
             return 'Kondisi akhir ${ppe.name} tidak boleh lebih baik dari kondisi awal.';
           }
         }
@@ -263,7 +242,7 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
         final initial = _initialChemicalConditions[chem.id];
         final finalCond = _finalChemicalConditions[chem.id];
         if (initial != null && finalCond != null) {
-          if (conditionRankChemical(finalCond) > conditionRankChemical(initial)) {
+          if (ItemConditions.isBetterThan(finalCond, initial)) {
             return 'Kondisi akhir ${chem.name} tidak boleh lebih baik dari kondisi awal.';
           }
         }
@@ -276,7 +255,7 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
         final initial = _initialMachineConditions[machine.id];
         final finalCond = _finalMachineConditions[machine.id];
         if (initial != null && finalCond != null) {
-          if (conditionRankTool(finalCond) > conditionRankTool(initial)) {
+          if (ItemConditions.isBetterThan(finalCond, initial)) {
             return 'Kondisi akhir ${machine.name} tidak boleh lebih baik dari kondisi awal.';
           }
         }
@@ -292,54 +271,14 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
       return;
     }
 
-    // Get task to check if there are tools/chemicals/ppes/machines that need conditions
-    final task = context.read<DailyTaskNotifier>().selectedTask;
-    final hasItems = (task?.tools?.isNotEmpty ?? false) ||
-        (task?.chemicals?.isNotEmpty ?? false) ||
-        (task?.ppes?.isNotEmpty ?? false) ||
-        (task?.machines?.isNotEmpty ?? false);
-
-    // Validate conditions if there are items
-    if (hasItems) {
-      final hasToolConditions = _initialToolConditions.isNotEmpty;
-      final hasPpeConditions = _initialPpeConditions.isNotEmpty;
-      final hasMachineConditions = _initialMachineConditions.isNotEmpty;
-      final hasChemicalConditions = _initialChemicalConditions.isNotEmpty;
-
-      if (!hasToolConditions && !hasPpeConditions && !hasMachineConditions && !hasChemicalConditions) {
-        _showErrorDialog('Kondisi Awal', 'Silakan pilih kondisi alat, APD, mesin, dan chemical sebelum bekerja.');
-        return;
-      }
-    }
-
-    // Build condition data for tools
-    final toolConditions = _initialToolConditions.entries
-        .map((e) => {'inventory_item_id': e.key.toString(), 'condition': e.value})
-        .toList();
-
-    // Build condition data for PPEs
-    final ppeConditions = _initialPpeConditions.entries
-        .map((e) => {'inventory_item_id': e.key.toString(), 'condition': e.value})
-        .toList();
-
-    // Build condition data for machines
-    final machineConditions = _initialMachineConditions.entries
-        .map((e) => {'inventory_item_id': e.key.toString(), 'condition': e.value})
-        .toList();
-
-    // Build condition data for chemicals
-    final chemicalConditions = _initialChemicalConditions.entries
-        .map((e) => {'inventory_item_id': e.key.toString(), 'condition': e.value})
-        .toList();
+    // Kondisi awal di-set otomatis oleh backend dari inventory items
+    // Tidak perlu validasi/kirim kondisi dari mobile
 
     final notifier = context.read<DailyTaskNotifier>();
     final success = await notifier.startTask(
       taskId: widget.taskId,
       photos: _beforePhotoPaths,
-      toolConditions: toolConditions.isNotEmpty ? toolConditions : null,
-      ppeConditions: ppeConditions.isNotEmpty ? ppeConditions : null,
-      machineConditions: machineConditions.isNotEmpty ? machineConditions : null,
-      chemicalConditions: chemicalConditions.isNotEmpty ? chemicalConditions : null,
+      // Kondisi di-set otomatis oleh backend
     );
 
     if (!mounted) return;
@@ -483,7 +422,8 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
 
                   // Form based on status
                   if (task.canStart) ...[
-                    // Start form - employee perlu input foto sebelum
+                    // Start form - employee cukup foto saja
+                    // Item & kondisi awal sudah dari inventory (di-set saat TL assign)
                     _buildPhotoSection(
                       label: 'Foto Sebelum',
                       photoPaths: _beforePhotoPaths,
@@ -492,6 +432,15 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
                       theme: theme,
                     ),
                     const SizedBox(height: AppSpacing.md),
+
+                    // Tampilkan item yang di-assign TL + kondisi saat ini (read-only)
+                    if ((task.tools?.isNotEmpty ?? false) ||
+                        (task.chemicals?.isNotEmpty ?? false) ||
+                        (task.ppes?.isNotEmpty ?? false) ||
+                        (task.machines?.isNotEmpty ?? false)) ...[
+                      _buildAssignedItemsInfo(task, theme),
+                      const SizedBox(height: AppSpacing.md),
+                    ],
 
                     PrimaryButton(
                       label: 'Mulai Kerjakan',
@@ -1360,7 +1309,11 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
             Wrap(
               spacing: AppSpacing.xs,
               runSpacing: AppSpacing.xs,
-              children: task.tools!.map((t) => _buildAssignedItemChip(t.name, theme)).toList(),
+              children: task.tools!.map((t) => _buildItemConditionChip(
+                name: t.name,
+                condition: t.currentCondition,
+                theme: theme,
+              )).toList(),
             ),
             const SizedBox(height: AppSpacing.sm),
           ],
@@ -1385,7 +1338,11 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
             Wrap(
               spacing: AppSpacing.xs,
               runSpacing: AppSpacing.xs,
-              children: task.chemicals!.map((c) => _buildAssignedItemChip(c.name, theme)).toList(),
+              children: task.chemicals!.map((c) => _buildItemConditionChip(
+                name: c.name,
+                condition: c.currentCondition,
+                theme: theme,
+              )).toList(),
             ),
             const SizedBox(height: AppSpacing.sm),
           ],
@@ -1397,7 +1354,7 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
                 Icon(IconMap.shieldCheck, size: 14, color: theme.colors.mutedForeground),
                 const SizedBox(width: 4),
                 Text(
-                  'Alat Pelindung Diri:',
+                  'APD:',
                   style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w500,
@@ -1410,32 +1367,111 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
             Wrap(
               spacing: AppSpacing.xs,
               runSpacing: AppSpacing.xs,
-              children: task.ppes!.map((p) => _buildAssignedItemChip(p.name, theme)).toList(),
+              children: task.ppes!.map((p) => _buildItemConditionChip(
+                name: p.name,
+                condition: p.currentCondition,
+                theme: theme,
+              )).toList(),
             ),
+            const SizedBox(height: AppSpacing.sm),
+          ],
+
+          // Machines section
+          if (task.machines?.isNotEmpty ?? false) ...[
+            Row(
+              children: [
+                Icon(IconMap.build, size: 14, color: theme.colors.mutedForeground),
+                const SizedBox(width: 4),
+                Text(
+                  'Mesin:',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                    color: theme.colors.mutedForeground,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 4),
+            Wrap(
+              spacing: AppSpacing.xs,
+              runSpacing: AppSpacing.xs,
+              children: task.machines!.map((m) => _buildItemConditionChip(
+                name: m.name,
+                condition: m.currentCondition,
+                theme: theme,
+              )).toList(),
+            ),
+            const SizedBox(height: AppSpacing.sm),
           ],
         ],
       ),
     );
   }
 
-  Widget _buildAssignedItemChip(String name, FThemeData theme) {
+  /// Badge untuk item dengan kondisi (saat assigned)
+  Widget _buildItemConditionChip({
+    required String name,
+    required String? condition,
+    required FThemeData theme,
+  }) {
+    final label = ItemConditions.getShortLabel(condition);
+    final color = _getConditionBadgeColor(condition);
+
     return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.sm,
-        vertical: AppSpacing.xs,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm, vertical: AppSpacing.xs),
       decoration: BoxDecoration(
-        color: AppColors.primary.withAlpha(26),
+        color: color.withAlpha(26),
         borderRadius: AppRadius.radiusSm,
+        border: Border.all(color: color.withAlpha(77)),
       ),
-      child: Text(
-        name,
-        style: TextStyle(
-          fontSize: 12,
-          color: AppColors.primary,
-        ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            name,
+            style: TextStyle(
+              fontSize: 12,
+              color: theme.colors.foreground,
+            ),
+          ),
+          const SizedBox(width: 4),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+            decoration: BoxDecoration(
+              color: color.withAlpha(51),
+              borderRadius: BorderRadius.circular(4),
+            ),
+            child: Text(
+              label,
+              style: TextStyle(
+                fontSize: 10,
+                fontWeight: FontWeight.w500,
+                color: color,
+              ),
+            ),
+          ),
+        ],
       ),
     );
+  }
+
+  Color _getConditionBadgeColor(String? condition) {
+    if (condition == null) return AppColors.textMuted;
+    if (NonChemicalConditions.isValid(condition)) {
+      final rank = NonChemicalConditions.getRank(condition);
+      if (rank >= 4) return AppColors.success;
+      if (rank >= 3) return AppColors.primary;
+      if (rank >= 2) return AppColors.warning;
+      return AppColors.danger;
+    }
+    if (ChemicalConditions.isValid(condition)) {
+      final rank = ChemicalConditions.getRank(condition);
+      if (rank >= 3) return AppColors.success;
+      if (rank >= 2) return AppColors.warning;
+      return AppColors.danger;
+    }
+    return AppColors.textMuted;
   }
 
   /// Build initial condition selection section (shown when starting task)
@@ -1669,7 +1705,7 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
     );
   }
 
-  /// Build condition selector with initial condition display
+  /// Build condition selector with initial condition display (non-chemical)
   Widget _buildToolConditionWithInitial({
     required int itemId,
     required String itemName,
@@ -1714,44 +1750,46 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
             ],
           ),
           const SizedBox(height: 4),
+          // Non-chemical condition chips: SB, B, CB, KB, Rusak
           Wrap(
             spacing: AppSpacing.xs,
             runSpacing: AppSpacing.xs,
             children: [
               _buildConditionChip(
                 label: 'SB',
-                value: 'excellent',
-                isSelected: selectedCondition == 'excellent',
-                onTap: () => onChanged('excellent'),
+                value: NonChemicalConditions.sangatBaik,
+                isSelected: selectedCondition == NonChemicalConditions.sangatBaik,
+                onTap: () => onChanged(NonChemicalConditions.sangatBaik),
                 theme: theme,
               ),
               _buildConditionChip(
                 label: 'B',
-                value: 'good',
-                isSelected: selectedCondition == 'good',
-                onTap: () => onChanged('good'),
+                value: NonChemicalConditions.baik,
+                isSelected: selectedCondition == NonChemicalConditions.baik,
+                onTap: () => onChanged(NonChemicalConditions.baik),
                 theme: theme,
               ),
               _buildConditionChip(
                 label: 'CB',
-                value: 'fair',
-                isSelected: selectedCondition == 'fair',
-                onTap: () => onChanged('fair'),
+                value: NonChemicalConditions.cukupBaik,
+                isSelected: selectedCondition == NonChemicalConditions.cukupBaik,
+                onTap: () => onChanged(NonChemicalConditions.cukupBaik),
                 theme: theme,
               ),
               _buildConditionChip(
                 label: 'KB',
-                value: 'poor',
-                isSelected: selectedCondition == 'poor',
-                onTap: () => onChanged('poor'),
+                value: NonChemicalConditions.kurangBaik,
+                isSelected: selectedCondition == NonChemicalConditions.kurangBaik,
+                onTap: () => onChanged(NonChemicalConditions.kurangBaik),
                 theme: theme,
               ),
               _buildConditionChip(
-                label: 'Ganti',
-                value: 'replace',
-                isSelected: selectedCondition == 'replace',
-                onTap: () => onChanged('replace'),
+                label: 'Rusak',
+                value: NonChemicalConditions.rusak,
+                isSelected: selectedCondition == NonChemicalConditions.rusak,
+                onTap: () => onChanged(NonChemicalConditions.rusak),
                 theme: theme,
+                isWarning: true,
               ),
             ],
           ),
@@ -1761,13 +1799,15 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
   }
 
   /// Build chemical condition selector with initial condition display
+  /// Chemical: Full, Half, Quarter, Habis (4 states)
   Widget _buildChemicalConditionWithInitial({
     required DailyTaskChemical chemical,
     required String? selectedCondition,
     required void Function(String) onChanged,
     required FThemeData theme,
   }) {
-    final initialLabel = chemical.initialConditionLabel ?? chemical.initialCondition;
+    final initialLabel =
+        ItemConditions.getFullLabel(chemical.initialCondition);
     return Padding(
       padding: const EdgeInsets.only(top: AppSpacing.xs),
       child: Column(
@@ -1784,7 +1824,7 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
                   ),
                 ),
               ),
-              if (initialLabel != null) ...[
+              if (initialLabel != '-') ...[
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                   decoration: BoxDecoration(
@@ -1804,44 +1844,40 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
             ],
           ),
           const SizedBox(height: 4),
+          // Chemical condition chips: Full, Half, Quarter, Habis
           Wrap(
             spacing: AppSpacing.xs,
             runSpacing: AppSpacing.xs,
             children: [
               _buildConditionChip(
-                label: 'Penuh',
-                value: 'full',
-                isSelected: selectedCondition == 'full',
-                onTap: () => onChanged('full'),
+                label: 'Full',
+                value: ChemicalConditions.full,
+                isSelected: selectedCondition == ChemicalConditions.full,
+                onTap: () => onChanged(ChemicalConditions.full),
                 theme: theme,
               ),
               _buildConditionChip(
                 label: 'Setengah',
-                value: 'half',
-                isSelected: selectedCondition == 'half',
-                onTap: () => onChanged('half'),
+                value: ChemicalConditions.half,
+                isSelected: selectedCondition == ChemicalConditions.half,
+                onTap: () => onChanged(ChemicalConditions.half),
                 theme: theme,
               ),
               _buildConditionChip(
                 label: 'Seperempat',
-                value: 'quarter',
-                isSelected: selectedCondition == 'quarter',
-                onTap: () => onChanged('quarter'),
+                value: ChemicalConditions.quarter,
+                isSelected: selectedCondition == ChemicalConditions.quarter,
+                onTap: () => onChanged(ChemicalConditions.quarter),
                 theme: theme,
-              ),
-              _buildConditionChip(
-                label: 'Rendah',
-                value: 'low',
-                isSelected: selectedCondition == 'low',
-                onTap: () => onChanged('low'),
-                theme: theme,
+                isWarning: true,
               ),
               _buildConditionChip(
                 label: 'Habis',
-                value: 'empty',
-                isSelected: selectedCondition == 'empty',
-                onTap: () => onChanged('empty'),
+                value: ChemicalConditions.habis,
+                isSelected: selectedCondition == ChemicalConditions.habis,
+                onTap: () => onChanged(ChemicalConditions.habis),
                 theme: theme,
+                isWarning: true,
               ),
             ],
           ),
@@ -1867,7 +1903,7 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
     );
   }
 
-  /// Build condition selector for tools/APD
+  /// Build condition selector for tools/PPE (non-chemical)
   /// Shows current condition from ProductArea
   Widget _buildToolConditionSelector({
     required int itemId,
@@ -1878,6 +1914,7 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
     String? currentCondition,
     double? currentStock,
   }) {
+    final currentLabel = ItemConditions.getFullLabel(currentCondition);
     return Padding(
       padding: const EdgeInsets.only(top: AppSpacing.xs),
       child: Column(
@@ -1894,7 +1931,7 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
                   ),
                 ),
               ),
-              if (currentCondition != null) ...[
+              if (currentLabel != '-') ...[
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                   decoration: BoxDecoration(
@@ -1902,7 +1939,7 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
                     borderRadius: BorderRadius.circular(4),
                   ),
                   child: Text(
-                    'Saat ini: $currentCondition${currentStock != null ? ' ($currentStock)' : ''}',
+                    'Saat ini: $currentLabel${currentStock != null ? ' ($currentStock)' : ''}',
                     style: TextStyle(
                       fontSize: 10,
                       color: theme.colors.mutedForeground,
@@ -1913,43 +1950,44 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
             ],
           ),
           const SizedBox(height: 4),
+          // Non-chemical condition chips with thresholds
           Wrap(
             spacing: AppSpacing.xs,
             runSpacing: AppSpacing.xs,
             children: [
               _buildConditionChip(
                 label: 'SB (≥85%)',
-                value: 'excellent',
-                isSelected: selectedCondition == 'excellent',
-                onTap: () => onChanged('excellent'),
+                value: NonChemicalConditions.sangatBaik,
+                isSelected: selectedCondition == NonChemicalConditions.sangatBaik,
+                onTap: () => onChanged(NonChemicalConditions.sangatBaik),
                 theme: theme,
               ),
               _buildConditionChip(
                 label: 'B (≥65%)',
-                value: 'good',
-                isSelected: selectedCondition == 'good',
-                onTap: () => onChanged('good'),
+                value: NonChemicalConditions.baik,
+                isSelected: selectedCondition == NonChemicalConditions.baik,
+                onTap: () => onChanged(NonChemicalConditions.baik),
                 theme: theme,
               ),
               _buildConditionChip(
                 label: 'CB (≥45%)',
-                value: 'fair',
-                isSelected: selectedCondition == 'fair',
-                onTap: () => onChanged('fair'),
+                value: NonChemicalConditions.cukupBaik,
+                isSelected: selectedCondition == NonChemicalConditions.cukupBaik,
+                onTap: () => onChanged(NonChemicalConditions.cukupBaik),
                 theme: theme,
               ),
               _buildConditionChip(
                 label: 'KB (≥25%)',
-                value: 'poor',
-                isSelected: selectedCondition == 'poor',
-                onTap: () => onChanged('poor'),
+                value: NonChemicalConditions.kurangBaik,
+                isSelected: selectedCondition == NonChemicalConditions.kurangBaik,
+                onTap: () => onChanged(NonChemicalConditions.kurangBaik),
                 theme: theme,
               ),
               _buildConditionChip(
-                label: 'Ganti (<25%)',
-                value: 'replace',
-                isSelected: selectedCondition == 'replace',
-                onTap: () => onChanged('replace'),
+                label: 'Rusak (<25%)',
+                value: NonChemicalConditions.rusak,
+                isSelected: selectedCondition == NonChemicalConditions.rusak,
+                onTap: () => onChanged(NonChemicalConditions.rusak),
                 theme: theme,
                 isWarning: true,
               ),
@@ -1961,7 +1999,7 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
   }
 
   /// Build condition selector for chemicals
-  /// Shows current condition from ProductArea
+  /// Chemical: Full, Half, Quarter, Habis (4 states with thresholds)
   Widget _buildChemicalConditionSelector({
     required DailyTaskChemical chemical,
     required String? selectedCondition,
@@ -1970,6 +2008,7 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
     String? currentCondition,
     double? currentStock,
   }) {
+    final currentLabel = ItemConditions.getFullLabel(currentCondition);
     return Padding(
       padding: const EdgeInsets.only(top: AppSpacing.xs),
       child: Column(
@@ -1986,7 +2025,7 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
                   ),
                 ),
               ),
-              if (currentCondition != null) ...[
+              if (currentLabel != '-') ...[
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                   decoration: BoxDecoration(
@@ -1994,7 +2033,7 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
                     borderRadius: BorderRadius.circular(4),
                   ),
                   child: Text(
-                    'Saat ini: $currentCondition${currentStock != null ? ' ($currentStock)' : ''}',
+                    'Saat ini: $currentLabel${currentStock != null ? ' ($currentStock)' : ''}',
                     style: TextStyle(
                       fontSize: 10,
                       color: theme.colors.mutedForeground,
@@ -2005,29 +2044,38 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
             ],
           ),
           const SizedBox(height: 4),
+          // Chemical condition chips with thresholds
           Wrap(
             spacing: AppSpacing.xs,
             runSpacing: AppSpacing.xs,
             children: [
               _buildConditionChip(
                 label: 'Full (≥75%)',
-                value: 'full',
-                isSelected: selectedCondition == 'full',
-                onTap: () => onChanged('full'),
+                value: ChemicalConditions.full,
+                isSelected: selectedCondition == ChemicalConditions.full,
+                onTap: () => onChanged(ChemicalConditions.full),
                 theme: theme,
               ),
               _buildConditionChip(
                 label: 'Setengah (≥50%)',
-                value: 'half',
-                isSelected: selectedCondition == 'half',
-                onTap: () => onChanged('half'),
+                value: ChemicalConditions.half,
+                isSelected: selectedCondition == ChemicalConditions.half,
+                onTap: () => onChanged(ChemicalConditions.half),
                 theme: theme,
               ),
               _buildConditionChip(
-                label: '1/4 (<50%)',
-                value: 'low',
-                isSelected: selectedCondition == 'low',
-                onTap: () => onChanged('low'),
+                label: 'Seperempat (≥25%)',
+                value: ChemicalConditions.quarter,
+                isSelected: selectedCondition == ChemicalConditions.quarter,
+                onTap: () => onChanged(ChemicalConditions.quarter),
+                theme: theme,
+                isWarning: true,
+              ),
+              _buildConditionChip(
+                label: 'Habis (<25%)',
+                value: ChemicalConditions.habis,
+                isSelected: selectedCondition == ChemicalConditions.habis,
+                onTap: () => onChanged(ChemicalConditions.habis),
                 theme: theme,
                 isWarning: true,
               ),
@@ -2315,10 +2363,10 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
         ],
 
         // Equipment used with condition transitions
-        _buildUsedItemsWithConditions('Alat', task.tools, theme, isTool: true),
-        _buildUsedItemsWithConditions('Chemical', task.chemicals, theme, isTool: false),
-        _buildUsedItemsWithConditions('APD', task.ppes, theme, isTool: true),
-        _buildUsedItemsWithConditions('Mesin', task.machines, theme, isTool: true),
+        _buildUsedItemsWithConditions('Alat', task.tools, theme, isChemical: false),
+        _buildUsedItemsWithConditions('Chemical', task.chemicals, theme, isChemical: true),
+        _buildUsedItemsWithConditions('APD', task.ppes, theme, isChemical: false),
+        _buildUsedItemsWithConditions('Mesin', task.machines, theme, isChemical: false),
 
         // Time info
         if (task.startAt != null || task.endAt != null) ...[
@@ -2494,46 +2542,27 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
     );
   }
 
-  /// Helper to get readable condition label for tools/PPE/machines
-  String _getToolConditionLabel(String? condition) {
-    switch (condition) {
-      // English codes (from mobile)
-      case 'excellent': return 'SB';
-      case 'good': return 'B';
-      case 'fair': return 'CB';
-      case 'poor': return 'KB';
-      case 'replace': return 'Ganti';
-      // Indonesian codes (from backend)
-      case 'sangat_baik': return 'SB';
-      case 'baik': return 'B';
-      case 'cukup_baik': return 'CB';
-      case 'kurang_baik': return 'KB';
-      case 'rusak': return 'Rusak';
-      default: return '-';
-    }
+  /// Helper to get short label for tools/PPEs/machines (non-chemical)
+  String _getNonChemicalLabel(String? condition) {
+    return NonChemicalConditions.getShortLabel(condition ?? '');
   }
 
-  /// Helper to get readable condition label for chemicals
-  String _getChemicalConditionLabel(String? condition) {
-    switch (condition) {
-      case 'full': return 'Full';
-      case 'half': return 'Setengah';
-      case 'low': return '1/4';
-      case 'quarter': return '1/4'; // backend uses quarter
-      default: return '-';
-    }
+  /// Helper to get short label for chemicals
+  String _getChemicalLabel(String? condition) {
+    return ChemicalConditions.getShortLabel(condition ?? '');
   }
 
   /// Build used items list with initial → final condition transitions
+  /// isChemical = true for chemicals, false for tools/PPEs/machines
   Widget _buildUsedItemsWithConditions(
     String label,
     List<dynamic>? items,
     FThemeData theme, {
-    required bool isTool,
+    required bool isChemical,
   }) {
     if (items == null || items.isEmpty) return const SizedBox.shrink();
 
-    final getLabel = isTool ? _getToolConditionLabel : _getChemicalConditionLabel;
+    final getLabel = isChemical ? _getChemicalLabel : _getNonChemicalLabel;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,

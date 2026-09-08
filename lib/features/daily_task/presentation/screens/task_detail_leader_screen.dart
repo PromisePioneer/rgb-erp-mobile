@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:forui/forui.dart';
 
 import '../../../../core/core.dart';
+import '../../../../shared/constants/condition_constants.dart';
 import '../../../../shared/widgets/feedback/loading_indicator.dart';
 import '../../../../shared/widgets/icons/forui_icon_map.dart';
 import '../../../../shared/widgets/toast/app_toast.dart';
@@ -997,72 +998,37 @@ class _TaskDetailLeaderScreenState extends State<TaskDetailLeaderScreen> {
   }
 
   String? _formatToolCondition(String? condition) {
-    if (condition == null) return null;
-    switch (condition) {
-      case 'excellent':
-        return 'SB';
-      case 'good':
-        return 'B';
-      case 'fair':
-        return 'CB';
-      case 'poor':
-        return 'KB';
-      case 'replace':
-        return 'Ganti';
-      default:
-        return condition;
-    }
+    return NonChemicalConditions.getShortLabel(condition ?? '');
   }
 
   String? _formatChemicalCondition(String? condition) {
-    if (condition == null) return null;
-    switch (condition) {
-      case 'full':
-        return 'Penuh';
-      case 'half':
-        return 'Setengah';
-      case 'low':
-        return 'Habis';
-      default:
-        return condition;
-    }
+    return ChemicalConditions.getShortLabel(condition ?? '');
   }
 
   Color _getConditionColor(String? condition) {
-    switch (condition) {
-      case 'excellent':
-      case 'sangat_baik':
-      case 'full':
-        return AppColors.success;
-      case 'good':
-      case 'baik':
-        return AppColors.primary;
-      case 'fair':
-      case 'cukup_baik':
-      case 'half':
-        return AppColors.warning;
-      case 'poor':
-      case 'kurang_baik':
-      case 'low':
-        return AppColors.danger;
-      case 'replace':
-      case 'rusak':
-        return AppColors.danger;
-      default:
-        return AppColors.textMuted;
+    if (condition == null) return AppColors.textMuted;
+
+    // Non-chemical
+    if (NonChemicalConditions.isValid(condition)) {
+      final rank = NonChemicalConditions.getRank(condition);
+      if (rank >= 4) return AppColors.success;
+      if (rank >= 3) return AppColors.primary;
+      if (rank >= 2) return AppColors.warning;
+      return AppColors.danger;
     }
+
+    // Chemical
+    if (ChemicalConditions.isValid(condition)) {
+      final rank = ChemicalConditions.getRank(condition);
+      if (rank >= 3) return AppColors.success;
+      if (rank >= 2) return AppColors.warning;
+      return AppColors.danger;
+    }
+
+    return AppColors.textMuted;
   }
 
   Color _getChemicalConditionColor(String? condition) {
-    switch (condition) {
-      case 'full':
-        return AppColors.success;
-      case 'half':
-        return AppColors.warning;
-      case 'low':
-        return AppColors.danger;
-      default:
-        return AppColors.textMuted;
-    }
+    return _getConditionColor(condition);
   }
 }

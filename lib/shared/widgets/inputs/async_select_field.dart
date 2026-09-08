@@ -2,6 +2,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
 
+import '../../../shared/constants/condition_constants.dart';
+
 /// Option item for AsyncSelect
 /// id can be int or String depending on the use case
 class AsyncSelectOption {
@@ -902,36 +904,23 @@ class _DropdownOverlay extends StatelessWidget {
 
   Color _getConditionColor(String? condition, FThemeData theme) {
     if (condition == null) return theme.colors.muted;
-    switch (condition.toLowerCase()) {
-      // Tools/PPEs/Machines conditions (Indonesian)
-      case 'sangat_baik':
-      case 'excellent':
-        return Colors.green.shade100;
-      case 'baik':
-      case 'good':
-        return Colors.green.shade200;
-      case 'cukup_baik':
-      case 'fair':
-        return Colors.yellow.shade100;
-      case 'kurang_baik':
-      case 'poor':
-        return Colors.orange.shade100;
-      case 'rusak':
-      case 'replace':
-      case 'damaged':
-      // Chemicals conditions - filtered out but just in case
-      case 'below_low':
-      case 'empty':
-        return Colors.red.shade100;
-      // Chemical conditions - still show if somehow returned
-      case 'full':
-        return Colors.green.shade100;
-      case 'half':
-        return Colors.yellow.shade100;
-      case 'low':
-        return Colors.orange.shade100;
-      default:
-        return theme.colors.muted;
+
+    // Use centralized condition colors
+    if (NonChemicalConditions.isValid(condition)) {
+      final rank = NonChemicalConditions.getRank(condition);
+      if (rank >= 4) return Colors.green.shade100;
+      if (rank >= 3) return Colors.green.shade200;
+      if (rank >= 2) return Colors.yellow.shade100;
+      return Colors.red.shade100;
     }
+
+    if (ChemicalConditions.isValid(condition)) {
+      final rank = ChemicalConditions.getRank(condition);
+      if (rank >= 3) return Colors.green.shade100;
+      if (rank >= 2) return Colors.yellow.shade100;
+      return Colors.red.shade100;
+    }
+
+    return theme.colors.muted;
   }
 }

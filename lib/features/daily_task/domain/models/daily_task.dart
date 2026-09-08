@@ -1,4 +1,6 @@
 // Daily Task entities
+import '../../../../shared/constants/condition_constants.dart';
+
 class DailyTask {
   final int id;
   final String itemName;
@@ -176,24 +178,8 @@ class DailyTaskTool {
     );
   }
 
-  String? get initialConditionLabel => _getConditionLabel(initialCondition);
-
-  String? _getConditionLabel(String? condition) {
-    if (condition == null) return null;
-    return switch (condition.toLowerCase()) {
-      'sangat_baik' || 'excellent' => 'Sangat Baik',
-      'baik' || 'good' => 'Baik',
-      'cukup_baik' || 'fair' => 'Cukup Baik',
-      'kurang_baik' || 'poor' => 'Kurang Baik',
-      'rusak' || 'replace' => 'Rusak',
-      'full' => 'Penuh',
-      'half' => 'Setengah',
-      'quarter' => 'Seperempat',
-      'low' || 'below_low' => 'Rendah',
-      'empty' => 'Habis',
-      _ => condition,
-    };
-  }
+  String? get initialConditionLabel =>
+      ItemConditions.getFullLabel(initialCondition);
 }
 
 class DailyTaskChemical {
@@ -237,24 +223,8 @@ class DailyTaskChemical {
     );
   }
 
-  String? get initialConditionLabel => _getConditionLabel(initialCondition);
-
-  String? _getConditionLabel(String? condition) {
-    if (condition == null) return null;
-    return switch (condition.toLowerCase()) {
-      'sangat_baik' || 'excellent' => 'Sangat Baik',
-      'baik' || 'good' => 'Baik',
-      'cukup_baik' || 'fair' => 'Cukup Baik',
-      'kurang_baik' || 'poor' => 'Kurang Baik',
-      'rusak' || 'replace' => 'Rusak',
-      'full' => 'Penuh',
-      'half' => 'Setengah',
-      'quarter' => 'Seperempat',
-      'low' || 'below_low' => 'Rendah',
-      'empty' => 'Habis',
-      _ => condition,
-    };
-  }
+  String? get initialConditionLabel =>
+      ItemConditions.getFullLabel(initialCondition);
 }
 
 class DailyTaskPpe {
@@ -298,17 +268,8 @@ class DailyTaskPpe {
     );
   }
 
-  String? get initialConditionLabel {
-    if (initialCondition == null) return null;
-    return switch (initialCondition!.toLowerCase()) {
-      'sangat_baik' || 'excellent' => 'Sangat Baik',
-      'baik' || 'good' => 'Baik',
-      'cukup_baik' || 'fair' => 'Cukup Baik',
-      'kurang_baik' || 'poor' => 'Kurang Baik',
-      'rusak' || 'replace' => 'Rusak',
-      _ => initialCondition,
-    };
-  }
+  String? get initialConditionLabel =>
+      ItemConditions.getFullLabel(initialCondition);
 }
 
 class DailyTaskReview {
@@ -408,17 +369,8 @@ class DailyTaskMachine {
     );
   }
 
-  String? get initialConditionLabel {
-    if (initialCondition == null) return null;
-    return switch (initialCondition!.toLowerCase()) {
-      'sangat_baik' || 'excellent' => 'Sangat Baik',
-      'baik' || 'good' => 'Baik',
-      'cukup_baik' || 'fair' => 'Cukup Baik',
-      'kurang_baik' || 'poor' => 'Kurang Baik',
-      'rusak' || 'replace' => 'Rusak',
-      _ => initialCondition,
-    };
-  }
+  String? get initialConditionLabel =>
+      ItemConditions.getFullLabel(initialCondition);
 }
 
 class DailyTaskMasterItem {

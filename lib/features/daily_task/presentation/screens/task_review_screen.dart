@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'package:forui/forui.dart';
 
 import '../../../../core/core.dart';
+import '../../../../shared/constants/condition_constants.dart';
 import '../../../../shared/widgets/buttons/primary_button.dart';
 import '../../../../shared/widgets/feedback/loading_indicator.dart';
 import '../../../../shared/widgets/icons/forui_icon_map.dart';
@@ -999,26 +1000,37 @@ class _TaskReviewScreenState extends State<TaskReviewScreen> {
   }
 
   String _formatCondition(String condition) {
-    switch (condition) {
-      case 'excellent':
-        return 'SB (100-85%)';
-      case 'good':
-        return 'B (85-65%)';
-      case 'fair':
-        return 'CB (65-45%)';
-      case 'poor':
-        return 'KB (45-25%)';
-      case 'replace':
-        return 'Ganti (<25%)';
-      case 'full':
-        return 'Full (100%)';
-      case 'half':
-        return 'Setengah (50%)';
-      case 'low':
-        return 'Sedikit (30%)';
-      default:
-        return condition;
+    // Try non-chemical first
+    if (NonChemicalConditions.isValid(condition)) {
+      switch (condition) {
+        case NonChemicalConditions.sangatBaik:
+          return 'SB (≥85%)';
+        case NonChemicalConditions.baik:
+          return 'B (≥65%)';
+        case NonChemicalConditions.cukupBaik:
+          return 'CB (≥45%)';
+        case NonChemicalConditions.kurangBaik:
+          return 'KB (≥25%)';
+        case NonChemicalConditions.rusak:
+          return 'Rusak (<25%)';
+      }
     }
+
+    // Try chemical
+    if (ChemicalConditions.isValid(condition)) {
+      switch (condition) {
+        case ChemicalConditions.full:
+          return 'Full (≥75%)';
+        case ChemicalConditions.half:
+          return 'Setengah (≥50%)';
+        case ChemicalConditions.quarter:
+          return 'Seperempat (≥25%)';
+        case ChemicalConditions.habis:
+          return 'Habis (<25%)';
+      }
+    }
+
+    return condition;
   }
 
   Widget _buildCriteriaRating(ReviewCriteria criteria, FThemeData theme) {
