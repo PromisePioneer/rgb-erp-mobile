@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:forui/forui.dart';
+import 'package:provider/provider.dart';
 
 import '../../../../core/core.dart';
+import '../../../features/auth/presentation/providers/auth_provider.dart';
 
 /// Bottom navigation bar with floating center button (myBCA style)
 class AppBottomNavBar extends StatelessWidget {
@@ -30,6 +32,10 @@ class AppBottomNavBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = context.theme;
+    final authNotifier = context.read<AuthNotifier>();
+    final user = authNotifier.state.user;
+    final hasPresensiPrivilege = user?.hasPrivilege('presensi') == true;
+
     return Container(
       height: 64 + MediaQuery.of(context).padding.bottom,
       decoration: BoxDecoration(
@@ -69,7 +75,19 @@ class AppBottomNavBar extends StatelessWidget {
                     activeIcon: Icons.access_time_filled,
                     label: 'Presensi',
                     isActive: currentIndex == 1,
-                    onTap: () => onTap(1),
+                    isEnabled: hasPresensiPrivilege,
+                    onTap: () {
+                      if (hasPresensiPrivilege) {
+                        onTap(1);
+                      } else {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Anda tidak memiliki akses Presensi'),
+                            behavior: SnackBarBehavior.floating,
+                          ),
+                        );
+                      }
+                    },
                   ),
                   const SizedBox(width: 64), // Space for FAB
                   _NavItem(
@@ -131,6 +149,24 @@ class AppBottomNavBar extends StatelessWidget {
 
   void _showScanBottomSheet(BuildContext context) {
     final theme = context.theme;
+    final authNotifier = context.read<AuthNotifier>();
+    final user = authNotifier.state.user;
+
+    // Check privileges
+    final hasPresensiPrivilege = user?.hasPrivilege('presensi') == true;
+    final hasPatrolPrivilege = user?.hasPrivilege('patrol') == true;
+
+    // If no privileges at all, show message and return
+    if (!hasPresensiPrivilege && !hasPatrolPrivilege) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Anda tidak memiliki akses scan'),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
+
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
@@ -171,31 +207,34 @@ class AppBottomNavBar extends StatelessWidget {
               padding: const EdgeInsets.fromLTRB(20, 0, 20, 32),
               child: Column(
                 children: [
-                  // Scan Presensi
-                  _ScanOptionTile(
-                    icon: Icons.fingerprint,
-                    iconColor: theme.colors.primary,
-                    iconBg: theme.colors.muted,
-                    title: 'Absen',
-                    subtitle: 'Absen dengan wajah',
-                    onTap: () {
-                      Navigator.pop(context);
-                      context.push('/attendance/capture');
-                    },
-                  ),
-                  const SizedBox(height: 12),
-                  // Scan Patroli
-                  _ScanOptionTile(
-                    icon: Icons.qr_code_scanner,
-                    iconColor: theme.colors.primary,
-                    iconBg: theme.colors.muted,
-                    title: 'Patroli',
-                    subtitle: 'Scan QR di titik patroli',
-                    onTap: () {
-                      Navigator.pop(context);
-                      context.push('/patrol/scan');
-                    },
-                  ),
+                  // Scan Presensi (requires 'presensi' privilege)
+                  if (hasPresensiPrivilege) ...[
+                    _ScanOptionTile(
+                      icon: Icons.fingerprint,
+                      iconColor: theme.colors.primary,
+                      iconBg: theme.colors.muted,
+                      title: 'Absen',
+                      subtitle: 'Absen dengan wajah',
+                      onTap: () {
+                        Navigator.pop(context);
+                        context.push('/attendance/capture');
+                      },
+                    ),
+                    if (hasPatrolPrivilege) const SizedBox(height: 12),
+                  ],
+                  // Scan Patroli (requires 'patrol' privilege)
+                  if (hasPatrolPrivilege)
+                    _ScanOptionTile(
+                      icon: Icons.qr_code_scanner,
+                      iconColor: theme.colors.primary,
+                      iconBg: theme.colors.muted,
+                      title: 'Patroli',
+                      subtitle: 'Scan QR di titik patroli',
+                      onTap: () {
+                        Navigator.pop(context);
+                        context.push('/patrol/scan');
+                      },
+                    ),
                 ],
               ),
             ),
@@ -212,6 +251,7 @@ class _NavItem extends StatelessWidget {
   final IconData activeIcon;
   final String label;
   final bool isActive;
+  final bool isEnabled;
   final VoidCallback onTap;
 
   const _NavItem({
@@ -220,6 +260,7 @@ class _NavItem extends StatelessWidget {
     required this.activeIcon,
     required this.label,
     required this.isActive,
+    this.isEnabled = true,
     required this.onTap,
   });
 
@@ -227,10 +268,18 @@ class _NavItem extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = context.theme;
     final activeColor = theme.colors.primaryForeground;
+    final disabledColor = theme.colors.primaryForeground.withAlpha(102); // 40% opacity
     final inactiveColor = theme.colors.primaryForeground.withAlpha(179); // 70% opacity
 
+    final isDisabled = !isEnabled;
+    final iconColor = isActive
+        ? activeColor
+        : isDisabled
+            ? disabledColor
+            : inactiveColor;
+
     final widget = GestureDetector(
-      onTap: onTap,
+      onTap: isEnabled ? onTap : null,
       behavior: HitTestBehavior.opaque,
       child: SizedBox(
         width: 64,
@@ -239,7 +288,7 @@ class _NavItem extends StatelessWidget {
           children: [
             Icon(
               isActive ? activeIcon : icon,
-              color: isActive ? activeColor : inactiveColor,
+              color: iconColor,
               size: 24,
             ),
             const SizedBox(height: 4),
@@ -247,7 +296,7 @@ class _NavItem extends StatelessWidget {
               label,
               style: theme.typography.body.xs.copyWith(
                 fontWeight: isActive ? FontWeight.w600 : FontWeight.normal,
-                color: isActive ? activeColor : inactiveColor,
+                color: iconColor,
               ),
             ),
           ],

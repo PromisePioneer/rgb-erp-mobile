@@ -18,6 +18,17 @@ class DailyTaskRepository {
       final data = response['data'];
       if (data == null) return [];
       final list = data is List ? data : [];
+
+      // Debug: log first item keys to see what fields are available
+      if (list.isNotEmpty) {
+        final firstItem = _toMap(list.first);
+        debugPrint('=== getTodayTasks DEBUG ===');
+        debugPrint('Keys: ${firstItem.keys.toList()}');
+        debugPrint('notes: ${firstItem['notes']}');
+        debugPrint('target_note: ${firstItem['target_note']}');
+        debugPrint('===========================');
+      }
+
       return list.map((json) => DailyTask.fromJson(_toMap(json))).toList();
     } on ApiException {
       rethrow;
@@ -252,7 +263,20 @@ class DailyTaskRepository {
 
   Future<Map<String, dynamic>> getHistory({int page = 1, int perPage = 15}) async {
     try {
-      return await api.getHistory(page: page, perPage: perPage);
+      final response = await api.getHistory(page: page, perPage: perPage);
+      final data = response['data'];
+
+      // Debug: log first item keys to see what fields are available
+      if (data is List && data.isNotEmpty) {
+        final firstItem = _toMap(data.first);
+        debugPrint('=== getHistory DEBUG ===');
+        debugPrint('Keys: ${firstItem.keys.toList()}');
+        debugPrint('notes: ${firstItem['notes']}');
+        debugPrint('target_note: ${firstItem['target_note']}');
+        debugPrint('===========================');
+      }
+
+      return response;
     } on ApiException {
       rethrow;
     } catch (e) {
@@ -345,7 +369,19 @@ class DailyTaskRepository {
       final response = await api.getAssignments(page: page, perPage: perPage, status: status);
       final data = response['data'];
       if (data == null) return [];
-      return (data is List ? data : []).map((json) => _toMap(json)).toList();
+      final list = (data is List ? data : []).map((json) => _toMap(json)).toList();
+
+      // Debug: log first item keys to see what fields are available
+      if (list.isNotEmpty) {
+        final firstItem = list.first;
+        debugPrint('=== getAssignments DEBUG ===');
+        debugPrint('Keys: ${firstItem.keys.toList()}');
+        debugPrint('notes: ${firstItem['notes']}');
+        debugPrint('target_note: ${firstItem['target_note']}');
+        debugPrint('===========================');
+      }
+
+      return list;
     } on ApiException {
       rethrow;
     } catch (e) {

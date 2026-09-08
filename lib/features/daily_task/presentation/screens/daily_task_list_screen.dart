@@ -72,6 +72,17 @@ class _DailyTaskListScreenState extends State<DailyTaskListScreen>
     final user = authNotifier.state.user;
     final canAssignTask = user?.hasPrivilege('daily_task_assign') ?? false;
 
+    // Debug: log task data
+    final notifier = context.read<DailyTaskNotifier>();
+    if (notifier.todayTasks.isNotEmpty) {
+      final task = notifier.todayTasks.first;
+      debugPrint('=== TODAY TASK CARD DEBUG ===');
+      debugPrint('notes: ${task.notes}');
+      debugPrint('targetNote: ${task.targetNote}');
+      debugPrint('itemDescription: ${task.itemDescription}');
+      debugPrint('===========================');
+    }
+
     return Scaffold(
       backgroundColor: theme.colors.muted,
       appBar: AppBar(
@@ -145,6 +156,17 @@ class _TodayTasksTab extends StatelessWidget {
 
     return Consumer<DailyTaskNotifier>(
       builder: (context, notifier, child) {
+        // Debug logging
+        debugPrint('=== TODAY TAB DEBUG ===');
+        debugPrint('todayTasks count: ${notifier.todayTasks.length}');
+        debugPrint('isLoading: ${notifier.isLoading}');
+        debugPrint('isTeamLeader: $isTeamLeader');
+        if (notifier.todayTasks.isNotEmpty) {
+          final first = notifier.todayTasks.first;
+          debugPrint('First task - notes: ${first.notes}, targetNote: ${first.targetNote}, itemDescription: ${first.itemDescription}');
+        }
+        debugPrint('======================');
+
         if (isTeamLeader) {
           return _buildTeamLeaderViewWithMyTasks(context, notifier, theme);
         }
@@ -217,6 +239,18 @@ class _TodayTasksTab extends StatelessWidget {
     final hasMyTasks = notifier.todayTasks.isNotEmpty;
     final hasAssignedTasks = notifier.assignments.isNotEmpty;
     final isLoading = notifier.isLoading;
+
+    // Debug logging
+    debugPrint('=== TEAM LEADER VIEW DEBUG ===');
+    debugPrint('todayTasks: ${notifier.todayTasks.length}');
+    debugPrint('assignments: ${notifier.assignments.length}');
+    if (notifier.assignments.isNotEmpty) {
+      final first = notifier.assignments.first;
+      debugPrint('First assignment keys: ${first.keys.toList()}');
+      debugPrint('First assignment notes: ${first['notes']}');
+      debugPrint('First assignment target_note: ${first['target_note']}');
+    }
+    debugPrint('=============================');
 
     if (isLoading && !hasMyTasks && !hasAssignedTasks) {
       return const Center(child: LoadingIndicator());
@@ -326,6 +360,14 @@ class _AssignedTaskCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = context.theme;
 
+    // Debug logging
+    final notes = assignment['notes'];
+    final notesStr = notes?.toString() ?? 'null';
+    debugPrint('Notes check: notes=$notesStr');
+    if (notes != null && notes.toString().isNotEmpty) {
+      debugPrint('NOTES SHOULD DISPLAY: $notesStr');
+    }
+
     final List<String> employeeNames = _extractEmployeeNames(assignment);
     final int employeeCount = _getEmployeeCount(assignment);
     final String displayNames = employeeCount > 2
@@ -337,7 +379,6 @@ class _AssignedTaskCard extends StatelessWidget {
     final status = assignment['status'] ?? 'assigned';
     final assignedDate = assignment['assigned_date'] ?? assignment['date'];
     final targetMinutes = assignment['target_minutes'];
-    final notes = assignment['notes'];
     final durationMinutes = assignment['duration_minutes'];
     final photos = assignment['photos'] as List<dynamic>? ?? [];
     final beforePhotos = photos.where((p) => p['type'] == 'before').toList();
@@ -730,6 +771,16 @@ class _HistoryTasksTab extends StatelessWidget {
 
     return Consumer<DailyTaskNotifier>(
       builder: (context, notifier, child) {
+        // Debug logging
+        debugPrint('=== HISTORY TAB DEBUG ===');
+        debugPrint('historyTasks count: ${notifier.historyTasks.length}');
+        debugPrint('isLoading: ${notifier.isLoading}');
+        if (notifier.historyTasks.isNotEmpty) {
+          final first = notifier.historyTasks.first;
+          debugPrint('First task - notes: ${first.notes}, targetNote: ${first.targetNote}');
+        }
+        debugPrint('========================');
+
         if (notifier.isLoading && notifier.historyTasks.isEmpty) {
           return const Center(child: LoadingIndicator());
         }
@@ -810,6 +861,14 @@ class _DailyTaskCard extends StatelessWidget {
     final theme = context.theme;
     final statusColor = _getStatusColor(theme);
 
+    // Debug logging for notes
+    debugPrint('=== _DailyTaskCard ===');
+    debugPrint('itemName: ${task.itemName}');
+    debugPrint('notes: ${task.notes}');
+    debugPrint('targetNote: ${task.targetNote}');
+    debugPrint('itemDescription: ${task.itemDescription}');
+    debugPrint('=====================');
+
     return Container(
       margin: const EdgeInsets.only(bottom: AppSpacing.md),
       decoration: BoxDecoration(
@@ -880,7 +939,8 @@ class _DailyTaskCard extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                 ),
               ],
-              if (task.notes != null && task.notes!.isNotEmpty) ...[
+              // Show notes from 'notes' or 'target_note' field
+              if ((task.notes != null && task.notes!.isNotEmpty) || (task.targetNote != null && task.targetNote!.isNotEmpty)) ...[
                 const SizedBox(height: AppSpacing.sm),
                 Container(
                   padding: const EdgeInsets.all(AppSpacing.sm),
@@ -895,7 +955,7 @@ class _DailyTaskCard extends StatelessWidget {
                       const SizedBox(width: 4),
                       Expanded(
                         child: Text(
-                          task.notes!,
+                          task.notes ?? task.targetNote ?? '',
                           style: TextStyle(fontSize: 12, color: theme.colors.mutedForeground),
                         ),
                       ),

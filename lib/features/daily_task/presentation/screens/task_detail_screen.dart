@@ -8,6 +8,7 @@ import 'package:image_picker/image_picker.dart';
 
 import '../../../../core/core.dart';
 import '../../../../shared/widgets/buttons/primary_button.dart';
+import '../../../../shared/widgets/dialogs/alert_dialogs.dart';
 import '../../../../shared/widgets/feedback/loading_indicator.dart';
 import '../../../../shared/widgets/icons/forui_icon_map.dart';
 import '../../../../shared/widgets/inputs/app_text_field.dart';
@@ -344,7 +345,7 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
     if (!mounted) return;
 
     if (success) {
-      _showSuccessDialog('Tugas dimulai', 'Tugas berhasil dimulai. Selamat bekerja!');
+      _showSuccessDialog('Tugas Dimulai', 'Tugas berhasil dimulai.\nSelamat bekerja!');
     } else {
       _showErrorDialog('Gagal', notifier.error ?? 'Terjadi kesalahan.');
     }
@@ -397,76 +398,31 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
     if (!mounted) return;
 
     if (success) {
-      _showSuccessDialog('Tugas Selesai', 'Tugas berhasil diselesaikan!');
+      _showSuccessDialog('Tugas Selesai', 'Tugas berhasil diselesaikan.\nTerima kasih!');
     } else {
       _showErrorDialog('Gagal', notifier.error ?? 'Terjadi kesalahan.');
     }
   }
 
   void _showErrorDialog(String title, String message) {
-    final theme = context.theme;
-    showFDialog(
+    ErrorDialog.show(
       context: context,
-      builder: (ctx, style, animation) => FDialog(
-        builder: (ctx, style) => Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(IconMap.errorOutline, color: theme.colors.destructive),
-                const SizedBox(width: 8),
-                Text(title, style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Text(message),
-            const SizedBox(height: 16),
-            FButton(
-              onPress: () => Navigator.pop(ctx),
-              variant: FButtonVariant.ghost,
-              child: const Text('Tutup'),
-            ),
-          ],
-        ),
-      ),
+      title: title,
+      message: message,
     );
   }
 
   void _showSuccessDialog(String title, String message) {
-    showFDialog(
+    SuccessDialog.show(
       context: context,
+      title: title,
+      message: message,
       barrierDismissible: false,
-      builder: (ctx, style, animation) => FDialog(
-        builder: (ctx, style) => Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(IconMap.checkCircle, color: AppColors.success),
-                const SizedBox(width: 8),
-                Text(title, style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Text(message),
-            const SizedBox(height: 16),
-            SizedBox(
-              width: double.infinity,
-              child: FButton(
-                onPress: () {
-                  Navigator.pop(ctx);
-                  context.pop();
-                },
-                variant: FButtonVariant.primary,
-                child: const Text('OK'),
-              ),
-            ),
-          ],
-        ),
-      ),
     );
+    // Pop after dialog is shown (since barrierDismissible is false, user must tap OK)
+    Future.delayed(const Duration(milliseconds: 100), () {
+      if (mounted) context.pop();
+    });
   }
 
   @override
@@ -527,7 +483,7 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
 
                   // Form based on status
                   if (task.canStart) ...[
-                    // Start form - employee perlu input kondisi awal alat & bahan
+                    // Start form - employee perlu input foto sebelum
                     _buildPhotoSection(
                       label: 'Foto Sebelum',
                       photoPaths: _beforePhotoPaths,
@@ -536,15 +492,6 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
                       theme: theme,
                     ),
                     const SizedBox(height: AppSpacing.md),
-
-                    // Show tools/chemicals/ppes/machines with condition selection (initial)
-                    if ((task.tools?.isNotEmpty ?? false) ||
-                        (task.chemicals?.isNotEmpty ?? false) ||
-                        (task.ppes?.isNotEmpty ?? false) ||
-                        (task.machines?.isNotEmpty ?? false)) ...[
-                      _buildInitialConditionSection(task, theme),
-                      const SizedBox(height: AppSpacing.md),
-                    ],
 
                     PrimaryButton(
                       label: 'Mulai Kerjakan',
@@ -1645,13 +1592,14 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
           ),
           const SizedBox(height: AppSpacing.md),
 
-          // Tools condition
+          // Tools condition with initial condition
           if (task.tools?.isNotEmpty ?? false) ...[
             _buildConditionSectionHeader('Alat', IconMap.build, theme),
             const SizedBox(height: AppSpacing.xs),
-            ...task.tools!.map((t) => _buildToolConditionSelector(
+            ...task.tools!.map((t) => _buildToolConditionWithInitial(
               itemId: t.id,
               itemName: t.name,
+              initialCondition: t.initialConditionLabel ?? t.initialCondition,
               selectedCondition: _finalToolConditions[t.id],
               onChanged: (condition) {
                 setState(() {
@@ -1663,13 +1611,14 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
             const SizedBox(height: AppSpacing.sm),
           ],
 
-          // PPEs condition
+          // PPEs condition with initial condition
           if (task.ppes?.isNotEmpty ?? false) ...[
             _buildConditionSectionHeader('Alat Pelindung Diri (APD)', IconMap.shieldCheck, theme),
             const SizedBox(height: AppSpacing.xs),
-            ...task.ppes!.map((p) => _buildToolConditionSelector(
+            ...task.ppes!.map((p) => _buildToolConditionWithInitial(
               itemId: p.id,
               itemName: p.name,
+              initialCondition: p.initialConditionLabel ?? p.initialCondition,
               selectedCondition: _finalPpeConditions[p.id],
               onChanged: (condition) {
                 setState(() {
@@ -1681,13 +1630,14 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
             const SizedBox(height: AppSpacing.sm),
           ],
 
-          // Machines condition
+          // Machines condition with initial condition
           if (task.machines?.isNotEmpty ?? false) ...[
             _buildConditionSectionHeader('Mesin', IconMap.build, theme),
             const SizedBox(height: AppSpacing.xs),
-            ...task.machines!.map((m) => _buildToolConditionSelector(
+            ...task.machines!.map((m) => _buildToolConditionWithInitial(
               itemId: m.id,
               itemName: m.name,
+              initialCondition: m.initialConditionLabel ?? m.initialCondition,
               selectedCondition: _finalMachineConditions[m.id],
               onChanged: (condition) {
                 setState(() {
@@ -1699,11 +1649,11 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
             const SizedBox(height: AppSpacing.sm),
           ],
 
-          // Chemicals condition
+          // Chemicals condition with initial condition
           if (task.chemicals?.isNotEmpty ?? false) ...[
             _buildConditionSectionHeader('Chemical', IconMap.flaskConical, theme),
             const SizedBox(height: AppSpacing.xs),
-            ...task.chemicals!.map((c) => _buildChemicalConditionSelector(
+            ...task.chemicals!.map((c) => _buildChemicalConditionWithInitial(
               chemical: c,
               selectedCondition: _finalChemicalConditions[c.id],
               onChanged: (condition) {
@@ -1714,6 +1664,187 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
               theme: theme,
             )),
           ],
+        ],
+      ),
+    );
+  }
+
+  /// Build condition selector with initial condition display
+  Widget _buildToolConditionWithInitial({
+    required int itemId,
+    required String itemName,
+    required String? initialCondition,
+    required String? selectedCondition,
+    required void Function(String) onChanged,
+    required FThemeData theme,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.only(top: AppSpacing.xs),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  itemName,
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: theme.colors.foreground,
+                  ),
+                ),
+              ),
+              if (initialCondition != null) ...[
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: AppColors.success.withAlpha(26),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Text(
+                    initialCondition,
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w500,
+                      color: AppColors.success,
+                    ),
+                  ),
+                ),
+              ],
+            ],
+          ),
+          const SizedBox(height: 4),
+          Wrap(
+            spacing: AppSpacing.xs,
+            runSpacing: AppSpacing.xs,
+            children: [
+              _buildConditionChip(
+                label: 'SB',
+                value: 'excellent',
+                isSelected: selectedCondition == 'excellent',
+                onTap: () => onChanged('excellent'),
+                theme: theme,
+              ),
+              _buildConditionChip(
+                label: 'B',
+                value: 'good',
+                isSelected: selectedCondition == 'good',
+                onTap: () => onChanged('good'),
+                theme: theme,
+              ),
+              _buildConditionChip(
+                label: 'CB',
+                value: 'fair',
+                isSelected: selectedCondition == 'fair',
+                onTap: () => onChanged('fair'),
+                theme: theme,
+              ),
+              _buildConditionChip(
+                label: 'KB',
+                value: 'poor',
+                isSelected: selectedCondition == 'poor',
+                onTap: () => onChanged('poor'),
+                theme: theme,
+              ),
+              _buildConditionChip(
+                label: 'Ganti',
+                value: 'replace',
+                isSelected: selectedCondition == 'replace',
+                onTap: () => onChanged('replace'),
+                theme: theme,
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Build chemical condition selector with initial condition display
+  Widget _buildChemicalConditionWithInitial({
+    required DailyTaskChemical chemical,
+    required String? selectedCondition,
+    required void Function(String) onChanged,
+    required FThemeData theme,
+  }) {
+    final initialLabel = chemical.initialConditionLabel ?? chemical.initialCondition;
+    return Padding(
+      padding: const EdgeInsets.only(top: AppSpacing.xs),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  chemical.name,
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: theme.colors.foreground,
+                  ),
+                ),
+              ),
+              if (initialLabel != null) ...[
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: AppColors.success.withAlpha(26),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Text(
+                    initialLabel,
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w500,
+                      color: AppColors.success,
+                    ),
+                  ),
+                ),
+              ],
+            ],
+          ),
+          const SizedBox(height: 4),
+          Wrap(
+            spacing: AppSpacing.xs,
+            runSpacing: AppSpacing.xs,
+            children: [
+              _buildConditionChip(
+                label: 'Penuh',
+                value: 'full',
+                isSelected: selectedCondition == 'full',
+                onTap: () => onChanged('full'),
+                theme: theme,
+              ),
+              _buildConditionChip(
+                label: 'Setengah',
+                value: 'half',
+                isSelected: selectedCondition == 'half',
+                onTap: () => onChanged('half'),
+                theme: theme,
+              ),
+              _buildConditionChip(
+                label: 'Seperempat',
+                value: 'quarter',
+                isSelected: selectedCondition == 'quarter',
+                onTap: () => onChanged('quarter'),
+                theme: theme,
+              ),
+              _buildConditionChip(
+                label: 'Rendah',
+                value: 'low',
+                isSelected: selectedCondition == 'low',
+                onTap: () => onChanged('low'),
+                theme: theme,
+              ),
+              _buildConditionChip(
+                label: 'Habis',
+                value: 'empty',
+                isSelected: selectedCondition == 'empty',
+                onTap: () => onChanged('empty'),
+                theme: theme,
+              ),
+            ],
+          ),
         ],
       ),
     );

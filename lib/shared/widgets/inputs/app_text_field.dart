@@ -88,9 +88,9 @@ class AppTextField extends StatelessWidget {
           onChange: (value) => onChanged?.call(value.text),
         ),
         size: FTextFieldSizeVariant.md,
-        label: label != null ? Text(label!) : null,
+        label: null, // Override default label since we render it externally
         hint: hint,
-        error: errorText != null ? Text(errorText!) : null,
+        error: null, // Error is already rendered by AppTextField wrapper
         onTap: onTap,
         textInputAction: textInputAction ?? TextInputAction.done,
         enabled: !readOnly,
@@ -107,26 +107,31 @@ class AppTextField extends StatelessWidget {
         onChange: (value) => onChanged?.call(value.text),
       ),
       size: FTextFieldSizeVariant.md,
-      label: label != null ? Text(label!) : null,
       hint: hint,
-      error: errorText != null ? Text(errorText!) : null,
+      error: null, // Error is already rendered by AppTextField wrapper
       prefixBuilder: prefixIcon != null
-          ? (context, style, variants) => Row(
+          ? (context, style, variants) => Padding(
+              padding: const EdgeInsets.only(left: 12),
+              child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   prefixIcon!,
                   const SizedBox(width: 8),
                 ],
-              )
+              ),
+            )
           : null,
       suffixBuilder: suffixIcon != null
-          ? (context, style, variants) => Row(
+          ? (context, style, variants) => Padding(
+              padding: const EdgeInsets.only(right: 12),
+              child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   const SizedBox(width: 8),
                   suffixIcon!,
                 ],
-              )
+              ),
+            )
           : null,
       onTap: onTap,
       textInputAction: textInputAction ?? TextInputAction.next,

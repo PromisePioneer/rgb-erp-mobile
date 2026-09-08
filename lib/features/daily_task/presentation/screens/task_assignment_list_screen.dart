@@ -200,12 +200,20 @@ class _TaskAssignmentListScreenState extends State<TaskAssignmentListScreen> {
                         itemCount: assignments.length,
                         itemBuilder: (context, index) {
                           final assignment = assignments[index];
+
+                          // Debug logging
+                          debugPrint('=== ASSIGNMENT CARD DEBUG ===');
+                          debugPrint('Keys: ${assignment.keys.toList()}');
+                          debugPrint('notes: ${assignment['notes']}');
+                          debugPrint('target_note: ${assignment['target_note']}');
+                          debugPrint('===========================');
+
                           final id = assignment['id'] as int?;
                           final employeeNames = assignment['employee_names'] as String? ?? assignment['employee_name'] as String? ?? '-';
                           final employeeCount = assignment['employee_count'] as int?;
                           final status = assignment['status'] as String?;
                           final targetMinutes = assignment['target_minutes'] as int?;
-                          final notes = assignment['notes'] as String?;
+                          final notes = assignment['notes'] as String? ?? assignment['target_note'] as String?;
                           final assignedDate = assignment['assigned_date'] as String?;
                           final statusColor = _getStatusColor(status, theme);
 
@@ -302,14 +310,27 @@ class _TaskAssignmentListScreenState extends State<TaskAssignmentListScreen> {
                                     ],
                                     if (notes != null && notes.isNotEmpty) ...[
                                       const SizedBox(height: 8),
-                                      Text(
-                                        notes,
-                                        style: TextStyle(
-                                          fontSize: 13,
-                                          color: theme.colors.mutedForeground,
+                                      Container(
+                                        padding: const EdgeInsets.all(AppSpacing.sm),
+                                        decoration: BoxDecoration(
+                                          color: theme.colors.muted,
+                                          borderRadius: AppRadius.radiusSm,
                                         ),
-                                        maxLines: 2,
-                                        overflow: TextOverflow.ellipsis,
+                                        child: Row(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            Icon(IconMap.editNote, size: 14, color: theme.colors.mutedForeground),
+                                            const SizedBox(width: 4),
+                                            Expanded(
+                                              child: Text(
+                                                notes,
+                                                style: TextStyle(fontSize: 12, color: theme.colors.mutedForeground),
+                                                maxLines: 3,
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
                                       ),
                                     ],
                                   ],
