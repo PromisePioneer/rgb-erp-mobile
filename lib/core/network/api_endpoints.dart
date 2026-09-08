@@ -141,11 +141,7 @@ class ApiEndpoints {
   static const String dailyTaskMobileAssignEmployees = '/daily-task/assign/employees';
   static const String dailyTaskMyAssignments = '/daily-task/assignments/my';
   static const String dailyTaskReviewCriteria = '/daily-task/review-criteria';
-
-  // ====================
-  // Product Areas (Stok per Area/Client) for Mobile
-  // ====================
-  static const String productAreasByArea = '/product-areas/area';
+  static const String dailyTaskProductsByArea = '/daily-task/products/by-area';
 
   // ====================
   // Client API Endpoints (Mobile App for Clients)

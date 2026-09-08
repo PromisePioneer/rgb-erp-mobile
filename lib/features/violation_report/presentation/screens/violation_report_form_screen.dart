@@ -1,7 +1,6 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:forui/forui.dart';
 
@@ -10,6 +9,7 @@ import '../../../../shared/widgets/buttons/primary_button.dart';
 import '../../../../shared/widgets/feedback/loading_indicator.dart';
 import '../../../../shared/widgets/icons/forui_icon_map.dart';
 import '../../domain/domain.dart';
+import '../../../../shared/widgets/dialogs/alert_dialogs.dart';
 import '../providers/violation_report_provider.dart';
 
 /// Violation report form screen
@@ -52,17 +52,19 @@ class _ViolationReportFormScreenState extends State<ViolationReportFormScreen> {
     if (!mounted) return;
 
     if (notifier.state.locationError != null) {
-      _showErrorDialog(
-        'Lokasi Tidak Valid',
-        notifier.state.locationError!,
+      ErrorDialog.show(
+        context: context,
+        title: 'Lokasi Tidak Valid',
+        message: notifier.state.locationError!,
       );
       return;
     }
 
     if (!notifier.state.isTimeValid) {
-      _showErrorDialog(
-        'Waktu Tidak Valid',
-        'Waktu perangkat tidak valid. Mohon perbarui waktu otomatis di pengaturan perangkat.',
+      ErrorDialog.show(
+        context: context,
+        title: 'Waktu Tidak Valid',
+        message: 'Waktu perangkat tidak valid. Mohon perbarui waktu otomatis di pengaturan perangkat.',
       );
       return;
     }
@@ -72,122 +74,19 @@ class _ViolationReportFormScreenState extends State<ViolationReportFormScreen> {
     if (!mounted) return;
 
     if (success) {
-      _showSuccessDialog();
+      SuccessDialog.show(
+        context: context,
+        title: 'Berhasil',
+        message: 'Temuan pelanggaran berhasil disimpan.',
+        buttonText: 'OK',
+      );
     } else {
-      _showErrorDialog(
-        'Gagal',
-        notifier.state.submitError ?? 'Terjadi kesalahan saat menyimpan temuan.',
+      ErrorDialog.show(
+        context: context,
+        title: 'Gagal',
+        message: notifier.state.submitError ?? 'Terjadi kesalahan saat menyimpan temuan.',
       );
     }
-  }
-
-  void _showErrorDialog(String title, String message) {
-    final theme = context.theme;
-    showDialog(
-      context: context,
-      builder: (ctx) => Center(
-        child: Material(
-          color: Colors.transparent,
-          child: Container(
-            margin: const EdgeInsets.all(AppSpacing.lg),
-            padding: const EdgeInsets.all(AppSpacing.lg),
-            decoration: BoxDecoration(
-              color: theme.colors.card,
-              borderRadius: AppRadius.radiusLg,
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Icon(IconMap.errorOutline, color: theme.colors.destructive),
-                    const SizedBox(width: AppSpacing.sm),
-                    Expanded(
-                      child: Text(
-                        title,
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: theme.colors.foreground,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: AppSpacing.md),
-                Text(
-                  message,
-                  style: TextStyle(color: theme.colors.mutedForeground),
-                ),
-                const SizedBox(height: AppSpacing.lg),
-                SizedBox(
-                  width: double.infinity,
-                  child: FButton(
-                    onPress: () => Navigator.pop(ctx),
-                    variant: FButtonVariant.ghost,
-                    child: const Text('Tutup'),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  void _showSuccessDialog() {
-    final theme = context.theme;
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (ctx) => Center(
-        child: Material(
-          color: Colors.transparent,
-          child: Container(
-            margin: const EdgeInsets.all(AppSpacing.lg),
-            padding: const EdgeInsets.all(AppSpacing.lg),
-            decoration: BoxDecoration(
-              color: theme.colors.card,
-              borderRadius: AppRadius.radiusLg,
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(IconMap.checkCircle, size: 48, color: theme.colors.primary),
-                const SizedBox(height: AppSpacing.md),
-                Text(
-                  'Berhasil',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: theme.colors.foreground,
-                  ),
-                ),
-                const SizedBox(height: AppSpacing.sm),
-                Text(
-                  'Temuan pelanggaran berhasil disimpan.',
-                  style: TextStyle(color: theme.colors.mutedForeground),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: AppSpacing.lg),
-                SizedBox(
-                  width: double.infinity,
-                  child: PrimaryButton(
-                    label: 'OK',
-                    onPressed: () {
-                      Navigator.pop(ctx);
-                      context.pop();
-                    },
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
   }
 
   @override

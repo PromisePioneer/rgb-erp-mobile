@@ -30,6 +30,10 @@
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
 
+    <!-- Background Task Permissions -->
+    <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
+
     <application
         android:label="RGB 86"
         android:name="${applicationName}"
@@ -56,6 +60,36 @@
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />
+
+        <!-- Foreground Service -->
+        <service
+            android:name="id.flutter.flutter_background_service.BackgroundService"
+            android:foregroundServiceType="location"
+            android:exported="false" />
+
+        <!-- Boot Completed Receiver - Auto-start app after reboot -->
+        <receiver
+            android:name="com.dexterous.flutterlocalnotifications.ScheduledNotificationBootReceiver"
+            android:enabled="true"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.QUICKBOOT_POWERON" />
+                <action android:name="com.htc.intent.action.QUICKBOOT_POWERON" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+            </intent-filter>
+        </receiver>
+
+        <!-- Flutter Foreground Task Receiver -->
+        <receiver
+            android:name="id.flutter.flutter_foreground_task.ForegroundServiceReceiver"
+            android:enabled="true"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="id.flutter.flutter_foreground_task.ACTION_START_FOREGROUND_SERVICE" />
+                <action android:name="id.flutter.flutter_foreground_task.ACTION_STOP_FOREGROUND_SERVICE" />
+            </intent-filter>
+        </receiver>
 
         <!-- Firebase Cloud Messaging -->
         <meta-data

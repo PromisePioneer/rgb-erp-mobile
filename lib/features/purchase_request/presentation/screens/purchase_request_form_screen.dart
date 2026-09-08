@@ -84,7 +84,7 @@ class _PurchaseRequestFormScreenState extends State<PurchaseRequestFormScreen> {
     try {
       final notifier = context.read<PurchaseRequestNotifier>();
       final options = await notifier.repository.getProductOptions(query: query);
-      return options.map((p) => AsyncSelectOption(id: p.id, name: p.name)).toList();
+      return options.map((p) => AsyncSelectOption(id: p.id.toString(), name: p.name)).toList();
     } catch (e) {
       return [];
     }
@@ -576,7 +576,7 @@ class _PurchaseRequestFormScreenState extends State<PurchaseRequestFormScreen> {
           label: null,
           placeholder: 'Cari produk...',
           loadOptions: _loadProducts,
-          selectedIds: item.productId != null ? {item.productId!} : {},
+          selectedIds: item.productId != null ? {item.productId.toString()} : <String>{},
           onSelectionChanged: (ids) {
             final selectedId = ids.isNotEmpty ? ids.first : null;
             // Find the selected option name
@@ -589,7 +589,7 @@ class _PurchaseRequestFormScreenState extends State<PurchaseRequestFormScreen> {
               }
             }
             _updateLineItem(index, _LineItem(
-              productId: selectedId,
+              productId: selectedId != null ? int.tryParse(selectedId) : null,
               productName: selectedName,
               qty: item.qty,
               price: item.price,

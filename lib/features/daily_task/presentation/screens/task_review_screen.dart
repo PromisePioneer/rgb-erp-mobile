@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:forui/forui.dart';
@@ -800,9 +801,10 @@ class _TaskReviewScreenState extends State<TaskReviewScreen> {
     final tools = widget.taskData['tools'] as List<dynamic>? ?? [];
     final chemicals = widget.taskData['chemicals'] as List<dynamic>? ?? [];
     final ppes = widget.taskData['ppes'] as List<dynamic>? ?? [];
+    final machines = widget.taskData['machines'] as List<dynamic>? ?? [];
 
     // Only show if at least one has items
-    if (tools.isEmpty && chemicals.isEmpty && ppes.isEmpty) {
+    if (tools.isEmpty && chemicals.isEmpty && ppes.isEmpty && machines.isEmpty) {
       return const SizedBox.shrink();
     }
 
@@ -811,10 +813,19 @@ class _TaskReviewScreenState extends State<TaskReviewScreen> {
       children: [
         if (tools.isNotEmpty) ...[
           _buildUsedItemsCard(
-            label: 'ALAT & APD',
+            label: 'ALAT',
             items: tools,
             theme: theme,
             icon: IconMap.build,
+          ),
+          const SizedBox(height: AppSpacing.sm),
+        ],
+        if (ppes.isNotEmpty) ...[
+          _buildUsedItemsCard(
+            label: 'APD / PPE',
+            items: ppes,
+            theme: theme,
+            icon: IconMap.shieldCheck,
           ),
           const SizedBox(height: AppSpacing.sm),
         ],
@@ -825,6 +836,15 @@ class _TaskReviewScreenState extends State<TaskReviewScreen> {
             theme: theme,
             icon: IconMap.flaskConical,
             isChemical: true,
+          ),
+          const SizedBox(height: AppSpacing.sm),
+        ],
+        if (machines.isNotEmpty) ...[
+          _buildUsedItemsCard(
+            label: 'MESIN',
+            items: machines,
+            theme: theme,
+            icon: IconMap.settings,
           ),
         ],
       ],
@@ -865,6 +885,8 @@ class _TaskReviewScreenState extends State<TaskReviewScreen> {
           const SizedBox(height: AppSpacing.sm),
           ...items.map((item) {
             final name = item['name']?.toString() ?? 'Unknown';
+            final qrCode = item['qr_code']?.toString();
+            final conditionLabel = item['condition_label']?.toString();
             final initialCondition = item['initial_condition'] as String?;
             final finalCondition = item['final_condition'] as String?;
 
@@ -874,20 +896,45 @@ class _TaskReviewScreenState extends State<TaskReviewScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Expanded(
-                        child: Text(
-                          name,
-                          style: TextStyle(
-                            fontSize: 13,
-                            color: theme.colors.foreground,
-                          ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              name,
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w500,
+                                color: theme.colors.foreground,
+                              ),
+                            ),
+                            if (qrCode != null && qrCode.isNotEmpty) ...[
+                              const SizedBox(height: 2),
+                              Text(
+                                'QR: $qrCode',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  color: theme.colors.mutedForeground,
+                                ),
+                              ),
+                            ],
+                          ],
                         ),
                       ),
+                      // Current condition badge (from item's condition_label)
+                      if (conditionLabel != null && conditionLabel.isNotEmpty) ...[
+                        _buildConditionBadge(
+                          label: conditionLabel,
+                          color: AppColors.info,
+                          theme: theme,
+                        ),
+                      ],
                     ],
                   ),
-                  const SizedBox(height: 4),
-                  // Show conditions
+                  const SizedBox(height: 6),
+                  // Show initial/final conditions from pivot
                   Row(
                     children: [
                       // Initial condition

@@ -429,8 +429,7 @@ class _TaskAssignmentFormScreenState extends State<TaskAssignmentFormScreen> {
         targetMinutes: targetMinutes,
         notes: notes,
         toolIds: _selectedToolIds.isEmpty ? null : _selectedToolIds.toList(),
-        chemicalIds: _selectedChemicalIds.isEmpty ? null : _selectedChemicalIds
-            .toList(),
+        chemicalIds: _selectedChemicalIds.isEmpty ? null : _selectedChemicalIds.toList(),
         ppeIds: _selectedPpeIds.isEmpty ? null : _selectedPpeIds.toList(),
       );
 
@@ -460,11 +459,9 @@ class _TaskAssignmentFormScreenState extends State<TaskAssignmentFormScreen> {
         notes: notes,
         assignedDate: assignedDate,
         toolIds: _selectedToolIds.isEmpty ? null : _selectedToolIds.toList(),
-        chemicalIds: _selectedChemicalIds.isEmpty ? null : _selectedChemicalIds
-            .toList(),
+        chemicalIds: _selectedChemicalIds.isEmpty ? null : _selectedChemicalIds.toList(),
         ppeIds: _selectedPpeIds.isEmpty ? null : _selectedPpeIds.toList(),
-        machineIds: _selectedMachineIds.isEmpty ? null : _selectedMachineIds
-            .toList(),
+        machineIds: _selectedMachineIds.isEmpty ? null : _selectedMachineIds.toList(),
       );
 
       if (!mounted) return;
@@ -547,7 +544,7 @@ class _TaskAssignmentFormScreenState extends State<TaskAssignmentFormScreen> {
       final displayName = emp != null
           ? '${emp['name']} (${emp['code'] ?? ''})'
           : name;
-      return AsyncSelectOption(id: id, name: displayName);
+      return AsyncSelectOption(id: id.toString(), name: displayName);
     }).toList()
         : <AsyncSelectOption>[];
 
@@ -605,14 +602,14 @@ class _TaskAssignmentFormScreenState extends State<TaskAssignmentFormScreen> {
 
               return filtered.map((r) {
                 final indent = '  ' * r.level + (r.level > 0 ? '└─ ' : '');
-                return AsyncSelectOption(id: r.id, name: '$indent${r.name}');
+                return AsyncSelectOption(id: r.id.toString(), name: '$indent${r.name}');
               }).toList();
             },
-            selectedIds: _selectedRoleIds,
+            selectedIds: _selectedRoleIds.map((i) => i.toString()).toSet(),
             initialOptions: _selectedRoleIds.isNotEmpty
                 ? _selectedRoleIds.map((id) {
               return AsyncSelectOption(
-                  id: id, name: _selectedRoleName ?? 'Memuat...');
+                  id: id.toString(), name: _selectedRoleName ?? 'Memuat...');
             }).toList()
                 : null,
             onSelectionChanged: (ids) {
@@ -623,9 +620,9 @@ class _TaskAssignmentFormScreenState extends State<TaskAssignmentFormScreen> {
               setState(() {
                 _selectedRoleIds.clear();
                 if (ids.isNotEmpty) {
-                  final roleId = ids.first;
-                  _selectedRoleIds.add(roleId);
+                  _selectedRoleIds.add(int.tryParse(ids.first) ?? 0);
                   // Store role name
+                  final roleId = int.tryParse(ids.first) ?? 0;
                   final role = notifier.roles.firstWhere(
                         (r) => r.id == roleId,
                     orElse: () =>
@@ -671,12 +668,12 @@ class _TaskAssignmentFormScreenState extends State<TaskAssignmentFormScreen> {
               return employees
                   .map((emp) =>
                   AsyncSelectOption(
-                    id: emp['id'] as int,
+                    id: (emp['id'] as int).toString(),
                     name: '${emp['name']} (${emp['code'] ?? ''})',
                   ))
                   .toList();
             },
-            selectedIds: _selectedEmployeeIds,
+            selectedIds: _selectedEmployeeIds.map((i) => i.toString()).toSet(),
             initialOptions: initialEmployeeOptions.isNotEmpty
                 ? initialEmployeeOptions
                 : null,
@@ -684,11 +681,12 @@ class _TaskAssignmentFormScreenState extends State<TaskAssignmentFormScreen> {
               setState(() {
                 _selectedEmployeeIds.clear();
                 _selectedEmployeeNames.clear();
-                _selectedEmployeeIds.addAll(ids);
+                _selectedEmployeeIds.addAll(ids.map((s) => int.tryParse(s) ?? 0));
                 // Store employee names
                 for (final id in ids) {
+                  final empId = int.tryParse(id) ?? 0;
                   final emp = notifier.mobileAssignEmployees.firstWhere(
-                        (e) => e['id'] == id,
+                        (e) => e['id'] == empId,
                     orElse: () => {'name': 'Unknown'},
                   );
                   _selectedEmployeeNames.add(emp['name'] as String);
@@ -718,7 +716,7 @@ class _TaskAssignmentFormScreenState extends State<TaskAssignmentFormScreen> {
                   AsyncSelectOption(id: item.id, name: item.name))
                   .toList();
             },
-            selectedIds: _selectedItemId != null ? {_selectedItemId!} : {},
+            selectedIds: _selectedItemId != null ? {_selectedItemId!} : <int>{},
             initialOptions: initialItemOptions.isNotEmpty
                 ? initialItemOptions
                 : null,
@@ -879,6 +877,16 @@ class _TaskAssignmentFormScreenState extends State<TaskAssignmentFormScreen> {
     }).toList()
         : <AsyncSelectOption>[];
 
+    final initialMachineOptions = _isEditMode && _selectedMachineIds.isNotEmpty
+        ? _selectedMachineIds.map((id) {
+      final name = _selectedMachineNames.firstWhere(
+            (n) => notifier.machines.any((m) => m.id == id && m.name == n),
+        orElse: () => 'Memuat...',
+      );
+      return AsyncSelectOption(id: id, name: name);
+    }).toList()
+        : <AsyncSelectOption>[];
+
     return ListView(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
@@ -928,7 +936,14 @@ class _TaskAssignmentFormScreenState extends State<TaskAssignmentFormScreen> {
                 categoryType: areaId != null ? 1 : null, // Tools category
               );
               return tools
-                  .map((t) => AsyncSelectOption(id: t.id, name: t.name))
+                  .map((t) => AsyncSelectOption(
+                      id: t.id,
+                      name: t.name,
+                      qrCode: t.qrCode,
+                      condition: t.condition,
+                      conditionLabel: t.conditionLabel,
+                      stock: t.currentStock,
+                    ))
                   .toList();
             },
             selectedIds: _selectedToolIds,
@@ -939,7 +954,7 @@ class _TaskAssignmentFormScreenState extends State<TaskAssignmentFormScreen> {
               setState(() {
                 _selectedToolIds.clear();
                 _selectedToolNames.clear();
-                _selectedToolIds.addAll(ids);
+                _selectedToolIds.addAll(ids.cast<int>());
                 // Store tool names
                 for (final id in ids) {
                   final tool = notifier.tools.firstWhere(
@@ -968,7 +983,14 @@ class _TaskAssignmentFormScreenState extends State<TaskAssignmentFormScreen> {
                 categoryType: areaId != null ? 2 : null, // Chemicals category
               );
               return chemicals
-                  .map((c) => AsyncSelectOption(id: c.id, name: c.name))
+                  .map((c) => AsyncSelectOption(
+                      id: c.id,
+                      name: c.name,
+                      qrCode: c.qrCode,
+                      condition: c.condition,
+                      conditionLabel: c.conditionLabel,
+                      stock: c.currentStock,
+                    ))
                   .toList();
             },
             selectedIds: _selectedChemicalIds,
@@ -979,7 +1001,7 @@ class _TaskAssignmentFormScreenState extends State<TaskAssignmentFormScreen> {
               setState(() {
                 _selectedChemicalIds.clear();
                 _selectedChemicalNames.clear();
-                _selectedChemicalIds.addAll(ids);
+                _selectedChemicalIds.addAll(ids.cast<int>());
                 // Store chemical names
                 for (final id in ids) {
                   final chemical = notifier.chemicals.firstWhere(
@@ -1008,7 +1030,14 @@ class _TaskAssignmentFormScreenState extends State<TaskAssignmentFormScreen> {
                 categoryType: areaId != null ? 3 : null, // PPEs category
               );
               return ppes
-                  .map((p) => AsyncSelectOption(id: p.id, name: p.name))
+                  .map((p) => AsyncSelectOption(
+                      id: p.id,
+                      name: p.name,
+                      qrCode: p.qrCode,
+                      condition: p.condition,
+                      conditionLabel: p.conditionLabel,
+                      stock: p.currentStock,
+                    ))
                   .toList();
             },
             selectedIds: _selectedPpeIds,
@@ -1019,7 +1048,7 @@ class _TaskAssignmentFormScreenState extends State<TaskAssignmentFormScreen> {
               setState(() {
                 _selectedPpeIds.clear();
                 _selectedPpeNames.clear();
-                _selectedPpeIds.addAll(ids);
+                _selectedPpeIds.addAll(ids.cast<int>());
                 // Store PPE names
                 for (final id in ids) {
                   final ppe = notifier.ppes.firstWhere(
@@ -1048,15 +1077,25 @@ class _TaskAssignmentFormScreenState extends State<TaskAssignmentFormScreen> {
                 categoryType: areaId != null ? 4 : null, // Machines category
               );
               return machines
-                  .map((m) => AsyncSelectOption(id: m.id, name: m.name))
+                  .map((m) => AsyncSelectOption(
+                      id: m.id,
+                      name: m.name,
+                      qrCode: m.qrCode,
+                      condition: m.condition,
+                      conditionLabel: m.conditionLabel,
+                      stock: m.currentStock,
+                    ))
                   .toList();
             },
             selectedIds: _selectedMachineIds,
+            initialOptions: initialMachineOptions.isNotEmpty
+                ? initialMachineOptions
+                : null,
             onSelectionChanged: (ids) {
               setState(() {
                 _selectedMachineIds.clear();
                 _selectedMachineNames.clear();
-                _selectedMachineIds.addAll(ids);
+                _selectedMachineIds.addAll(ids.cast<int>());
                 // Store machine names
                 for (final id in ids) {
                   final machine = notifier.machines.firstWhere(

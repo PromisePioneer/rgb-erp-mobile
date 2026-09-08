@@ -1066,43 +1066,13 @@ class DailyTaskApi {
   }
  }
 
- /// GET /product-areas/area/{areaId} - Get products from product_areas by area
- /// Used for mobile task assignment to show available tools/chemicals/ppes/machines from area stock
- Future<Map<String, dynamic>> getProductsByArea({
-   required int areaId,
-   String? query,
-   int? categoryType,
- }) async {
-   try {
-     final queryParts = <String>[];
-     if (query != null && query.isNotEmpty) {
-       queryParts.add('q=${Uri.encodeComponent(query)}');
-     }
-     if (categoryType != null) {
-       queryParts.add('category_type=$categoryType');
-     }
-
-     final queryString = queryParts.isNotEmpty ? '?${queryParts.join('&')}' : '';
-     final url = '${ApiEndpoints.productAreasByArea}/$areaId$queryString';
-
-     debugPrint('DailyTaskApi.getProductsByArea: calling $url');
-
-     final response = await _dio.get(url);
-     return response.data as Map<String, dynamic>;
-   } on DioException catch (e) {
-     debugPrint('DailyTaskApi.getProductsByArea: DioException - $e');
-     throw ApiException.fromDioException(e);
-   }
- }
-
  // ====================
- // Daily Task Inventory API Methods
- // Mobile endpoint: /daily-task/inventory/by-area/{areaId}
+ // Daily Task Products By Area
  // ====================
 
- /// GET /daily-task/inventory/by-area/{areaId} - Get inventory items by area
- /// Used for daily task equipment selection (tools, chemicals, ppes, machines)
- Future<Map<String, dynamic>> getDailyTaskInventoryByArea({
+ /// GET /daily-task/products/by-area/{areaId} - Get products by area for task assignment
+ /// Query params: q (search), category_type (tools|chemicals|ppes|machines)
+ Future<Map<String, dynamic>> getDailyTaskProductsByArea({
    required int areaId,
    String? query,
    String? categoryType,
@@ -1110,24 +1080,28 @@ class DailyTaskApi {
    try {
      final queryParts = <String>[];
      if (query != null && query.isNotEmpty) {
-       queryParts.add('query=${Uri.encodeComponent(query)}');
+       queryParts.add('q=${Uri.encodeComponent(query)}');
      }
      if (categoryType != null && categoryType.isNotEmpty) {
        queryParts.add('category_type=$categoryType');
      }
 
      final queryString = queryParts.isNotEmpty ? '?${queryParts.join('&')}' : '';
-     final url = '${ApiEndpoints.dailyTaskInventoryByArea}/$areaId$queryString';
+     final url = '${ApiEndpoints.dailyTaskProductsByArea}/$areaId$queryString';
 
-     debugPrint('DailyTaskApi.getDailyTaskInventoryByArea: calling $url');
+     debugPrint('DailyTaskApi.getDailyTaskProductsByArea: calling $url');
 
      final response = await _dio.get(url);
      return response.data as Map<String, dynamic>;
    } on DioException catch (e) {
-     debugPrint('DailyTaskApi.getDailyTaskInventoryByArea: DioException - $e');
+     debugPrint('DailyTaskApi.getDailyTaskProductsByArea: DioException - $e');
      throw ApiException.fromDioException(e);
    }
  }
+
+ // ====================
+ // Daily Task History
+ // ====================
 
  /// GET /daily-task/history - Get task history
  Future<Map<String, dynamic>> getHistory({int page = 1, int perPage = 15}) async {
@@ -1172,62 +1146,62 @@ class DailyTaskApi {
 
  // Add tool conditions
  if (toolConditions != null && toolConditions.isNotEmpty) {
- for (int i = 0; i < toolConditions.length; i++) {
- formData.fields.add(MapEntry(
- 'tool_conditions[$i][product_id]',
- toolConditions[i]['product_id']!,
- ));
- formData.fields.add(MapEntry(
- 'tool_conditions[$i][condition]',
- toolConditions[i]['condition']!,
- ));
- }
+   for (int i = 0; i < toolConditions.length; i++) {
+     formData.fields.add(MapEntry(
+       'tool_conditions[$i][inventory_item_id]',
+       toolConditions[i]['inventory_item_id']!,
+     ));
+     formData.fields.add(MapEntry(
+       'tool_conditions[$i][condition]',
+       toolConditions[i]['condition']!,
+     ));
+   }
  }
 
  // Add PPE conditions
  if (ppeConditions != null && ppeConditions.isNotEmpty) {
- for (int i = 0; i < ppeConditions.length; i++) {
- formData.fields.add(MapEntry(
- 'ppe_conditions[$i][product_id]',
- ppeConditions[i]['product_id']!,
- ));
- formData.fields.add(MapEntry(
- 'ppe_conditions[$i][condition]',
- ppeConditions[i]['condition']!,
- ));
- }
+   for (int i = 0; i < ppeConditions.length; i++) {
+     formData.fields.add(MapEntry(
+       'ppe_conditions[$i][inventory_item_id]',
+       ppeConditions[i]['inventory_item_id']!,
+     ));
+     formData.fields.add(MapEntry(
+       'ppe_conditions[$i][condition]',
+       ppeConditions[i]['condition']!,
+     ));
+   }
  }
 
  // Add machine conditions
  if (machineConditions != null && machineConditions.isNotEmpty) {
- for (int i = 0; i < machineConditions.length; i++) {
- formData.fields.add(MapEntry(
- 'machine_conditions[$i][product_id]',
- machineConditions[i]['product_id']!,
- ));
- formData.fields.add(MapEntry(
- 'machine_conditions[$i][condition]',
- machineConditions[i]['condition']!,
- ));
- }
+   for (int i = 0; i < machineConditions.length; i++) {
+     formData.fields.add(MapEntry(
+       'machine_conditions[$i][inventory_item_id]',
+       machineConditions[i]['inventory_item_id']!,
+     ));
+     formData.fields.add(MapEntry(
+       'machine_conditions[$i][condition]',
+       machineConditions[i]['condition']!,
+     ));
+   }
  }
 
  // Add chemical conditions
  if (chemicalConditions != null && chemicalConditions.isNotEmpty) {
- for (int i = 0; i < chemicalConditions.length; i++) {
- formData.fields.add(MapEntry(
- 'chemical_conditions[$i][product_id]',
- chemicalConditions[i]['product_id']!,
- ));
- formData.fields.add(MapEntry(
- 'chemical_conditions[$i][condition]',
- chemicalConditions[i]['condition']!,
- ));
- }
+   for (int i = 0; i < chemicalConditions.length; i++) {
+     formData.fields.add(MapEntry(
+       'chemical_conditions[$i][inventory_item_id]',
+       chemicalConditions[i]['inventory_item_id']!,
+     ));
+     formData.fields.add(MapEntry(
+       'chemical_conditions[$i][condition]',
+       chemicalConditions[i]['condition']!,
+     ));
+   }
  }
 
  final response = await _dio.post(
- '${ApiEndpoints.dailyTask}/$taskId/start',
+   '${ApiEndpoints.dailyTask}/$taskId/start',
  data: formData,
  options: Options(
  contentType: 'multipart/form-data',
@@ -1277,8 +1251,8 @@ class DailyTaskApi {
       if (toolConditions != null && toolConditions.isNotEmpty) {
         for (int i = 0; i < toolConditions.length; i++) {
           formData.fields.add(MapEntry(
-            'tool_conditions[$i][product_id]',
-            toolConditions[i]['product_id']!,
+            'tool_conditions[$i][inventory_item_id]',
+            toolConditions[i]['inventory_item_id']!,
           ));
           formData.fields.add(MapEntry(
             'tool_conditions[$i][condition]',
@@ -1291,8 +1265,8 @@ class DailyTaskApi {
       if (ppeConditions != null && ppeConditions.isNotEmpty) {
         for (int i = 0; i < ppeConditions.length; i++) {
           formData.fields.add(MapEntry(
-            'ppe_conditions[$i][product_id]',
-            ppeConditions[i]['product_id']!,
+            'ppe_conditions[$i][inventory_item_id]',
+            ppeConditions[i]['inventory_item_id']!,
           ));
           formData.fields.add(MapEntry(
             'ppe_conditions[$i][condition]',
@@ -1305,8 +1279,8 @@ class DailyTaskApi {
       if (machineConditions != null && machineConditions.isNotEmpty) {
         for (int i = 0; i < machineConditions.length; i++) {
           formData.fields.add(MapEntry(
-            'machine_conditions[$i][product_id]',
-            machineConditions[i]['product_id']!,
+            'machine_conditions[$i][inventory_item_id]',
+            machineConditions[i]['inventory_item_id']!,
           ));
           formData.fields.add(MapEntry(
             'machine_conditions[$i][condition]',
@@ -1319,8 +1293,8 @@ class DailyTaskApi {
       if (chemicalConditions != null && chemicalConditions.isNotEmpty) {
         for (int i = 0; i < chemicalConditions.length; i++) {
           formData.fields.add(MapEntry(
-            'chemical_conditions[$i][product_id]',
-            chemicalConditions[i]['product_id']!,
+            'chemical_conditions[$i][inventory_item_id]',
+            chemicalConditions[i]['inventory_item_id']!,
           ));
           formData.fields.add(MapEntry(
             'chemical_conditions[$i][condition]',

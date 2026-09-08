@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:forui/forui.dart';
 
 import '../../../../core/core.dart';
+import '../../../../core/services/auto_start_service.dart';
 import '../../../../shared/widgets/inputs/app_text_field.dart';
 import '../../../../shared/widgets/banners/banner_carousel.dart';
 import '../../../../shared/widgets/buttons/primary_button.dart';
@@ -92,6 +93,8 @@ class _LoginScreenState extends State<LoginScreen> {
         final destination = isClient ? '/client/dashboard' : '/dashboard';
 
         Future.delayed(Duration(milliseconds: 500), () {
+          // Check and show auto-start guide after login
+          _checkAndShowAutoStartGuide(context);
           context.go(destination);
         });
       }
@@ -124,6 +127,8 @@ class _LoginScreenState extends State<LoginScreen> {
 
       if (mounted) {
         // Biometric is only for employees
+        // Check and show auto-start guide
+        _checkAndShowAutoStartGuide(context);
         context.go('/dashboard');
       }
     } on ApiException catch (e) {
@@ -176,6 +181,124 @@ class _LoginScreenState extends State<LoginScreen> {
         );
       }
     }
+  }
+
+  /// Check and show auto-start guide after successful login
+  Future<void> _checkAndShowAutoStartGuide(BuildContext context) async {
+    // Check if auto-start is likely enabled
+    final isEnabled = await AutoStartService.isAutoStartLikelyEnabled();
+
+    if (isEnabled) {
+      // Auto-start is already enabled, skip
+      return;
+    }
+
+    // Get device brand
+    final brand = AutoStartService.getDeviceBrand();
+    final brandConfig = AutoStartBrandConfigs.getConfig(brand);
+
+    // If it's a known brand (Chinese OEMs), show the guide
+    if (brandConfig != null && mounted) {
+      // Show the auto-start guide dialog
+      _showAutoStartDialog(context, brandConfig);
+    }
+  }
+
+  /// Show auto-start setup dialog
+  void _showAutoStartDialog(BuildContext context, AutoStartBrandConfig config) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        title: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.primaryContainer,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(
+                Icons.notifications_active,
+                color: Theme.of(context).colorScheme.onPrimaryContainer,
+              ),
+            ),
+            const SizedBox(width: 12),
+            const Expanded(child: Text('Aktifkan Auto-Start')),
+          ],
+        ),
+        content: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'Untuk HP ${config.displayName}, Anda perlu mengaktifkan auto-start agar app tetap berjalan di background.',
+                style: const TextStyle(fontSize: 14),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'Langkah-langkah:',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
+              ),
+              const SizedBox(height: 8),
+              ...config.steps.asMap().entries.map((entry) {
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        width: 24,
+                        height: 24,
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).colorScheme.primary,
+                          shape: BoxShape.circle,
+                        ),
+                        child: Center(
+                          child: Text(
+                            '${entry.key + 1}',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          entry.value,
+                          style: const TextStyle(fontSize: 13),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Nanti Saja'),
+          ),
+          FilledButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+              AutoStartService.openAutoStartSettings();
+            },
+            child: const Text('Buka Pengaturan'),
+          ),
+        ],
+      ),
+    );
   }
 
   @override

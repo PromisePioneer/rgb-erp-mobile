@@ -9,6 +9,7 @@ import 'package:forui/forui.dart';
 import 'core/core.dart';
 import 'core/theme/app_ftheme.dart';
 import 'core/services/notification_dialog_handler.dart';
+import 'core/services/background_task_service.dart';
 import 'features/auth/presentation/providers/auth_provider.dart';
 import 'features/auth/data/repositories/auth_repository.dart';
 import 'features/attendance/presentation/providers/attendance_provider.dart';
@@ -50,6 +51,11 @@ void main() async {
 
   // Initialize Firebase
   await Firebase.initializeApp();
+
+  // Initialize Background Task Service (WorkManager + Foreground Service)
+  // Ini membuat app tetap jalan meskipun di force close / HP restart
+  await backgroundTaskService.initialize();
+  await backgroundTaskService.startForegroundService();
 
   // Foreground service disabled for now (causes crash)
   // await foregroundTaskManager.init();

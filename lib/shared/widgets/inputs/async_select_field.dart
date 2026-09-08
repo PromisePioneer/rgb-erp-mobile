@@ -2,25 +2,38 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
 
-import '../../../../core/core.dart';
-
 /// Option item for AsyncSelect
+/// id can be int or String depending on the use case
 class AsyncSelectOption {
-  final int id;
+  final dynamic id;
   final String name;
   final String? description;
+  final String? condition;
+  final String? conditionLabel;
+  final double? stock;
+  final String? qrCode;
 
   AsyncSelectOption({
     required this.id,
     required this.name,
     this.description,
+    this.condition,
+    this.conditionLabel,
+    this.stock,
+    this.qrCode,
   });
 
   factory AsyncSelectOption.fromJson(Map<String, dynamic> json) {
     return AsyncSelectOption(
-      id: json['id'] as int,
+      id: json['id'] is int
+          ? json['id']
+          : int.tryParse(json['id']?.toString() ?? '') ?? json['id'] ?? 0,
       name: json['name'] as String,
       description: json['description'] as String?,
+      condition: json['current_condition'] as String?,
+      conditionLabel: json['current_condition_label'] as String?,
+      stock: (json['current_stock'] as num?)?.toDouble(),
+      qrCode: json['qr_code'] as String?,
     );
   }
 }
@@ -30,8 +43,8 @@ class AsyncSelectField extends StatefulWidget {
   final String? label;
   final String placeholder;
   final Future<List<AsyncSelectOption>> Function(String query) loadOptions;
-  final Set<int> selectedIds;
-  final ValueChanged<Set<int>> onSelectionChanged;
+  final Set<dynamic> selectedIds;
+  final ValueChanged<Set<dynamic>> onSelectionChanged;
   final bool multiSelect;
   final bool disabled;
   final int minSearchChars;
@@ -255,12 +268,13 @@ class _AsyncSelectFieldState extends State<AsyncSelectField> {
         onRetry: () => _fetchOptions(_searchController.text),
         fieldPosition: fieldPosition,
         fieldSize: fieldSize,
+        getSelectedIds: () => widget.selectedIds,
       ),
     );
   }
 
   void _toggleSelection(AsyncSelectOption option) {
-    final newSelection = Set<int>.from(widget.selectedIds);
+    final newSelection = Set<dynamic>.from(widget.selectedIds);
 
     if (newSelection.contains(option.id)) {
       newSelection.remove(option.id);
@@ -285,7 +299,7 @@ class _AsyncSelectFieldState extends State<AsyncSelectField> {
   }
 
   void _removeSelection(int id) {
-    final newSelection = Set<int>.from(widget.selectedIds);
+    final newSelection = Set<dynamic>.from(widget.selectedIds);
     newSelection.remove(id);
     widget.onSelectionChanged(newSelection);
   }
@@ -312,10 +326,10 @@ class _AsyncSelectFieldState extends State<AsyncSelectField> {
           child: GestureDetector(
             onTap: _toggleDropdown,
             child: Container(
-              constraints: const BoxConstraints(minHeight: 48),
+              constraints: const BoxConstraints(minHeight: 42),
               decoration: BoxDecoration(
                 color: widget.disabled ? theme.colors.muted : theme.colors.background,
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: BorderRadius.circular(8),
                 border: Border.all(
                   color: _isOpen ? theme.colors.primary : theme.colors.border,
                   width: _isOpen ? 1.5 : 1,
@@ -343,7 +357,7 @@ class _AsyncSelectFieldState extends State<AsyncSelectField> {
       final isLoading = !_initialOptionsLoaded && option.name == '...';
 
       return Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
         child: Row(
           children: [
             Expanded(
@@ -351,14 +365,14 @@ class _AsyncSelectFieldState extends State<AsyncSelectField> {
                   ? Row(
                       children: [
                         const SizedBox(
-                          width: 16,
-                          height: 16,
+                          width: 14,
+                          height: 14,
                           child: CircularProgressIndicator(strokeWidth: 2),
                         ),
-                        const SizedBox(width: 8),
+                        const SizedBox(width: 6),
                         Text(
                           'Memuat...',
-                          style: theme.typography.body.md.copyWith(
+                          style: theme.typography.body.sm.copyWith(
                             color: theme.colors.mutedForeground,
                           ),
                         ),
@@ -366,7 +380,7 @@ class _AsyncSelectFieldState extends State<AsyncSelectField> {
                     )
                   : Text(
                       option.name,
-                      style: theme.typography.body.md.copyWith(
+                      style: theme.typography.body.sm.copyWith(
                         fontWeight: FontWeight.w500,
                         color: option.name == '...' ? theme.colors.mutedForeground : theme.colors.foreground,
                       ),
@@ -384,7 +398,7 @@ class _AsyncSelectFieldState extends State<AsyncSelectField> {
                   ),
                   child: Icon(
                     Icons.close,
-                    size: 16,
+                    size: 14,
                     color: theme.colors.mutedForeground,
                   ),
                 ),
@@ -396,14 +410,14 @@ class _AsyncSelectFieldState extends State<AsyncSelectField> {
 
     // For multi-select, show chips with inline search
     return Padding(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(8),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Chips
+          // Chips - compact
           Wrap(
-            spacing: 8,
-            runSpacing: 8,
+            spacing: 6,
+            runSpacing: 6,
             children: [
               ...widget.selectedIds.map((id) {
                 final option = _allSelectedOptions.firstWhere(
@@ -415,21 +429,21 @@ class _AsyncSelectFieldState extends State<AsyncSelectField> {
                   onDelete: widget.disabled ? null : () => _removeSelection(id),
                 );
               }),
-              // Inline search for multi-select
+              // Inline search for multi-select - smaller
               if (widget.multiSelect)
                 SizedBox(
-                  height: 28,
-                  width: 100,
+                  height: 24,
+                  width: 80,
                   child: TextField(
                     controller: _searchController,
                     focusNode: _focusNode,
                     enabled: !widget.disabled,
                     onChanged: _onSearchChanged,
                     onTap: _openDropdown,
-                    style: theme.typography.body.md,
+                    style: theme.typography.body.sm,
                     decoration: InputDecoration(
                       hintText: 'Cari...',
-                      hintStyle: theme.typography.body.md.copyWith(
+                      hintStyle: theme.typography.body.sm.copyWith(
                         color: theme.colors.mutedForeground,
                       ),
                       border: InputBorder.none,
@@ -437,7 +451,7 @@ class _AsyncSelectFieldState extends State<AsyncSelectField> {
                       focusedBorder: InputBorder.none,
                       disabledBorder: InputBorder.none,
                       isDense: true,
-                      contentPadding: const EdgeInsets.symmetric(vertical: 4),
+                      contentPadding: const EdgeInsets.symmetric(vertical: 2),
                       filled: true,
                       fillColor: theme.colors.muted,
                     ),
@@ -452,13 +466,13 @@ class _AsyncSelectFieldState extends State<AsyncSelectField> {
 
   Widget _buildSearchField(FThemeData theme) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 10),
       child: Row(
         children: [
           Icon(
             Icons.search,
             color: theme.colors.mutedForeground,
-            size: 20,
+            size: 18,
           ),
           const SizedBox(width: 8),
           Expanded(
@@ -468,10 +482,10 @@ class _AsyncSelectFieldState extends State<AsyncSelectField> {
               enabled: !widget.disabled,
               onChanged: _onSearchChanged,
               onTap: _openDropdown,
-              style: theme.typography.body.md,
+              style: theme.typography.body.sm,
               decoration: InputDecoration(
                 hintText: widget.placeholder,
-                hintStyle: theme.typography.body.md.copyWith(
+                hintStyle: theme.typography.body.sm.copyWith(
                   color: theme.colors.mutedForeground,
                 ),
                 border: InputBorder.none,
@@ -479,14 +493,14 @@ class _AsyncSelectFieldState extends State<AsyncSelectField> {
                 focusedBorder: InputBorder.none,
                 disabledBorder: InputBorder.none,
                 isDense: true,
-                contentPadding: const EdgeInsets.symmetric(vertical: 14),
+                contentPadding: const EdgeInsets.symmetric(vertical: 12),
               ),
             ),
           ),
           if (_isLoading)
             const SizedBox(
-              width: 20,
-              height: 20,
+              width: 18,
+              height: 18,
               child: Padding(
                 padding: EdgeInsets.all(2),
                 child: CircularProgressIndicator(strokeWidth: 2),
@@ -496,7 +510,7 @@ class _AsyncSelectFieldState extends State<AsyncSelectField> {
             Icon(
               _isOpen ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
               color: theme.colors.mutedForeground,
-              size: 22,
+              size: 20,
             ),
         ],
       ),
@@ -504,7 +518,7 @@ class _AsyncSelectFieldState extends State<AsyncSelectField> {
   }
 }
 
-/// Stylized chip for selected items
+/// Stylized chip for selected items - compact
 class _SelectChip extends StatelessWidget {
   final String label;
   final VoidCallback? onDelete;
@@ -518,10 +532,10 @@ class _SelectChip extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = context.theme;
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
         color: theme.colors.primary.withAlpha(20),
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(6),
         border: Border.all(
           color: theme.colors.primary.withAlpha(50),
           width: 1,
@@ -532,10 +546,13 @@ class _SelectChip extends StatelessWidget {
         children: [
           Text(
             label,
-            style: theme.typography.body.md.copyWith(
+            style: theme.typography.body.sm.copyWith(
               fontWeight: FontWeight.w500,
               color: theme.colors.primary,
+              fontSize: 12,
             ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
           ),
           if (onDelete != null) ...[
             const SizedBox(width: 4),
@@ -549,7 +566,7 @@ class _SelectChip extends StatelessWidget {
                 ),
                 child: Icon(
                   Icons.close,
-                  size: 12,
+                  size: 10,
                   color: theme.colors.primary,
                 ),
               ),
@@ -568,11 +585,13 @@ class _DropdownOverlay extends StatelessWidget {
   final List<AsyncSelectOption> options;
   final bool isLoading;
   final String? error;
-  final Set<int> selectedIds;
+  final Set<dynamic> selectedIds;
   final ValueChanged<AsyncSelectOption> onToggle;
   final VoidCallback onRetry;
   final Offset fieldPosition;
   final Size fieldSize;
+  /// Callback to get current selectedIds, so overlay always has fresh selection state
+  final Set<dynamic> Function() getSelectedIds;
 
   const _DropdownOverlay({
     required this.layerLink,
@@ -585,10 +604,12 @@ class _DropdownOverlay extends StatelessWidget {
     required this.onRetry,
     required this.fieldPosition,
     required this.fieldSize,
+    required this.getSelectedIds,
   });
 
-  static const double _dropdownHeight = 200;
-  static const double _dropdownMaxHeightWithKeyboard = 150;
+  // Compact sizes
+  static const double _dropdownHeight = 160;
+  static const double _dropdownMaxHeightWithKeyboard = 120;
 
   @override
   Widget build(BuildContext context) {
@@ -668,19 +689,19 @@ class _DropdownOverlay extends StatelessWidget {
   Widget _buildContent(FThemeData theme, bool isKeyboardOpen) {
     if (isLoading && options.isEmpty) {
       return Container(
-        padding: const EdgeInsets.all(24),
+        padding: const EdgeInsets.all(16),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             const SizedBox(
-              width: 32,
-              height: 32,
-              child: CircularProgressIndicator(),
+              width: 24,
+              height: 24,
+              child: CircularProgressIndicator(strokeWidth: 2),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 8),
             Text(
-              'Memuat data...',
-              style: theme.typography.body.md.copyWith(
+              'Memuat...',
+              style: theme.typography.body.sm.copyWith(
                 color: theme.colors.mutedForeground,
               ),
             ),
@@ -691,27 +712,28 @@ class _DropdownOverlay extends StatelessWidget {
 
     if (error != null && options.isEmpty) {
       return Container(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(16),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(
               Icons.error_outline,
               color: theme.colors.error,
-              size: 32,
+              size: 24,
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 6),
             Text(
               error!,
-              style: theme.typography.body.md.copyWith(
+              style: theme.typography.body.sm.copyWith(
                 color: theme.colors.error,
               ),
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 8),
             FButton(
               onPress: onRetry,
               variant: FButtonVariant.ghost,
+              size: FButtonSizeVariant.sm,
               child: const Text('Coba lagi'),
             ),
           ],
@@ -721,19 +743,19 @@ class _DropdownOverlay extends StatelessWidget {
 
     if (options.isEmpty) {
       return Container(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(16),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(
               Icons.search_off,
               color: theme.colors.mutedForeground,
-              size: 32,
+              size: 24,
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 6),
             Text(
               'Tidak ada hasil',
-              style: theme.typography.body.md.copyWith(
+              style: theme.typography.body.sm.copyWith(
                 color: theme.colors.mutedForeground,
               ),
             ),
@@ -743,14 +765,14 @@ class _DropdownOverlay extends StatelessWidget {
     }
 
     return ClipRRect(
-      borderRadius: BorderRadius.circular(12),
+      borderRadius: BorderRadius.circular(8),
       child: ListView.separated(
         shrinkWrap: true,
         // Use BouncingScrollPhysics for iOS-like feel, or clamp when keyboard is open
         physics: isKeyboardOpen
             ? const ClampingScrollPhysics()
             : const BouncingScrollPhysics(),
-        padding: const EdgeInsets.symmetric(vertical: 6),
+        padding: const EdgeInsets.symmetric(vertical: 4),
         itemCount: options.length,
         separatorBuilder: (context, index) => Divider(
           height: 1,
@@ -758,19 +780,19 @@ class _DropdownOverlay extends StatelessWidget {
         ),
         itemBuilder: (context, index) {
           final option = options[index];
-          final isSelected = selectedIds.contains(option.id);
+          final isSelected = getSelectedIds().contains(option.id);
 
           return GestureDetector(
             onTap: () => onToggle(option),
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
               color: isSelected ? theme.colors.primary.withAlpha(15) : null,
               child: Row(
                 children: [
-                  // Checkbox indicator
+                  // Checkbox indicator - smaller
                   Container(
-                    width: 20,
-                    height: 20,
+                    width: 18,
+                    height: 18,
                     decoration: BoxDecoration(
                       color: isSelected ? theme.colors.primary : Colors.transparent,
                       borderRadius: BorderRadius.circular(4),
@@ -782,30 +804,88 @@ class _DropdownOverlay extends StatelessWidget {
                     child: isSelected
                         ? Icon(
                             Icons.check,
-                            size: 14,
+                            size: 12,
                             color: theme.colors.primaryForeground,
                           )
                         : null,
                   ),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: 10),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
                           option.name,
-                          style: theme.typography.body.md.copyWith(
+                          style: theme.typography.body.sm.copyWith(
                             color: isSelected ? theme.colors.primary : theme.colors.foreground,
                             fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
                           ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
-                        if (option.description != null) ...[
+                        if (option.qrCode != null) ...[
+                          const SizedBox(height: 1),
+                          Text(
+                            'QR: ${option.qrCode}',
+                            style: theme.typography.body.xs.copyWith(
+                              color: theme.colors.mutedForeground,
+                              fontSize: 9,
+                              fontFamily: 'monospace',
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                        if (option.conditionLabel != null || option.stock != null) ...[
                           const SizedBox(height: 2),
+                          Row(
+                            children: [
+                              if (option.conditionLabel != null) ...[
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                                  decoration: BoxDecoration(
+                                    color: _getConditionColor(option.condition, theme),
+                                    borderRadius: BorderRadius.circular(3),
+                                  ),
+                                  child: Text(
+                                    option.conditionLabel!,
+                                    style: theme.typography.body.xs.copyWith(
+                                      color: theme.colors.foreground,
+                                      fontSize: 9,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                              if (option.conditionLabel != null && option.stock != null)
+                                const SizedBox(width: 6),
+                              if (option.stock != null) ...[
+                                Icon(
+                                  Icons.inventory_2,
+                                  size: 10,
+                                  color: theme.colors.mutedForeground,
+                                ),
+                                const SizedBox(width: 2),
+                                Text(
+                                  '${option.stock!.toStringAsFixed(0)}',
+                                  style: theme.typography.body.xs.copyWith(
+                                    color: theme.colors.mutedForeground,
+                                    fontSize: 9,
+                                  ),
+                                ),
+                              ],
+                            ],
+                          ),
+                        ],
+                        if (option.description != null) ...[
+                          const SizedBox(height: 1),
                           Text(
                             option.description!,
                             style: theme.typography.body.xs.copyWith(
                               color: theme.colors.mutedForeground,
+                              fontSize: 10,
                             ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ],
                       ],
@@ -818,5 +898,40 @@ class _DropdownOverlay extends StatelessWidget {
         },
       ),
     );
+  }
+
+  Color _getConditionColor(String? condition, FThemeData theme) {
+    if (condition == null) return theme.colors.muted;
+    switch (condition.toLowerCase()) {
+      // Tools/PPEs/Machines conditions (Indonesian)
+      case 'sangat_baik':
+      case 'excellent':
+        return Colors.green.shade100;
+      case 'baik':
+      case 'good':
+        return Colors.green.shade200;
+      case 'cukup_baik':
+      case 'fair':
+        return Colors.yellow.shade100;
+      case 'kurang_baik':
+      case 'poor':
+        return Colors.orange.shade100;
+      case 'rusak':
+      case 'replace':
+      case 'damaged':
+      // Chemicals conditions - filtered out but just in case
+      case 'below_low':
+      case 'empty':
+        return Colors.red.shade100;
+      // Chemical conditions - still show if somehow returned
+      case 'full':
+        return Colors.green.shade100;
+      case 'half':
+        return Colors.yellow.shade100;
+      case 'low':
+        return Colors.orange.shade100;
+      default:
+        return theme.colors.muted;
+    }
   }
 }

@@ -385,26 +385,32 @@ class _TaskDetailLeaderScreenState extends State<TaskDetailLeaderScreen> {
 
           // Tools
           if (task.tools?.isNotEmpty ?? false) ...[
-            _buildEquipmentSection('Alat', task.tools!, theme),
+            _buildEquipmentSection('Alat', task.tools!, theme, task.status),
             const SizedBox(height: AppSpacing.sm),
           ],
 
           // Chemicals
           if (task.chemicals?.isNotEmpty ?? false) ...[
-            _buildEquipmentSection('Chemical', task.chemicals!, theme),
+            _buildEquipmentSection('Chemical', task.chemicals!, theme, task.status),
             const SizedBox(height: AppSpacing.sm),
           ],
 
           // PPEs
           if (task.ppes?.isNotEmpty ?? false) ...[
-            _buildEquipmentSection('Alat Pelindung Diri', task.ppes!, theme),
+            _buildEquipmentSection('Alat Pelindung Diri', task.ppes!, theme, task.status),
+          ],
+
+          // Machines
+          if (task.machines?.isNotEmpty ?? false) ...[
+            const SizedBox(height: AppSpacing.sm),
+            _buildEquipmentSection('Mesin', task.machines!, theme, task.status),
           ],
         ],
       ),
     );
   }
 
-  Widget _buildEquipmentSection(String label, List<dynamic> items, FThemeData theme) {
+  Widget _buildEquipmentSection(String label, List<dynamic> items, FThemeData theme, String taskStatus) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -417,18 +423,37 @@ class _TaskDetailLeaderScreenState extends State<TaskDetailLeaderScreen> {
           ),
         ),
         const SizedBox(height: 4),
-        Wrap(
-          spacing: AppSpacing.xs,
-          runSpacing: AppSpacing.xs,
-          children: items.map((item) {
-            final name = item is DailyTaskTool
-                ? item.name
-                : item is DailyTaskChemical
-                    ? item.name
-                    : item is DailyTaskPpe
-                        ? item.name
-                        : 'Unknown';
-            return Container(
+        ...items.map((item) {
+          final name = item is DailyTaskTool
+              ? item.name
+              : item is DailyTaskChemical
+                  ? item.name
+                  : item is DailyTaskPpe
+                      ? item.name
+                      : item is DailyTaskMachine
+                          ? item.name
+                          : 'Unknown';
+
+          // Get condition based on item type
+          String? conditionLabel;
+          Color? conditionColor;
+          if (item is DailyTaskTool) {
+            conditionLabel = _getToolConditionLabel(item, taskStatus);
+            conditionColor = _getConditionColor(item.currentCondition);
+          } else if (item is DailyTaskChemical) {
+            conditionLabel = _getChemicalConditionLabel(item, taskStatus);
+            conditionColor = _getChemicalConditionColor(item.currentCondition);
+          } else if (item is DailyTaskPpe) {
+            conditionLabel = _getPpeConditionLabel(item, taskStatus);
+            conditionColor = _getConditionColor(item.currentCondition);
+          } else if (item is DailyTaskMachine) {
+            conditionLabel = _getMachineConditionLabel(item, taskStatus);
+            conditionColor = _getConditionColor(item.currentCondition);
+          }
+
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 4),
+            child: Container(
               padding: const EdgeInsets.symmetric(
                 horizontal: AppSpacing.sm,
                 vertical: AppSpacing.xs,
@@ -437,16 +462,43 @@ class _TaskDetailLeaderScreenState extends State<TaskDetailLeaderScreen> {
                 color: theme.colors.muted,
                 borderRadius: AppRadius.radiusSm,
               ),
-              child: Text(
-                name,
-                style: TextStyle(
-                  fontSize: 12,
-                  color: theme.colors.foreground,
-                ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      name,
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: theme.colors.foreground,
+                      ),
+                    ),
+                  ),
+                  if (conditionLabel != null) ...[
+                    const SizedBox(width: AppSpacing.xs),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: conditionColor?.withAlpha(26) ?? theme.colors.muted,
+                        borderRadius: BorderRadius.circular(4),
+                        border: Border.all(
+                          color: conditionColor?.withAlpha(77) ?? theme.colors.border,
+                        ),
+                      ),
+                      child: Text(
+                        conditionLabel,
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w500,
+                          color: conditionColor ?? theme.colors.mutedForeground,
+                        ),
+                      ),
+                    ),
+                  ],
+                ],
               ),
-            );
-          }).toList(),
-        ),
+            ),
+          );
+        }).toList(),
       ],
     );
   }
@@ -902,5 +954,115 @@ class _TaskDetailLeaderScreenState extends State<TaskDetailLeaderScreen> {
     final date = '${dt.day.toString().padLeft(2, '0')}/${dt.month.toString().padLeft(2, '0')}/${dt.year}';
     final time = '${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
     return '$date $time';
+  }
+
+  // Helper methods for equipment conditions
+  String? _getToolConditionLabel(DailyTaskTool tool, String taskStatus) {
+    if (taskStatus == 'completed' || taskStatus == 'reviewed') {
+      // Show final condition if task is completed
+      return _formatToolCondition(tool.finalCondition);
+    } else if (taskStatus == 'in_progress') {
+      // Show initial condition if task is in progress
+      return _formatToolCondition(tool.initialCondition);
+    }
+    // Show current condition from inventory
+    return tool.currentConditionLabel ?? _formatToolCondition(tool.currentCondition);
+  }
+
+  String? _getChemicalConditionLabel(DailyTaskChemical chemical, String taskStatus) {
+    if (taskStatus == 'completed' || taskStatus == 'reviewed') {
+      return _formatChemicalCondition(chemical.finalCondition);
+    } else if (taskStatus == 'in_progress') {
+      return _formatChemicalCondition(chemical.initialCondition);
+    }
+    return chemical.currentConditionLabel ?? _formatChemicalCondition(chemical.currentCondition);
+  }
+
+  String? _getPpeConditionLabel(DailyTaskPpe ppe, String taskStatus) {
+    if (taskStatus == 'completed' || taskStatus == 'reviewed') {
+      return _formatToolCondition(ppe.finalCondition);
+    } else if (taskStatus == 'in_progress') {
+      return _formatToolCondition(ppe.initialCondition);
+    }
+    return ppe.currentConditionLabel ?? _formatToolCondition(ppe.currentCondition);
+  }
+
+  String? _getMachineConditionLabel(DailyTaskMachine machine, String taskStatus) {
+    if (taskStatus == 'completed' || taskStatus == 'reviewed') {
+      return _formatToolCondition(machine.finalCondition);
+    } else if (taskStatus == 'in_progress') {
+      return _formatToolCondition(machine.initialCondition);
+    }
+    return machine.currentConditionLabel ?? _formatToolCondition(machine.currentCondition);
+  }
+
+  String? _formatToolCondition(String? condition) {
+    if (condition == null) return null;
+    switch (condition) {
+      case 'excellent':
+        return 'SB';
+      case 'good':
+        return 'B';
+      case 'fair':
+        return 'CB';
+      case 'poor':
+        return 'KB';
+      case 'replace':
+        return 'Ganti';
+      default:
+        return condition;
+    }
+  }
+
+  String? _formatChemicalCondition(String? condition) {
+    if (condition == null) return null;
+    switch (condition) {
+      case 'full':
+        return 'Penuh';
+      case 'half':
+        return 'Setengah';
+      case 'low':
+        return 'Habis';
+      default:
+        return condition;
+    }
+  }
+
+  Color _getConditionColor(String? condition) {
+    switch (condition) {
+      case 'excellent':
+      case 'sangat_baik':
+      case 'full':
+        return AppColors.success;
+      case 'good':
+      case 'baik':
+        return AppColors.primary;
+      case 'fair':
+      case 'cukup_baik':
+      case 'half':
+        return AppColors.warning;
+      case 'poor':
+      case 'kurang_baik':
+      case 'low':
+        return AppColors.danger;
+      case 'replace':
+      case 'rusak':
+        return AppColors.danger;
+      default:
+        return AppColors.textMuted;
+    }
+  }
+
+  Color _getChemicalConditionColor(String? condition) {
+    switch (condition) {
+      case 'full':
+        return AppColors.success;
+      case 'half':
+        return AppColors.warning;
+      case 'low':
+        return AppColors.danger;
+      default:
+        return AppColors.textMuted;
+    }
   }
 }

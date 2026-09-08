@@ -313,22 +313,22 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
 
     // Build condition data for tools
     final toolConditions = _initialToolConditions.entries
-        .map((e) => {'product_id': e.key.toString(), 'condition': e.value})
+        .map((e) => {'inventory_item_id': e.key.toString(), 'condition': e.value})
         .toList();
 
     // Build condition data for PPEs
     final ppeConditions = _initialPpeConditions.entries
-        .map((e) => {'product_id': e.key.toString(), 'condition': e.value})
+        .map((e) => {'inventory_item_id': e.key.toString(), 'condition': e.value})
         .toList();
 
     // Build condition data for machines
     final machineConditions = _initialMachineConditions.entries
-        .map((e) => {'product_id': e.key.toString(), 'condition': e.value})
+        .map((e) => {'inventory_item_id': e.key.toString(), 'condition': e.value})
         .toList();
 
     // Build condition data for chemicals
     final chemicalConditions = _initialChemicalConditions.entries
-        .map((e) => {'product_id': e.key.toString(), 'condition': e.value})
+        .map((e) => {'inventory_item_id': e.key.toString(), 'condition': e.value})
         .toList();
 
     final notifier = context.read<DailyTaskNotifier>();
@@ -365,22 +365,22 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
 
     // Build condition data for tools
     final toolConditions = _finalToolConditions.entries
-        .map((e) => {'product_id': e.key.toString(), 'condition': e.value})
+        .map((e) => {'inventory_item_id': e.key.toString(), 'condition': e.value})
         .toList();
 
     // Build condition data for PPEs
     final ppeConditions = _finalPpeConditions.entries
-        .map((e) => {'product_id': e.key.toString(), 'condition': e.value})
+        .map((e) => {'inventory_item_id': e.key.toString(), 'condition': e.value})
         .toList();
 
     // Build condition data for machines
     final machineConditions = _finalMachineConditions.entries
-        .map((e) => {'product_id': e.key.toString(), 'condition': e.value})
+        .map((e) => {'inventory_item_id': e.key.toString(), 'condition': e.value})
         .toList();
 
     // Build condition data for chemicals
     final chemicalConditions = _finalChemicalConditions.entries
-        .map((e) => {'product_id': e.key.toString(), 'condition': e.value})
+        .map((e) => {'inventory_item_id': e.key.toString(), 'condition': e.value})
         .toList();
 
     final notifier = context.read<DailyTaskNotifier>();
@@ -2183,11 +2183,11 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
           const SizedBox(height: AppSpacing.md),
         ],
 
-        // Equipment used
-        _buildUsedItemsList('Alat', task.tools, theme),
-        _buildUsedItemsList('Chemical', task.chemicals, theme),
-        _buildUsedItemsList('APD', task.ppes, theme),
-        _buildUsedItemsList('Mesin', task.machines, theme),
+        // Equipment used with condition transitions
+        _buildUsedItemsWithConditions('Alat', task.tools, theme, isTool: true),
+        _buildUsedItemsWithConditions('Chemical', task.chemicals, theme, isTool: false),
+        _buildUsedItemsWithConditions('APD', task.ppes, theme, isTool: true),
+        _buildUsedItemsWithConditions('Mesin', task.machines, theme, isTool: true),
 
         // Time info
         if (task.startAt != null || task.endAt != null) ...[
@@ -2360,6 +2360,173 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
             ),
         ],
       ],
+    );
+  }
+
+  /// Helper to get readable condition label for tools/PPE/machines
+  String _getToolConditionLabel(String? condition) {
+    switch (condition) {
+      // English codes (from mobile)
+      case 'excellent': return 'SB';
+      case 'good': return 'B';
+      case 'fair': return 'CB';
+      case 'poor': return 'KB';
+      case 'replace': return 'Ganti';
+      // Indonesian codes (from backend)
+      case 'sangat_baik': return 'SB';
+      case 'baik': return 'B';
+      case 'cukup_baik': return 'CB';
+      case 'kurang_baik': return 'KB';
+      case 'rusak': return 'Rusak';
+      default: return '-';
+    }
+  }
+
+  /// Helper to get readable condition label for chemicals
+  String _getChemicalConditionLabel(String? condition) {
+    switch (condition) {
+      case 'full': return 'Full';
+      case 'half': return 'Setengah';
+      case 'low': return '1/4';
+      case 'quarter': return '1/4'; // backend uses quarter
+      default: return '-';
+    }
+  }
+
+  /// Build used items list with initial → final condition transitions
+  Widget _buildUsedItemsWithConditions(
+    String label,
+    List<dynamic>? items,
+    FThemeData theme, {
+    required bool isTool,
+  }) {
+    if (items == null || items.isEmpty) return const SizedBox.shrink();
+
+    final getLabel = isTool ? _getToolConditionLabel : _getChemicalConditionLabel;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label.toUpperCase(),
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w500,
+            color: theme.colors.mutedForeground,
+            letterSpacing: 1,
+          ),
+        ),
+        const SizedBox(height: AppSpacing.sm),
+        ...items.map((item) {
+          String name;
+          String? initialCondition;
+          String? finalCondition;
+
+          if (item is DailyTaskTool) {
+            name = item.name;
+            initialCondition = item.initialCondition;
+            finalCondition = item.finalCondition;
+          } else if (item is DailyTaskChemical) {
+            name = item.name;
+            initialCondition = item.initialCondition;
+            finalCondition = item.finalCondition;
+          } else if (item is DailyTaskPpe) {
+            name = item.name;
+            initialCondition = item.initialCondition;
+            finalCondition = item.finalCondition;
+          } else if (item is DailyTaskMachine) {
+            name = item.name;
+            initialCondition = item.initialCondition;
+            finalCondition = item.finalCondition;
+          } else {
+            name = 'Unknown';
+          }
+
+          final hasConditions = initialCondition != null || finalCondition != null;
+
+          return Padding(
+            padding: const EdgeInsets.only(bottom: AppSpacing.xs),
+            child: Container(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.sm,
+                vertical: AppSpacing.xs + 2,
+              ),
+              decoration: BoxDecoration(
+                color: theme.colors.card,
+                borderRadius: AppRadius.radiusSm,
+                border: Border.all(color: theme.colors.border),
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      name,
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: theme.colors.foreground,
+                      ),
+                    ),
+                  ),
+                  if (hasConditions) ...[
+                    Icon(IconMap.swapHoriz, size: 16, color: theme.colors.mutedForeground),
+                    const SizedBox(width: 4),
+                    _buildConditionBadge(
+                      label: getLabel(initialCondition),
+                      theme: theme,
+                      color: AppColors.primary,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      '→',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: theme.colors.mutedForeground,
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    _buildConditionBadge(
+                      label: getLabel(finalCondition),
+                      theme: theme,
+                      color: AppColors.warning,
+                    ),
+                  ] else
+                    Text(
+                      '-',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: theme.colors.mutedForeground,
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          );
+        }),
+        const SizedBox(height: AppSpacing.sm),
+      ],
+    );
+  }
+
+  Widget _buildConditionBadge({
+    required String label,
+    required FThemeData theme,
+    required Color color,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+      decoration: BoxDecoration(
+        color: color.withAlpha(26),
+        borderRadius: BorderRadius.circular(4),
+        border: Border.all(color: color.withAlpha(77)),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          fontSize: 11,
+          fontWeight: FontWeight.w600,
+          color: color,
+        ),
+      ),
     );
   }
 

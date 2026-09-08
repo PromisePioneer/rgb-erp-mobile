@@ -4,6 +4,7 @@ class DailyTask {
   final String itemName;
   final String? itemDescription;
   final String? areaName;
+  final int? areaId;
   final String status;
   final int? targetMinutes;
   final String? targetNote;
@@ -27,6 +28,7 @@ class DailyTask {
     required this.itemName,
     this.itemDescription,
     this.areaName,
+    this.areaId,
     required this.status,
     this.targetMinutes,
     this.targetNote,
@@ -52,6 +54,7 @@ class DailyTask {
       itemName: json['item_name'] as String? ?? '',
       itemDescription: json['item_description'] as String?,
       areaName: json['area_name'] as String?,
+      areaId: json['area_id'] as int?,
       status: json['status'] as String? ?? 'assigned',
       targetMinutes: json['target_minutes'] as int?,
       targetNote: json['target_note'] as String?,
@@ -135,6 +138,9 @@ class DailyTaskPhoto {
 class DailyTaskTool {
   final int id;
   final String name;
+  final String? qrCode;
+  final String? condition;
+  final String? conditionLabel;
   final String? initialCondition;
   final String? finalCondition;
   // Current condition from ProductArea
@@ -145,6 +151,9 @@ class DailyTaskTool {
   DailyTaskTool({
     required this.id,
     required this.name,
+    this.qrCode,
+    this.condition,
+    this.conditionLabel,
     this.initialCondition,
     this.finalCondition,
     this.currentStock,
@@ -156,6 +165,9 @@ class DailyTaskTool {
     return DailyTaskTool(
       id: int.tryParse(json['id']?.toString() ?? '') ?? 0,
       name: json['name'] as String? ?? '',
+      qrCode: json['qr_code'] as String?,
+      condition: json['condition'] as String?,
+      conditionLabel: json['condition_label'] as String?,
       initialCondition: json['initial_condition'] as String?,
       finalCondition: json['final_condition'] as String?,
       currentStock: (json['current_stock'] as num?)?.toDouble(),
@@ -168,6 +180,9 @@ class DailyTaskTool {
 class DailyTaskChemical {
   final int id;
   final String name;
+  final String? qrCode;
+  final String? condition;
+  final String? conditionLabel;
   final String? initialCondition;
   final String? finalCondition;
   // Current condition from ProductArea
@@ -178,6 +193,9 @@ class DailyTaskChemical {
   DailyTaskChemical({
     required this.id,
     required this.name,
+    this.qrCode,
+    this.condition,
+    this.conditionLabel,
     this.initialCondition,
     this.finalCondition,
     this.currentStock,
@@ -189,6 +207,9 @@ class DailyTaskChemical {
     return DailyTaskChemical(
       id: int.tryParse(json['id']?.toString() ?? '') ?? 0,
       name: json['name'] as String? ?? '',
+      qrCode: json['qr_code'] as String?,
+      condition: json['condition'] as String?,
+      conditionLabel: json['condition_label'] as String?,
       initialCondition: json['initial_condition'] as String?,
       finalCondition: json['final_condition'] as String?,
       currentStock: (json['current_stock'] as num?)?.toDouble(),
@@ -201,6 +222,9 @@ class DailyTaskChemical {
 class DailyTaskPpe {
   final int id;
   final String name;
+  final String? qrCode;
+  final String? condition;
+  final String? conditionLabel;
   final String? initialCondition;
   final String? finalCondition;
   // Current condition from ProductArea
@@ -211,6 +235,9 @@ class DailyTaskPpe {
   DailyTaskPpe({
     required this.id,
     required this.name,
+    this.qrCode,
+    this.condition,
+    this.conditionLabel,
     this.initialCondition,
     this.finalCondition,
     this.currentStock,
@@ -222,6 +249,9 @@ class DailyTaskPpe {
     return DailyTaskPpe(
       id: int.tryParse(json['id']?.toString() ?? '') ?? 0,
       name: json['name'] as String? ?? '',
+      qrCode: json['qr_code'] as String?,
+      condition: json['condition'] as String?,
+      conditionLabel: json['condition_label'] as String?,
       initialCondition: json['initial_condition'] as String?,
       finalCondition: json['final_condition'] as String?,
       currentStock: (json['current_stock'] as num?)?.toDouble(),
@@ -290,6 +320,9 @@ class DailyTaskReviewScore {
 class DailyTaskMachine {
   final int id;
   final String name;
+  final String? qrCode;
+  final String? condition;
+  final String? conditionLabel;
   final String? initialCondition;
   final String? finalCondition;
   // Current condition from ProductArea
@@ -300,6 +333,9 @@ class DailyTaskMachine {
   DailyTaskMachine({
     required this.id,
     required this.name,
+    this.qrCode,
+    this.condition,
+    this.conditionLabel,
     this.initialCondition,
     this.finalCondition,
     this.currentStock,
@@ -311,6 +347,9 @@ class DailyTaskMachine {
     return DailyTaskMachine(
       id: int.tryParse(json['id']?.toString() ?? '') ?? 0,
       name: json['name'] as String? ?? '',
+      qrCode: json['qr_code'] as String?,
+      condition: json['condition'] as String?,
+      conditionLabel: json['condition_label'] as String?,
       initialCondition: json['initial_condition'] as String?,
       finalCondition: json['final_condition'] as String?,
       currentStock: (json['current_stock'] as num?)?.toDouble(),

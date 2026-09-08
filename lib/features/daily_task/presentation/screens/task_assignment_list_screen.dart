@@ -201,7 +201,8 @@ class _TaskAssignmentListScreenState extends State<TaskAssignmentListScreen> {
                         itemBuilder: (context, index) {
                           final assignment = assignments[index];
                           final id = assignment['id'] as int?;
-                          final employeeName = assignment['employee_name'] as String? ?? '-';
+                          final employeeNames = assignment['employee_names'] as String? ?? assignment['employee_name'] as String? ?? '-';
+                          final employeeCount = assignment['employee_count'] as int?;
                           final status = assignment['status'] as String?;
                           final targetMinutes = assignment['target_minutes'] as int?;
                           final notes = assignment['notes'] as String?;
@@ -228,12 +229,35 @@ class _TaskAssignmentListScreenState extends State<TaskAssignmentListScreen> {
                                     Row(
                                       children: [
                                         Expanded(
-                                          child: Text(
-                                            employeeName,
-                                            style: TextStyle(
-                                              fontWeight: FontWeight.w600,
-                                              color: theme.colors.foreground,
-                                            ),
+                                          child: Column(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                employeeNames,
+                                                style: TextStyle(
+                                                  fontWeight: FontWeight.w600,
+                                                  color: theme.colors.foreground,
+                                                ),
+                                              ),
+                                              if (employeeCount != null && employeeCount > 1) ...[
+                                                const SizedBox(height: 2),
+                                                Container(
+                                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+                                                  decoration: BoxDecoration(
+                                                    color: theme.colors.primary.withAlpha(26),
+                                                    borderRadius: BorderRadius.circular(4),
+                                                  ),
+                                                  child: Text(
+                                                    '$employeeCount karyawan',
+                                                    style: TextStyle(
+                                                      fontSize: 11,
+                                                      color: theme.colors.primary,
+                                                      fontWeight: FontWeight.w500,
+                                                    ),
+                                                  ),
+                                                ),
+                                              ],
+                                            ],
                                           ),
                                         ),
                                         if (status == 'assigned')
