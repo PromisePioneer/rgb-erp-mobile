@@ -4,14 +4,27 @@ import 'package:latlong2/latlong.dart';
 import 'package:provider/provider.dart';
 import 'package:forui/forui.dart';
 
-
 import '../../../../core/core.dart';
 import '../../../../shared/widgets/feedback/loading_indicator.dart';
 import '../providers/client_dashboard_provider.dart';
 
 /// Client area list screen with map
-class ClientAreaListScreen extends StatelessWidget {
+class ClientAreaListScreen extends StatefulWidget {
   const ClientAreaListScreen({super.key});
+
+  @override
+  State<ClientAreaListScreen> createState() => _ClientAreaListScreenState();
+}
+
+class _ClientAreaListScreenState extends State<ClientAreaListScreen> {
+  @override
+  void initState() {
+    super.initState();
+    // Auto-fetch areas on init
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<ClientDashboardNotifier>().fetchAreas();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -30,11 +43,11 @@ class ClientAreaListScreen extends StatelessWidget {
       ),
       body: Consumer<ClientDashboardNotifier>(
         builder: (context, notifier, child) {
-          if (notifier.isLoadingAreas) {
+          if (notifier.isLoadingAreas && notifier.areas.isEmpty) {
             return const Center(child: LoadingIndicator());
           }
 
-          if (notifier.areasError != null) {
+          if (notifier.areasError != null && notifier.areas.isEmpty) {
             return Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -66,7 +79,12 @@ class ClientAreaListScreen extends StatelessWidget {
             );
           }
 
-          return _AreaListContent(areas: notifier.areas, theme: theme);
+          return RefreshIndicator(
+            onRefresh: () async {
+              await notifier.fetchAreas();
+            },
+            child: _AreaListContent(areas: notifier.areas, theme: theme),
+          );
         },
       ),
     );

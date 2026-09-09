@@ -72,10 +72,9 @@ class _ClientDashboardScreenState extends State<ClientDashboardScreen> {
                         children: [
                           Expanded(
                             child: _StatCard(
-                              title: 'Total Employee',
+                              title: 'Karyawan',
                               value: '${data?.totalEmployees ?? 0}',
                               icon: IconMap.users,
-                              color: AppColors.primary,
                               onTap: () => context.push('/client/employees'),
                               theme: theme,
                             ),
@@ -86,7 +85,6 @@ class _ClientDashboardScreenState extends State<ClientDashboardScreen> {
                               title: 'Total Area',
                               value: '${data?.totalAreas ?? 0}',
                               icon: IconMap.mapPin,
-                              color: AppColors.info,
                               onTap: () => context.push('/client/areas'),
                               theme: theme,
                             ),
@@ -97,9 +95,8 @@ class _ClientDashboardScreenState extends State<ClientDashboardScreen> {
                       _StatCard(
                         title: 'Hadir Hari Ini',
                         value: '${data?.attendanceToday.checkedIn ?? 0}',
-                        subtitle: 'Pending: ${data?.attendanceToday.pending ?? 0}',
+                        subtitle: 'Belum Hadir: ${data?.attendanceToday.pending ?? 0}',
                         icon: IconMap.checkCircle,
-                        color: AppColors.success,
                         onTap: () => context.push('/client/attendance'),
                         theme: theme,
                       ),
@@ -109,17 +106,15 @@ class _ClientDashboardScreenState extends State<ClientDashboardScreen> {
                         value: '${(data?.tasksSummary.total ?? 0) + (data?.patrolSummary.total ?? 0) + (data?.fieldReportsToday ?? 0)}',
                         subtitle: 'Tugas: ${data?.tasksSummary.total ?? 0} • Patrol: ${data?.patrolSummary.total ?? 0} • Field: ${data?.fieldReportsToday ?? 0}',
                         icon: IconMap.fileText,
-                        color: AppColors.info,
                         onTap: () => context.push('/client/tasks'),
                         theme: theme,
                       ),
                       const SizedBox(height: AppSpacing.md),
                       _StatCard(
                         title: 'Jadwal Karyawan',
-                        value: 'Calendar',
+                        value: 'Kalender',
                         subtitle: 'Lihat jadwal dan kehadiran',
                         icon: IconMap.calendar,
-                        color: AppColors.warning,
                         onTap: () => context.push('/client/schedules'),
                         theme: theme,
                       ),
@@ -131,7 +126,7 @@ class _ClientDashboardScreenState extends State<ClientDashboardScreen> {
 
   Widget _buildWelcomeCard(BuildContext context, FThemeData theme) {
     return Container(
-      padding: const EdgeInsets.all(AppSpacing.lg),
+      padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [AppColors.primary, AppColors.primary.withAlpha(204)],
@@ -145,7 +140,7 @@ class _ClientDashboardScreenState extends State<ClientDashboardScreen> {
         children: [
           Text(
             'Selamat Datang!',
-            style: theme.typography.display.lg.copyWith(
+            style: theme.typography.body.lg.copyWith(
                   color: Colors.white,
                   fontWeight: FontWeight.bold,
                 ),
@@ -153,9 +148,11 @@ class _ClientDashboardScreenState extends State<ClientDashboardScreen> {
           const SizedBox(height: AppSpacing.xs),
           Text(
             'Monitoring Karyawan Anda',
-            style: theme.typography.body.md.copyWith(
+            style: theme.typography.body.sm.copyWith(
                   color: Colors.white.withAlpha(230),
                 ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
           ),
         ],
       ),
@@ -285,7 +282,6 @@ class _StatCard extends StatelessWidget {
   final String value;
   final String? subtitle;
   final IconData icon;
-  final Color color;
   final VoidCallback? onTap;
   final FThemeData theme;
 
@@ -294,17 +290,18 @@ class _StatCard extends StatelessWidget {
     required this.value,
     this.subtitle,
     required this.icon,
-    required this.color,
     this.onTap,
     required this.theme,
   });
 
   @override
   Widget build(BuildContext context) {
+    const color = AppColors.primary; // Consistent color for all icons
+
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.all(AppSpacing.lg),
+        padding: const EdgeInsets.all(AppSpacing.md),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: AppRadius.radiusMd,
@@ -319,29 +316,36 @@ class _StatCard extends StatelessWidget {
         child: Row(
           children: [
             Container(
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
                 color: color.withAlpha(26),
                 borderRadius: AppRadius.radiusMd,
               ),
-              child: Icon(icon, color: color, size: 32),
+              child: Icon(icon, color: color, size: 24),
             ),
-            const SizedBox(width: 16),
+            const SizedBox(width: 12),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
                     title,
-                    style: theme.typography.body.sm.copyWith(
+                    style: theme.typography.body.xs.copyWith(
                       color: AppColors.slate500,
                     ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
+                  const SizedBox(height: 2),
                   Text(
                     value,
-                    style: theme.typography.display.lg.copyWith(
+                    style: theme.typography.body.lg.copyWith(
                       color: AppColors.textPrimary,
+                      fontWeight: FontWeight.bold,
                     ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                   if (subtitle != null) ...[
                     const SizedBox(height: 2),
@@ -350,13 +354,15 @@ class _StatCard extends StatelessWidget {
                       style: theme.typography.body.xs.copyWith(
                         color: AppColors.gray500,
                       ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ],
                 ],
               ),
             ),
             if (onTap != null)
-              Icon(IconMap.chevronRight, color: AppColors.gray400),
+              Icon(IconMap.chevronRight, color: AppColors.gray400, size: 20),
           ],
         ),
       ),

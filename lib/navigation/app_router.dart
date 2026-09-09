@@ -84,6 +84,8 @@ import '../features/daily_task/presentation/screens/task_detail_leader_screen.da
 import '../features/daily_task/presentation/screens/task_review_screen.dart';
 import '../features/daily_task/presentation/screens/task_assignment_list_screen.dart';
 import '../features/daily_task/presentation/screens/task_assignment_form_screen.dart';
+import '../features/daily_task/presentation/screens/task_progress_screen.dart';
+import '../features/daily_task/presentation/screens/task_progress_detail_screen.dart';
 import '../features/approval/presentation/screens/approval_list_screen.dart';
 import '../features/approval/presentation/screens/approval_detail_screen.dart';
 import '../features/notification/presentation/screens/notification_screen.dart';
@@ -262,7 +264,28 @@ void initRouter(AuthNotifier authNotifier) {
               ),
             ],
           ),
-          // Branch 9: Report List
+          // Branch 9: Task Progress (Progress Daily Task)
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/task-progress',
+                name: 'task-progress',
+                builder: (context, state) => const TaskProgressScreen(),
+                routes: [
+                  // Task progress detail - select employee and submit check
+                  GoRoute(
+                    path: ':id',
+                    name: 'task-progress-detail',
+                    builder: (context, state) {
+                      final id = int.parse(state.pathParameters['id']!);
+                      return TaskProgressDetailScreen(taskId: id);
+                    },
+                  ),
+                ],
+              ),
+            ],
+          ),
+          // Branch 10: Report List
           StatefulShellBranch(
             routes: [
               GoRoute(

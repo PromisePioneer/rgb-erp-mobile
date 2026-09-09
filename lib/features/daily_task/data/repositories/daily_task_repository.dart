@@ -628,4 +628,94 @@ class DailyTaskRepository {
       );
     }
   }
+
+  // ====================
+  // Task Progress Check Methods (uses task_progress privilege)
+  // ====================
+
+  /// GET /daily-task/progress/tasks - Get tasks for progress checking
+  Future<List<Map<String, dynamic>>> getProgressTasks() async {
+    try {
+      final response = await api.getProgressTasks();
+      final data = response['data'];
+      if (data == null) return [];
+      final list = data is List ? data : [];
+      return list.map((json) => _toMap(json)).toList();
+    } on ApiException {
+      rethrow;
+    } catch (e) {
+      throw ApiException(
+        message: 'Gagal memuat daftar tugas: $e',
+        statusCode: 500,
+      );
+    }
+  }
+
+  /// POST /daily-task/{id}/progress-check - Submit progress check with photo
+  Future<Map<String, dynamic>> submitProgressCheckPhoto({
+    required int taskId,
+    required int employeeId,
+    required String photoBase64,
+    String? notes,
+  }) async {
+    try {
+      final response = await api.submitProgressCheckPhoto(
+        taskId: taskId,
+        employeeId: employeeId,
+        photoBase64: photoBase64,
+        notes: notes,
+      );
+      return response;
+    } on ApiException {
+      rethrow;
+    } catch (e) {
+      throw ApiException(
+        message: 'Gagal menyimpan progress check: $e',
+        statusCode: 500,
+      );
+    }
+  }
+
+  /// POST /daily-task/{id}/progress-check - Submit progress check with video
+  Future<Map<String, dynamic>> submitProgressCheckVideo({
+    required int taskId,
+    required int employeeId,
+    required String videoPath,
+    String? notes,
+  }) async {
+    try {
+      final response = await api.submitProgressCheckVideo(
+        taskId: taskId,
+        employeeId: employeeId,
+        videoPath: videoPath,
+        notes: notes,
+      );
+      return response;
+    } on ApiException {
+      rethrow;
+    } catch (e) {
+      throw ApiException(
+        message: 'Gagal menyimpan progress check: $e',
+        statusCode: 500,
+      );
+    }
+  }
+
+  /// GET /daily-task/{id}/progress-checks - Get progress check history
+  Future<List<Map<String, dynamic>>> getProgressChecks(int taskId) async {
+    try {
+      final response = await api.getProgressChecks(taskId);
+      final data = response['data'];
+      if (data == null) return [];
+      final list = data is List ? data : [];
+      return list.map((json) => _toMap(json)).toList();
+    } on ApiException {
+      rethrow;
+    } catch (e) {
+      throw ApiException(
+        message: 'Gagal memuat riwayat progress check: $e',
+        statusCode: 500,
+      );
+    }
+  }
 }

@@ -36,11 +36,11 @@ class _ClientAttendanceScreenState extends State<ClientAttendanceScreen> with Si
     super.dispose();
   }
 
-  void _fetchData() {
+  Future<void> _fetchData() async {
     final notifier = context.read<ClientAttendanceNotifier>();
     final fromStr = DateFormat('yyyy-MM-dd').format(_fromDate);
     final toStr = DateFormat('yyyy-MM-dd').format(_toDate);
-    notifier.fetchAttendance(fromDate: fromStr, toDate: toStr);
+    await notifier.fetchAttendance(fromDate: fromStr, toDate: toStr);
   }
 
   Future<void> _selectDateRange() async {
@@ -149,7 +149,7 @@ class _ClientAttendanceScreenState extends State<ClientAttendanceScreen> with Si
     }
 
     return RefreshIndicator(
-      onRefresh: () async => _fetchData(),
+      onRefresh: _fetchData,
       child: ListView.builder(
         padding: const EdgeInsets.all(AppSpacing.md),
         itemCount: todayData.length,
@@ -185,7 +185,7 @@ class _ClientAttendanceScreenState extends State<ClientAttendanceScreen> with Si
     }
 
     return RefreshIndicator(
-      onRefresh: () async => _fetchData(),
+      onRefresh: _fetchData,
       child: ListView.builder(
         padding: const EdgeInsets.all(AppSpacing.md),
         itemCount: grouped.length,

@@ -10,6 +10,7 @@
 - **Lokasi**: `geolocator` dibungkus `LocationService` (`lib/core/services/location_service.dart`), mengembalikan `LocationData` (lat/lng/accuracy/timestamp) dan sudah handle permission + service-disabled dengan `LocationException`.
 - **Biometrik device** (fingerprint/Face ID untuk login, BUKAN face recognition server): `local_auth` dibungkus `BiometricService`.
 - **Model/JSON**: entity ditulis manual `extends Equatable` dengan `fromJson`/`toJson` manual (lihat `lib/features/auth/domain/entities/user.dart`).
+- **Watermark**: `WatermarkService` (`lib/shared/utils/watermark_service.dart`) - untuk menambahkan watermark pada foto/video yang diambil user. Pakai `ffmpeg_kit_flutter_new` untuk video, dan `RepaintBoundary` untuk foto.
 
 ## Struktur folder per fitur (feature-first, bukan layer-first di root)
 
@@ -70,3 +71,54 @@ Jika membuat fitur yang memakai kamera/lokasi, tambahkan permission di:
 ## Testing
 
 Test ada di `test/`, mirror path dari `lib/features/...`. Pakai `flutter_test` untuk unit test `copyWith` dan transisi state.
+
+## Watermark Service
+
+File: `lib/shared/utils/watermark_service.dart`
+
+Service untuk menambahkan watermark pada foto dan video yang diambil user. Format watermark:
+```
+{dd-MM-yyyy HH:mm}
+{areaName}
+{namaUserLogin}
+```
+
+### Penggunaan untuk Foto
+
+```dart
+import 'package:shared/utils/watermark_service.dart';
+
+final watermarkService = WatermarkService();
+
+// Ambil foto dari camera
+final XFile image = await picker.pickImage(...);
+
+// Tambah watermark
+final watermarkedBytes = await watermarkService.watermarkImage(
+  image: image,
+  areaName: 'Area Produksi A',
+  userName: authNotifier.state.user?.name ?? 'Unknown',
+);
+
+// Simpan ke file
+final file = File('path/to/save.jpg');
+await file.writeAsBytes(watermarkedBytes);
+```
+
+### Penggunaan untuk Video
+
+```dart
+// Tambah watermark ke video (dengan progress callback)
+final watermarkedFile = await watermarkService.watermarkVideoWithProgress(
+  video: videoFile,
+  areaName: 'Area Produksi A',
+  userName: authNotifier.state.user?.name ?? 'Unknown',
+  onProgress: (progress) {
+    // Update UI dengan progress (0.0 - 1.0)
+  },
+);
+```
+
+### Dependencies
+- `path_provider` - untuk akses direktori temporary
+- `ffmpeg_kit_flutter_new` - untuk watermark video (minSdk: 24)

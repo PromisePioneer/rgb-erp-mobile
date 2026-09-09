@@ -39,6 +39,7 @@ final _menuItems = <MenuItemData>[
   MenuItemData(label: 'Laporan Patroli', icon: IconMap.reportProblem, route: '/violation-report'),
   MenuItemData(label: 'Laporan Mutasi', icon: IconMap.editNote, route: '/report'),
   MenuItemData(label: 'Tugas Harian', icon: IconMap.task, route: '/daily-task'),
+  MenuItemData(label: 'Monitoring', icon: IconMap.visibility, route: '/task-progress'),
 ];
 
 final _patrolPoints = [

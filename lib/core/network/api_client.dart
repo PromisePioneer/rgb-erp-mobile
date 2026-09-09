@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import '../services/storage_service.dart';
 import '../constants/app_constants.dart';
 
@@ -33,9 +34,16 @@ class AuthInterceptor extends Interceptor {
       options.headers['Authorization'] = 'Bearer $token';
     }
 
-    // Add default headers
-    options.headers['Accept'] = 'application/json';
-    options.headers['Content-Type'] = 'application/json';
+    // Add default headers (only for non-multipart requests)
+    // For multipart/form-data, Dio will set the correct Content-Type automatically
+    if (!options.headers.containsKey('Content-Type') ||
+        options.headers['Content-Type'] == 'application/json') {
+      options.headers['Accept'] = 'application/json';
+      // Only set Content-Type to json if not already set (for multipart)
+      if (!options.headers.containsKey('Content-Type')) {
+        options.headers['Content-Type'] = 'application/json';
+      }
+    }
 
     return handler.next(options);
   }
@@ -62,22 +70,23 @@ class AuthInterceptor extends Interceptor {
 class LoggingInterceptor extends Interceptor {
   @override
   void onRequest(RequestOptions options, RequestInterceptorHandler handler) {
-    // TODO: Add debug logging
-    // 
+    debugPrint('API REQUEST: ${options.method} ${options.uri}');
+    debugPrint('Headers: ${options.headers}');
     return handler.next(options);
   }
 
   @override
   void onResponse(Response response, ResponseInterceptorHandler handler) {
-    // TODO: Add debug logging
-    // 
+    debugPrint('API RESPONSE: ${response.statusCode} ${response.requestOptions.uri}');
+    debugPrint('Response data type: ${response.data.runtimeType}');
+    debugPrint('Response data: ${response.data}');
     return handler.next(response);
   }
 
   @override
   void onError(DioException err, ErrorInterceptorHandler handler) {
-    // TODO: Add debug logging
-    // 
+    debugPrint('API ERROR: ${err.type} ${err.requestOptions.uri}');
+    debugPrint('Error response: ${err.response?.data}');
     return handler.next(err);
   }
 }

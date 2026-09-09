@@ -680,4 +680,121 @@ class DailyTaskNotifier extends ChangeNotifier {
       return false;
     }
   }
+
+  // ====================
+  // Task Progress Check Methods (uses task_progress privilege)
+  // ====================
+
+  /// List of tasks for progress checking
+  List<Map<String, dynamic>> _progressTasks = [];
+  List<Map<String, dynamic>> get progressTasks => _progressTasks;
+
+  /// Progress check history for current task
+  List<Map<String, dynamic>> _progressChecks = [];
+  List<Map<String, dynamic>> get progressChecks => _progressChecks;
+
+  /// Load tasks for progress checking
+  Future<void> loadProgressTasks() async {
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+
+    try {
+      _progressTasks = await _repository.getProgressTasks();
+      _isLoading = false;
+      notifyListeners();
+    } catch (e) {
+      _isLoading = false;
+      _error = e.toString();
+      notifyListeners();
+    }
+  }
+
+  /// Load progress check history for a task
+  Future<void> loadProgressChecks(int taskId) async {
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+
+    try {
+      _progressChecks = await _repository.getProgressChecks(taskId);
+      _isLoading = false;
+      notifyListeners();
+    } catch (e) {
+      _isLoading = false;
+      _error = e.toString();
+      notifyListeners();
+    }
+  }
+
+  /// Submit progress check with photo
+  Future<bool> submitProgressCheckPhoto({
+    required int taskId,
+    required int employeeId,
+    required String photoBase64,
+    String? notes,
+  }) async {
+    _isSubmitting = true;
+    _error = null;
+    notifyListeners();
+
+    try {
+      await _repository.submitProgressCheckPhoto(
+        taskId: taskId,
+        employeeId: employeeId,
+        photoBase64: photoBase64,
+        notes: notes,
+      );
+
+      // Reload progress checks for this task
+      _progressChecks = await _repository.getProgressChecks(taskId);
+
+      _isSubmitting = false;
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _isSubmitting = false;
+      _error = e.toString();
+      notifyListeners();
+      return false;
+    }
+  }
+
+  /// Submit progress check with video
+  Future<bool> submitProgressCheckVideo({
+    required int taskId,
+    required int employeeId,
+    required String videoPath,
+    String? notes,
+  }) async {
+    _isSubmitting = true;
+    _error = null;
+    notifyListeners();
+
+    try {
+      await _repository.submitProgressCheckVideo(
+        taskId: taskId,
+        employeeId: employeeId,
+        videoPath: videoPath,
+        notes: notes,
+      );
+
+      // Reload progress checks for this task
+      _progressChecks = await _repository.getProgressChecks(taskId);
+
+      _isSubmitting = false;
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _isSubmitting = false;
+      _error = e.toString();
+      notifyListeners();
+      return false;
+    }
+  }
+
+  void clearProgressChecks() {
+    _progressChecks = [];
+    notifyListeners();
+  }
 }

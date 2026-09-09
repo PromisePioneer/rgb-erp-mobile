@@ -24,11 +24,18 @@ class _ClientScheduleScreenState extends State<ClientScheduleScreen> {
   void initState() {
     super.initState();
     _currentMonth = DateTime.now();
+    // Auto-select today's date
+    _selectedDate = DateTime.now();
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<ClientScheduleNotifier>().fetchScheduleDates(
-            year: _currentMonth.year,
-            month: _currentMonth.month,
-          );
+      final notifier = context.read<ClientScheduleNotifier>();
+      // Fetch schedule dates and today's employees
+      notifier.fetchScheduleDates(
+        year: _currentMonth.year,
+        month: _currentMonth.month,
+      );
+      // Fetch employees for today immediately
+      notifier.fetchEmployeesByDate(_selectedDate!);
     });
   }
 
@@ -59,6 +66,17 @@ class _ClientScheduleScreenState extends State<ClientScheduleScreen> {
     context.read<ClientScheduleNotifier>().fetchEmployeesByDate(date);
   }
 
+  Future<void> _refreshAll() async {
+    final notifier = context.read<ClientScheduleNotifier>();
+    await notifier.fetchScheduleDates(
+      year: _currentMonth.year,
+      month: _currentMonth.month,
+    );
+    if (_selectedDate != null) {
+      await notifier.fetchEmployeesByDate(_selectedDate!);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = FTheme.of(context);
@@ -67,44 +85,47 @@ class _ClientScheduleScreenState extends State<ClientScheduleScreen> {
       appBar: AppBar(
         title: const Text('Jadwal Karyawan'),
       ),
-      body: Consumer<ClientScheduleNotifier>(
-        builder: (context, notifier, child) {
-          return Column(
-            children: [
-              // Calendar Header
-              _CalendarHeader(
-                currentMonth: _currentMonth,
-                onPrevious: _previousMonth,
-                onNext: _nextMonth,
-                theme: theme,
-              ),
-              // Calendar Grid
-              _CalendarGrid(
-                currentMonth: _currentMonth,
-                selectedDate: _selectedDate,
-                scheduleDates: notifier.dateState.dates,
-                isLoading: notifier.dateState.isLoading,
-                onDateTap: _onDateTap,
-              ),
-              const Divider(height: 1),
-              // Selected Date Employees
-              Expanded(
-                child: _EmployeesList(
-                  selectedDate: _selectedDate,
-                  employees: notifier.employeeState.employees,
-                  isLoading: notifier.employeeState.isLoading,
-                  error: notifier.employeeState.error,
+      body: RefreshIndicator(
+        onRefresh: _refreshAll,
+        child: Consumer<ClientScheduleNotifier>(
+          builder: (context, notifier, child) {
+            return Column(
+              children: [
+                // Calendar Header
+                _CalendarHeader(
+                  currentMonth: _currentMonth,
+                  onPrevious: _previousMonth,
+                  onNext: _nextMonth,
                   theme: theme,
-                  onRetry: () {
-                    if (_selectedDate != null) {
-                      notifier.fetchEmployeesByDate(_selectedDate!);
-                    }
-                  },
                 ),
-              ),
-            ],
-          );
-        },
+                // Calendar Grid
+                _CalendarGrid(
+                  currentMonth: _currentMonth,
+                  selectedDate: _selectedDate,
+                  scheduleDates: notifier.dateState.dates,
+                  isLoading: notifier.dateState.isLoading,
+                  onDateTap: _onDateTap,
+                ),
+                const Divider(height: 1),
+                // Selected Date Employees
+                Expanded(
+                  child: _EmployeesList(
+                    selectedDate: _selectedDate,
+                    employees: notifier.employeeState.employees,
+                    isLoading: notifier.employeeState.isLoading,
+                    error: notifier.employeeState.error,
+                    theme: theme,
+                    onRetry: () {
+                      if (_selectedDate != null) {
+                        notifier.fetchEmployeesByDate(_selectedDate!);
+                      }
+                    },
+                  ),
+                ),
+              ],
+            );
+          },
+        ),
       ),
     );
   }
@@ -457,9 +478,12 @@ class _EmployeeScheduleCard extends StatelessWidget {
                   children: [
                     Icon(FLucideIcons.clock, size: 14, color: AppColors.gray500),
                     const SizedBox(width: 4),
-                    Text(
-                      '${employee.shiftName} (${employee.shiftStart} - ${employee.shiftEnd})',
-                      style: theme.typography.body.xs.copyWith(color: AppColors.gray500),
+                    Flexible(
+                      child: Text(
+                        '${employee.shiftName} (${employee.shiftStart} - ${employee.shiftEnd})',
+                        style: theme.typography.body.xs.copyWith(color: AppColors.gray500),
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
                   ],
                 ),

@@ -30,6 +30,7 @@ const Map<String, String> menuPrivilegeMapping = {
   'Laporan Patroli': 'patrol_report',
   'Laporan Mutasi': 'field_report',
   'Tugas Harian': 'daily_task',
+  'Progress Daily Task': 'task_progress',
 };
 
 /// Menu labels that should be hidden when user already has the data

@@ -420,3 +420,47 @@ class DailyTaskRole {
     );
   }
 }
+
+/// Progress check model for task observation
+class DailyTaskProgressCheck {
+  final int id;
+  final int employeeId;
+  final String? employeeName;
+  final int checkedBy;
+  final String? checkedByName;
+  final String mediaType;
+  final String mediaUrl;
+  final String? notes;
+  final DateTime? checkedAt;
+
+  DailyTaskProgressCheck({
+    required this.id,
+    required this.employeeId,
+    this.employeeName,
+    required this.checkedBy,
+    this.checkedByName,
+    required this.mediaType,
+    required this.mediaUrl,
+    this.notes,
+    this.checkedAt,
+  });
+
+  factory DailyTaskProgressCheck.fromJson(Map<String, dynamic> json) {
+    return DailyTaskProgressCheck(
+      id: int.tryParse(json['id']?.toString() ?? '') ?? 0,
+      employeeId: int.tryParse(json['employee_id']?.toString() ?? '') ?? 0,
+      employeeName: json['employee_name'] as String?,
+      checkedBy: int.tryParse(json['checked_by']?.toString() ?? '') ?? 0,
+      checkedByName: json['checked_by_name'] as String?,
+      mediaType: json['media_type'] as String? ?? 'photo',
+      mediaUrl: json['media_url'] as String? ?? '',
+      notes: json['notes'] as String?,
+      checkedAt: json['checked_at'] != null
+          ? DateTime.tryParse(json['checked_at'] as String)
+          : null,
+    );
+  }
+
+  bool get isPhoto => mediaType == 'photo';
+  bool get isVideo => mediaType == 'video';
+}

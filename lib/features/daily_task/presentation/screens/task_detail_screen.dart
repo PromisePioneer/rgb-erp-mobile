@@ -14,6 +14,8 @@ import '../../../../shared/widgets/feedback/loading_indicator.dart';
 import '../../../../shared/widgets/icons/forui_icon_map.dart';
 import '../../../../shared/widgets/inputs/app_text_field.dart';
 import '../../../../shared/widgets/toast/app_toast.dart';
+import '../../../../shared/utils/watermark_service.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../domain/models/daily_task.dart';
 import '../providers/daily_task_provider.dart';
 
@@ -29,6 +31,7 @@ class TaskDetailScreen extends StatefulWidget {
 
 class _TaskDetailScreenState extends State<TaskDetailScreen> {
   final ImagePicker _picker = ImagePicker();
+  final WatermarkService _watermarkService = WatermarkService();
 
   // Form state for start - multiple photos
   final List<String> _beforePhotoPaths = [];
@@ -36,6 +39,12 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
   // Form state for finish - multiple photos
   final List<String> _afterPhotoPaths = [];
   final _notesController = TextEditingController();
+
+  // Loading state for watermark processing
+  bool _isProcessingWatermark = false;
+
+  // Cached area name for watermark (set when task is loaded)
+  String _cachedAreaName = '';
 
   // Condition tracking state
   // Non-chemical (tool/ppe/machine): sangat_baik, baik, cukup_baik, kurang_baik, rusak
@@ -61,6 +70,9 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
     final notifier = context.read<DailyTaskNotifier>();
     // Load task detail - tools/chemicals/ppes sudah dari API
     notifier.loadTaskDetail(widget.taskId);
+
+    // Also fetch area name from progress tasks if available (for supervisor)
+    notifier.loadProgressTasks();
   }
 
   @override
@@ -82,15 +94,96 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
       );
 
       if (image != null) {
+        // Show loading indicator
         setState(() {
-          if (isBefore) {
-            _beforePhotoPaths.add(image.path);
-          } else {
-            _afterPhotoPaths.add(image.path);
-          }
+          _isProcessingWatermark = true;
         });
+
+        try {
+          // Get user info from AuthNotifier
+          final authNotifier = context.read<AuthNotifier>();
+          final userName = authNotifier.state.user?.name ?? 'Unknown';
+
+          // Get area name - try multiple sources
+          String areaName = 'Unknown Area';
+
+          // 1. Try from selectedTask (employee view)
+          final notifier = context.read<DailyTaskNotifier>();
+          final task = notifier.selectedTask;
+          if (task != null && task.areaName != null && task.areaName!.isNotEmpty) {
+            areaName = task.areaName!;
+            debugPrint('WatermarkService: Using areaName from selectedTask: $areaName');
+          }
+          // 2. Try from progressTasks (supervisor view)
+          else if (notifier.progressTasks.isNotEmpty) {
+            final progressTask = notifier.progressTasks.firstWhere(
+              (t) => t['id'] == widget.taskId,
+              orElse: () => <String, dynamic>{},
+            );
+            if (progressTask.isNotEmpty) {
+              final progressAreaName = progressTask['area_name'] as String?;
+              if (progressAreaName != null && progressAreaName.isNotEmpty) {
+                areaName = progressAreaName;
+                debugPrint('WatermarkService: Using areaName from progressTasks: $areaName');
+              }
+            }
+          }
+          // 3. Fallback to item name
+          if (areaName == 'Unknown Area' && task != null && task.itemName.isNotEmpty) {
+            areaName = task.itemName;
+            debugPrint('WatermarkService: Using itemName as fallback: $areaName');
+          }
+
+          debugPrint('WatermarkService: Final areaName for watermark: $areaName');
+
+          // Add watermark to the image
+          final watermarkedBytes = await _watermarkService.watermarkImage(
+            image: image,
+            areaName: areaName,
+            userName: userName,
+          );
+
+          // Save watermarked image to temporary file
+          final tempDir = await Directory.systemTemp.createTemp();
+          final timestamp = DateTime.now().millisecondsSinceEpoch;
+          final watermarkedPath = '${tempDir.path}/watermarked_$timestamp.jpg';
+          final watermarkedFile = File(watermarkedPath);
+          await watermarkedFile.writeAsBytes(watermarkedBytes);
+
+          setState(() {
+            if (isBefore) {
+              _beforePhotoPaths.add(watermarkedPath);
+            } else {
+              _afterPhotoPaths.add(watermarkedPath);
+            }
+            _isProcessingWatermark = false;
+          });
+
+          debugPrint('WatermarkService: Photo watermarked and saved to $watermarkedPath');
+        } catch (e) {
+          debugPrint('WatermarkService: Failed to watermark image: $e');
+          // Fallback: save original image without watermark
+          setState(() {
+            if (isBefore) {
+              _beforePhotoPaths.add(image.path);
+            } else {
+              _afterPhotoPaths.add(image.path);
+            }
+            _isProcessingWatermark = false;
+          });
+
+          if (mounted) {
+            context.toast.show(
+              message: 'Foto disimpan tanpa watermark: $e',
+              style: AppToastStyle.warning,
+            );
+          }
+        }
       }
     } catch (e) {
+      setState(() {
+        _isProcessingWatermark = false;
+      });
       if (mounted) {
         context.toast.show(
           message: 'Gagal mengambil foto: $e',

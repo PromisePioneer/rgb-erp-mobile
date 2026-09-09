@@ -144,6 +144,13 @@ class ApiEndpoints {
   static const String dailyTaskProductsByArea = '/daily-task/products/by-area';
 
   // ====================
+  // Daily Task Progress Check Endpoints
+  // ====================
+  static const String dailyTaskProgressTasks = '/daily-task/progress/tasks';
+  static String dailyTaskProgressCheck(int taskId) => '/daily-task/$taskId/progress-check';
+  static String dailyTaskProgressChecks(int taskId) => '/daily-task/$taskId/progress-checks';
+
+  // ====================
   // Client API Endpoints (Mobile App for Clients)
   // ====================
   static const String clientDashboard = '/client/dashboard';
@@ -152,6 +159,7 @@ class ApiEndpoints {
   static const String clientAttendanceToday = '/client/attendance/today';
   static const String clientAttendance = '/client/attendance';
   static const String clientDailyTasks = '/client/daily-tasks';
+  static const String clientDailyTaskProgressChecks = '/client/daily-tasks/{id}/progress-checks';
   static const String clientPatrolReports = '/client/patrol-reports';
   static const String clientFieldReports = '/client/field-reports';
   static const String clientProfile = '/client/profile';

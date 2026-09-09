@@ -107,4 +107,8 @@ class IconMap {
   static IconData mapPin = FLucideIcons.mapPin;
   static IconData fileText = FLucideIcons.fileText;
   static IconData calendar = FLucideIcons.calendar;
+
+  // Additional icons for Task Progress
+  static IconData people = FLucideIcons.users;
+  static IconData videocam = FLucideIcons.video;
 }

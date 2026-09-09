@@ -1,6 +1,42 @@
 import 'package:flutter/foundation.dart';
 import '../../../../core/core.dart';
 
+/// Progress Check record model
+class ProgressCheckRecord {
+  final int id;
+  final String mediaType;
+  final String mediaUrl;
+  final String? employeeName;
+  final String? checkedByName;
+  final String? notes;
+  final String? checkedAt;
+
+  ProgressCheckRecord({
+    required this.id,
+    required this.mediaType,
+    required this.mediaUrl,
+    this.employeeName,
+    this.checkedByName,
+    this.notes,
+    this.checkedAt,
+  });
+
+  factory ProgressCheckRecord.fromJson(Map<String, dynamic> json) {
+    return ProgressCheckRecord(
+      id: json['id'] ?? 0,
+      mediaType: json['media_type'] ?? 'photo',
+      mediaUrl: json['media_url'] ?? '',
+      employeeName: json['employee_name'],
+      checkedByName: json['checked_by_name'],
+      notes: json['notes'],
+      checkedAt: json['checked_at'],
+    );
+  }
+
+  bool get isVideo => mediaType == 'video';
+  bool get isPhoto => mediaType == 'photo';
+}
+
 /// Daily Task record model
 class DailyTaskRecord {
   final int id;
@@ -8,6 +44,7 @@ class DailyTaskRecord {
   final String? employeeName;
   final String? employeeCode;
   final String? itemName;
+  final String? areaName;
   final String status;
   final String? statusLabel;
   final String? assignedDate;
@@ -16,6 +53,7 @@ class DailyTaskRecord {
   final String? endAt;
   final String? notes;
   final bool hasReview;
+  final int progressChecksCount;
 
   DailyTaskRecord({
     required this.id,
@@ -23,6 +61,7 @@ class DailyTaskRecord {
     this.employeeName,
     this.employeeCode,
     this.itemName,
+    this.areaName,
     required this.status,
     this.statusLabel,
     this.assignedDate,
@@ -31,6 +70,7 @@ class DailyTaskRecord {
     this.endAt,
     this.notes,
     this.hasReview = false,
+    this.progressChecksCount = 0,
   });
 
   factory DailyTaskRecord.fromJson(Map<String, dynamic> json) {
@@ -40,6 +80,7 @@ class DailyTaskRecord {
       employeeName: json['employee_name'],
       employeeCode: json['employee_code'],
       itemName: json['item_name'],
+      areaName: json['area_name'],
       status: json['status'] ?? 'assigned',
       statusLabel: json['status_label'],
       assignedDate: json['assigned_date'],
@@ -48,6 +89,7 @@ class DailyTaskRecord {
       endAt: json['end_at'],
       notes: json['notes'],
       hasReview: json['has_review'] ?? false,
+      progressChecksCount: json['progress_checks_count'] ?? 0,
     );
   }
 }
@@ -143,49 +185,66 @@ class ClientReportsState {
   final List<DailyTaskRecord> tasks;
   final List<PatrolReportRecord> patrolReports;
   final List<FieldReportRecord> fieldReports;
+  final Map<int, List<ProgressCheckRecord>> progressChecks;
   final bool isLoadingTasks;
   final bool isLoadingPatrol;
   final bool isLoadingField;
+  final bool isLoadingProgressChecks;
   final String? tasksError;
   final String? patrolError;
   final String? fieldError;
+  final String? progressChecksError;
+  final Map<int, bool> loadingProgressChecks; // taskId -> isLoading
 
   const ClientReportsState({
     this.tasks = const [],
     this.patrolReports = const [],
     this.fieldReports = const [],
+    this.progressChecks = const {},
     this.isLoadingTasks = false,
     this.isLoadingPatrol = false,
     this.isLoadingField = false,
+    this.isLoadingProgressChecks = false,
     this.tasksError,
     this.patrolError,
     this.fieldError,
+    this.progressChecksError,
+    this.loadingProgressChecks = const {},
   });
 
   ClientReportsState copyWith({
     List<DailyTaskRecord>? tasks,
     List<PatrolReportRecord>? patrolReports,
     List<FieldReportRecord>? fieldReports,
+    Map<int, List<ProgressCheckRecord>>? progressChecks,
     bool? isLoadingTasks,
     bool? isLoadingPatrol,
     bool? isLoadingField,
+    bool? isLoadingProgressChecks,
     String? tasksError,
     String? patrolError,
     String? fieldError,
+    String? progressChecksError,
+    Map<int, bool>? loadingProgressChecks,
     bool clearTasksError = false,
     bool clearPatrolError = false,
     bool clearFieldError = false,
+    bool clearProgressChecksError = false,
   }) {
     return ClientReportsState(
       tasks: tasks ?? this.tasks,
       patrolReports: patrolReports ?? this.patrolReports,
       fieldReports: fieldReports ?? this.fieldReports,
+      progressChecks: progressChecks ?? this.progressChecks,
       isLoadingTasks: isLoadingTasks ?? this.isLoadingTasks,
       isLoadingPatrol: isLoadingPatrol ?? this.isLoadingPatrol,
       isLoadingField: isLoadingField ?? this.isLoadingField,
+      isLoadingProgressChecks: isLoadingProgressChecks ?? this.isLoadingProgressChecks,
       tasksError: clearTasksError ? null : (tasksError ?? this.tasksError),
       patrolError: clearPatrolError ? null : (patrolError ?? this.patrolError),
       fieldError: clearFieldError ? null : (fieldError ?? this.fieldError),
+      progressChecksError: clearProgressChecksError ? null : (progressChecksError ?? this.progressChecksError),
+      loadingProgressChecks: loadingProgressChecks ?? this.loadingProgressChecks,
     );
   }
 }
@@ -219,6 +278,41 @@ class ClientReportsNotifier extends ChangeNotifier {
       _state = _state.copyWith(
         isLoadingTasks: false,
         tasksError: e.toString(),
+      );
+      notifyListeners();
+    }
+  }
+
+  /// Fetch progress checks for a specific task
+  Future<void> fetchProgressChecks(int taskId) async {
+    final currentLoading = Map<int, bool>.from(_state.loadingProgressChecks);
+    currentLoading[taskId] = true;
+    _state = _state.copyWith(
+      loadingProgressChecks: currentLoading,
+      clearProgressChecksError: true,
+    );
+    notifyListeners();
+
+    try {
+      final response = await _api.getDailyTaskProgressChecks(taskId);
+      final data = (response['data'] as List? ?? [])
+          .map((e) => ProgressCheckRecord.fromJson(e))
+          .toList();
+
+      final currentProgressChecks = Map<int, List<ProgressCheckRecord>>.from(_state.progressChecks);
+      currentProgressChecks[taskId] = data;
+      currentLoading[taskId] = false;
+
+      _state = _state.copyWith(
+        progressChecks: currentProgressChecks,
+        loadingProgressChecks: currentLoading,
+      );
+      notifyListeners();
+    } catch (e) {
+      currentLoading[taskId] = false;
+      _state = _state.copyWith(
+        loadingProgressChecks: currentLoading,
+        progressChecksError: e.toString(),
       );
       notifyListeners();
     }

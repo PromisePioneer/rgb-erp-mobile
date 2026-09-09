@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import 'package:forui/forui.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:video_player/video_player.dart';
 
 
 import '../../../../core/core.dart';
@@ -64,20 +66,20 @@ class _ClientReportsScreenState extends State<ClientReportsScreen>
     }
   }
 
-  void _fetchData() {
+  Future<void> _fetchData() async {
     final notifier = context.read<ClientReportsNotifier>();
     final fromStr = DateFormat('yyyy-MM-dd').format(_fromDate);
     final toStr = DateFormat('yyyy-MM-dd').format(_toDate);
 
     switch (_tabController.index) {
       case 0:
-        notifier.fetchDailyTasks(fromDate: fromStr, toDate: toStr);
+        await notifier.fetchDailyTasks(fromDate: fromStr, toDate: toStr);
         break;
       case 1:
-        notifier.fetchPatrolReports(fromDate: fromStr, toDate: toStr);
+        await notifier.fetchPatrolReports(fromDate: fromStr, toDate: toStr);
         break;
       case 2:
-        notifier.fetchFieldReports(fromDate: fromStr, toDate: toStr);
+        await notifier.fetchFieldReports(fromDate: fromStr, toDate: toStr);
         break;
     }
   }
@@ -200,14 +202,32 @@ class _ClientReportsScreenState extends State<ClientReportsScreen>
     }
 
     return RefreshIndicator(
-      onRefresh: () async => _fetchData(),
+      onRefresh: _fetchData,
       child: ListView.builder(
         padding: const EdgeInsets.all(AppSpacing.md),
         itemCount: state.tasks.length,
         itemBuilder: (context, index) {
           final task = state.tasks[index];
-          return _TaskCard(task: task, theme: theme);
+          return _TaskCard(
+            task: task,
+            theme: theme,
+            onTap: () => _showProgressChecksSheet(context, task),
+          );
         },
+      ),
+    );
+  }
+
+  void _showProgressChecksSheet(BuildContext context, DailyTaskRecord task) {
+    final notifier = context.read<ClientReportsNotifier>();
+    notifier.fetchProgressChecks(task.id);
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => _ProgressChecksBottomSheet(
+        task: task,
       ),
     );
   }
@@ -235,7 +255,7 @@ class _ClientReportsScreenState extends State<ClientReportsScreen>
     }
 
     return RefreshIndicator(
-      onRefresh: () async => _fetchData(),
+      onRefresh: _fetchData,
       child: ListView.builder(
         padding: const EdgeInsets.all(AppSpacing.md),
         itemCount: state.patrolReports.length,
@@ -270,7 +290,7 @@ class _ClientReportsScreenState extends State<ClientReportsScreen>
     }
 
     return RefreshIndicator(
-      onRefresh: () async => _fetchData(),
+      onRefresh: _fetchData,
       child: ListView.builder(
         padding: const EdgeInsets.all(AppSpacing.md),
         itemCount: state.fieldReports.length,
@@ -305,77 +325,788 @@ class _ClientReportsScreenState extends State<ClientReportsScreen>
 class _TaskCard extends StatelessWidget {
   final DailyTaskRecord task;
   final FThemeData theme;
+  final VoidCallback? onTap;
 
-  const _TaskCard({required this.task, required this.theme});
+  const _TaskCard({
+    required this.task,
+    required this.theme,
+    this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: AppRadius.radiusMd,
+      child: Container(
+        margin: const EdgeInsets.only(bottom: AppSpacing.sm),
+        padding: const EdgeInsets.all(AppSpacing.md),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: AppRadius.radiusMd,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withAlpha(13),
+              blurRadius: 4,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  width: 32,
+                  height: 32,
+                  decoration: BoxDecoration(
+                    color: AppColors.info.withAlpha(26),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: const Icon(FLucideIcons.checkCircle2, size: 16, color: AppColors.info),
+                ),
+                const SizedBox(width: AppSpacing.sm),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        task.itemName ?? 'Task',
+                        style: theme.typography.body.md.copyWith(fontWeight: FontWeight.w600),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      Text(
+                        task.employeeName ?? '-',
+                        style: theme.typography.body.xs.copyWith(color: AppColors.gray500),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
+                ),
+                if (task.progressChecksCount > 0) ...[
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withAlpha(26),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(FLucideIcons.camera, size: 12, color: AppColors.primary),
+                        const SizedBox(width: 2),
+                        Text(
+                          '${task.progressChecksCount}',
+                          style: theme.typography.body.xs.copyWith(
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.primary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: AppSpacing.sm),
+                ],
+                _StatusBadge(status: task.status, theme: theme),
+              ],
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            // Use Wrap instead of Row to prevent overflow on narrow screens
+            Wrap(
+              spacing: AppSpacing.md,
+              runSpacing: AppSpacing.xs,
+              children: [
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(FLucideIcons.calendar, size: 14, color: AppColors.gray500),
+                    const SizedBox(width: 4),
+                    Flexible(
+                      child: Text(
+                        task.assignedDate ?? '-',
+                        style: theme.typography.body.xs.copyWith(color: AppColors.gray600),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ),
+                if (task.targetMinutes != null)
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(FLucideIcons.timer, size: 14, color: AppColors.gray500),
+                      const SizedBox(width: 4),
+                      Text(
+                        '${task.targetMinutes} min',
+                        style: theme.typography.body.xs.copyWith(color: AppColors.gray600),
+                      ),
+                    ],
+                  ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ProgressChecksBottomSheet extends StatelessWidget {
+  final DailyTaskRecord task;
+
+  const _ProgressChecksBottomSheet({required this.task});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = FTheme.of(context);
+    final state = context.watch<ClientReportsNotifier>().state;
+    final isLoading = state.loadingProgressChecks[task.id] ?? false;
+    final progressChecks = state.progressChecks[task.id] ?? [];
+    final error = state.progressChecksError;
+
+    // Format date
+    String formattedDate = '-';
+    if (task.assignedDate != null) {
+      try {
+        final date = DateTime.parse(task.assignedDate!);
+        formattedDate = DateFormat('dd MMM yyyy').format(date);
+      } catch (_) {
+        formattedDate = task.assignedDate!;
+      }
+    }
+
+    // Format time
+    String formattedTime = '-';
+    if (task.startAt != null && task.endAt != null) {
+      try {
+        final start = DateTime.parse(task.startAt!);
+        final end = DateTime.parse(task.endAt!);
+        formattedTime = '${DateFormat('HH:mm').format(start)} - ${DateFormat('HH:mm').format(end)}';
+      } catch (_) {
+        formattedTime = '${task.startAt} - ${task.endAt}';
+      }
+    } else if (task.startAt != null) {
+      try {
+        final start = DateTime.parse(task.startAt!);
+        formattedTime = DateFormat('HH:mm').format(start);
+      } catch (_) {
+        formattedTime = task.startAt!;
+      }
+    }
+
+    return Container(
+      constraints: BoxConstraints(
+        maxHeight: MediaQuery.of(context).size.height * 0.85,
+      ),
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Handle bar
+          Container(
+            margin: const EdgeInsets.only(top: 12),
+            width: 40,
+            height: 4,
+            decoration: BoxDecoration(
+              color: AppColors.gray300,
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+          // Header with task details
+          Container(
+            padding: const EdgeInsets.all(AppSpacing.md),
+            decoration: BoxDecoration(
+              color: AppColors.gray50,
+              border: Border(
+                bottom: BorderSide(color: AppColors.gray200),
+              ),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: AppColors.primary.withAlpha(26),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Icon(FLucideIcons.camera, color: AppColors.primary),
+                    ),
+                    const SizedBox(width: AppSpacing.sm),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            task.itemName ?? 'Task',
+                            style: theme.typography.body.lg.copyWith(fontWeight: FontWeight.w600),
+                          ),
+                          Text(
+                            task.employeeName ?? '-',
+                            style: theme.typography.body.xs.copyWith(color: AppColors.gray600),
+                          ),
+                        ],
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: () => Navigator.pop(context),
+                      icon: const Icon(FLucideIcons.x),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                // Task details row
+                Wrap(
+                  spacing: AppSpacing.md,
+                  runSpacing: AppSpacing.xs,
+                  children: [
+                    // Area
+                    if (task.areaName != null)
+                      _DetailChip(
+                        icon: FLucideIcons.mapPin,
+                        label: task.areaName!,
+                        theme: theme,
+                      ),
+                    // Date
+                    _DetailChip(
+                      icon: FLucideIcons.calendar,
+                      label: formattedDate,
+                      theme: theme,
+                    ),
+                    // Time
+                    if (formattedTime != '-')
+                      _DetailChip(
+                        icon: FLucideIcons.clock,
+                        label: formattedTime,
+                        theme: theme,
+                      ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          // Content
+          Flexible(
+            child: isLoading
+                ? const Center(child: LoadingIndicator())
+                : error != null
+                    ? Center(
+                        child: Padding(
+                          padding: const EdgeInsets.all(AppSpacing.lg),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(FLucideIcons.alertCircle, size: 48, color: AppColors.danger),
+                              const SizedBox(height: AppSpacing.md),
+                              Text('Gagal memuat: $error', style: theme.typography.body.md),
+                            ],
+                          ),
+                        ),
+                      )
+                    : progressChecks.isEmpty
+                        ? Center(
+                            child: Padding(
+                              padding: const EdgeInsets.all(AppSpacing.lg),
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const Icon(FLucideIcons.cameraOff, size: 48, color: AppColors.gray400),
+                                  const SizedBox(height: AppSpacing.md),
+                                  Text('Belum ada progress check', style: theme.typography.body.md),
+                                ],
+                              ),
+                            ),
+                          )
+                        : ListView.builder(
+                            shrinkWrap: true,
+                            padding: const EdgeInsets.all(AppSpacing.md),
+                            itemCount: progressChecks.length,
+                            itemBuilder: (context, index) {
+                              final check = progressChecks[index];
+                              return _ProgressCheckCard(check: check, theme: theme);
+                            },
+                          ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _DetailChip extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final FThemeData theme;
+
+  const _DetailChip({
+    required this.icon,
+    required this.label,
+    required this.theme,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.only(bottom: AppSpacing.sm),
-      padding: const EdgeInsets.all(AppSpacing.md),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: AppRadius.radiusMd,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withAlpha(13),
-            blurRadius: 4,
-            offset: const Offset(0, 2),
+        color: AppColors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.gray200),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 12, color: AppColors.gray500),
+          const SizedBox(width: 4),
+          Text(
+            label,
+            style: theme.typography.body.xs.copyWith(color: AppColors.gray600),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _ProgressCheckCard extends StatefulWidget {
+  final ProgressCheckRecord check;
+  final FThemeData theme;
+
+  const _ProgressCheckCard({required this.check, required this.theme});
+
+  @override
+  State<_ProgressCheckCard> createState() => _ProgressCheckCardState();
+}
+
+class _ProgressCheckCardState extends State<_ProgressCheckCard> {
+  VideoPlayerController? _videoController;
+  bool _isVideoInitialized = false;
+  bool _isVideoPlaying = false;
+  bool _hasVideoError = false;
+  bool _isVideoLoading = false;
+
+  @override
+  void dispose() {
+    _videoController?.dispose();
+    super.dispose();
+  }
+
+  Future<void> _initializeVideo() async {
+    if (_videoController != null || _isVideoLoading) return;
+
+    setState(() {
+      _isVideoLoading = true;
+      _hasVideoError = false;
+    });
+
+    try {
+      _videoController = VideoPlayerController.networkUrl(
+        Uri.parse(widget.check.mediaUrl),
+      );
+      await _videoController!.initialize();
+      await _videoController!.setLooping(false);
+      if (mounted) {
+        setState(() {
+          _isVideoInitialized = true;
+          _isVideoLoading = false;
+        });
+        _playVideo();
+      }
+    } catch (e) {
+      debugPrint('Video initialization error: $e');
+      if (mounted) {
+        setState(() {
+          _hasVideoError = true;
+          _isVideoLoading = false;
+        });
+      }
+    }
+  }
+
+  void _playVideo() {
+    if (_videoController == null) return;
+    _videoController!.play();
+    setState(() {
+      _isVideoPlaying = true;
+    });
+    _videoController!.addListener(_videoListener);
+  }
+
+  void _pauseVideo() {
+    _videoController?.pause();
+    _videoController?.removeListener(_videoListener);
+    if (mounted) {
+      setState(() {
+        _isVideoPlaying = false;
+      });
+    }
+  }
+
+  void _videoListener() {
+    if (_videoController == null) return;
+    if (_videoController!.value.position >= _videoController!.value.duration &&
+        _videoController!.value.duration.inMilliseconds > 0) {
+      // Video ended
+      _videoController!.removeListener(_videoListener);
+      if (mounted) {
+        setState(() {
+          _isVideoPlaying = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _openPhotoFullscreen(BuildContext context) async {
+    await showDialog(
+      context: context,
+      barrierColor: Colors.black,
+      builder: (ctx) => _PhotoZoomDialog(mediaUrl: widget.check.mediaUrl),
+    );
+  }
+
+  Future<void> _openVideoExternal() async {
+    final url = Uri.parse(widget.check.mediaUrl);
+    if (await canLaunchUrl(url)) {
+      await launchUrl(url, mode: LaunchMode.externalApplication);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: AppSpacing.md),
+      decoration: BoxDecoration(
+        color: AppColors.gray50,
+        borderRadius: AppRadius.radiusMd,
+        border: Border.all(color: AppColors.gray200),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Container(
-                width: 32,
-                height: 32,
-                decoration: BoxDecoration(
-                  color: AppColors.info.withAlpha(26),
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: const Icon(FLucideIcons.checkCircle2, size: 16, color: AppColors.info),
+          // Media preview
+          InkWell(
+            onTap: () {
+              if (widget.check.isPhoto) {
+                _openPhotoFullscreen(context);
+              } else {
+                if (!_isVideoInitialized && !_hasVideoError) {
+                  _initializeVideo();
+                }
+              }
+            },
+            child: Container(
+              height: 200,
+              width: double.infinity,
+              decoration: BoxDecoration(
+                color: AppColors.gray200,
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(8)),
               ),
-              const SizedBox(width: AppSpacing.sm),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+              child: widget.check.isPhoto
+                  ? Stack(
+                      children: [
+                        ClipRRect(
+                          borderRadius: const BorderRadius.vertical(top: Radius.circular(8)),
+                          child: Image.network(
+                            widget.check.mediaUrl,
+                            fit: BoxFit.cover,
+                            width: double.infinity,
+                            height: double.infinity,
+                            errorBuilder: (_, __, ___) => const Center(
+                              child: Icon(FLucideIcons.imageOff, size: 48, color: AppColors.gray400),
+                            ),
+                            loadingBuilder: (context, child, loadingProgress) {
+                              if (loadingProgress == null) return child;
+                              return const Center(child: LoadingIndicator());
+                            },
+                          ),
+                        ),
+                        // Zoom icon
+                        Positioned(
+                          right: 8,
+                          bottom: 8,
+                          child: Container(
+                            padding: const EdgeInsets.all(6),
+                            decoration: BoxDecoration(
+                              color: Colors.black54,
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: const Icon(
+                              FLucideIcons.zoomIn,
+                              color: Colors.white,
+                              size: 16,
+                            ),
+                          ),
+                        ),
+                      ],
+                    )
+                  : _buildVideoPreview(),
+            ),
+          ),
+          // Info
+          Padding(
+            padding: const EdgeInsets.all(AppSpacing.md),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
                   children: [
-                    Text(
-                      task.itemName ?? 'Task',
-                      style: theme.typography.body.md.copyWith(fontWeight: FontWeight.w600),
-                    ),
-                    Text(
-                      task.employeeName ?? '-',
-                      style: theme.typography.body.xs.copyWith(color: AppColors.gray500),
+                    Icon(FLucideIcons.user, size: 14, color: AppColors.gray500),
+                    const SizedBox(width: 4),
+                    Expanded(
+                      child: Text(
+                        'Karyawan: ${widget.check.employeeName ?? '-'}',
+                        style: widget.theme.typography.body.sm,
+                      ),
                     ),
                   ],
                 ),
-              ),
-              _StatusBadge(status: task.status, theme: theme),
-            ],
-          ),
-          const SizedBox(height: AppSpacing.sm),
-          Row(
-            children: [
-              Icon(FLucideIcons.calendar, size: 14, color: AppColors.gray500),
-              const SizedBox(width: 4),
-              Text(
-                task.assignedDate ?? '-',
-                style: theme.typography.body.xs.copyWith(color: AppColors.gray600),
-              ),
-              if (task.targetMinutes != null) ...[
-                const SizedBox(width: AppSpacing.md),
-                Icon(FLucideIcons.timer, size: 14, color: AppColors.gray500),
-                const SizedBox(width: 4),
-                Text(
-                  '${task.targetMinutes} min',
-                  style: theme.typography.body.xs.copyWith(color: AppColors.gray600),
+                const SizedBox(height: 4),
+                Row(
+                  children: [
+                    Icon(FLucideIcons.userCheck, size: 14, color: AppColors.gray500),
+                    const SizedBox(width: 4),
+                    Expanded(
+                      child: Text(
+                        'Dicek oleh: ${widget.check.checkedByName ?? '-'}',
+                        style: widget.theme.typography.body.sm,
+                      ),
+                    ),
+                  ],
+                ),
+                if (widget.check.notes != null && widget.check.notes!.isNotEmpty) ...[
+                  const SizedBox(height: AppSpacing.sm),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Icon(FLucideIcons.messageSquare, size: 14, color: AppColors.gray500),
+                      const SizedBox(width: 4),
+                      Expanded(
+                        child: Text(
+                          widget.check.notes!,
+                          style: widget.theme.typography.body.sm,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+                const SizedBox(height: AppSpacing.sm),
+                Row(
+                  children: [
+                    Icon(FLucideIcons.clock, size: 14, color: AppColors.gray500),
+                    const SizedBox(width: 4),
+                    Text(
+                      widget.check.checkedAt != null
+                          ? DateFormat('dd MMM yyyy, HH:mm').format(DateTime.parse(widget.check.checkedAt!))
+                          : '-',
+                      style: widget.theme.typography.body.xs.copyWith(color: AppColors.gray600),
+                    ),
+                  ],
                 ),
               ],
-            ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildVideoPreview() {
+    if (_isVideoLoading) {
+      return const Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            CircularProgressIndicator(),
+            SizedBox(height: 8),
+            Text(
+              'Memuat video...',
+              style: TextStyle(color: Colors.white70, fontSize: 12),
+            ),
+          ],
+        ),
+      );
+    }
+
+    if (_hasVideoError) {
+      return InkWell(
+        onTap: () {
+          // Try external player as fallback
+          _openVideoExternal();
+        },
+        child: Container(
+          color: AppColors.gray800,
+          child: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: const BoxDecoration(
+                    color: Colors.white24,
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    FLucideIcons.playCircle,
+                    size: 48,
+                    color: Colors.white70,
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                const Text(
+                  'Tap untuk buka dengan player lain',
+                  style: TextStyle(color: Colors.white70, fontSize: 12),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
+    if (_isVideoInitialized && _videoController != null) {
+      return GestureDetector(
+        onTap: () {
+          if (_isVideoPlaying) {
+            _pauseVideo();
+          } else {
+            _playVideo();
+          }
+        },
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            AspectRatio(
+              aspectRatio: _videoController!.value.aspectRatio,
+              child: VideoPlayer(_videoController!),
+            ),
+            if (!_isVideoPlaying)
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: const BoxDecoration(
+                  color: Colors.white54,
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  FLucideIcons.play,
+                  size: 32,
+                  color: Colors.white,
+                ),
+              ),
+          ],
+        ),
+      );
+    }
+
+    // Default state - show placeholder
+    return InkWell(
+      onTap: () {
+        if (!_isVideoInitialized && !_hasVideoError) {
+          _initializeVideo();
+        }
+      },
+      child: Container(
+        color: AppColors.gray800,
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            // Play icon center
+            Center(
+              child: Container(
+                padding: const EdgeInsets.all(16),
+                decoration: const BoxDecoration(
+                  color: Colors.white54,
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  FLucideIcons.play,
+                  size: 32,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+            // VIDEO badge
+            Positioned(
+              right: 8,
+              bottom: 8,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(
+                  color: Colors.black87,
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: const Text(
+                  'VIDEO',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+class _PhotoZoomDialog extends StatelessWidget {
+  final String mediaUrl;
+
+  const _PhotoZoomDialog({required this.mediaUrl});
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      backgroundColor: Colors.black,
+      insetPadding: EdgeInsets.zero,
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          InteractiveViewer(
+            minScale: 0.5,
+            maxScale: 4.0,
+            child: Center(
+              child: Image.network(
+                mediaUrl,
+                fit: BoxFit.contain,
+                errorBuilder: (context, error, stackTrace) => const Center(
+                  child: Icon(
+                    FLucideIcons.imageOff,
+                    color: Colors.white54,
+                    size: 64,
+                  ),
+                ),
+                loadingBuilder: (context, child, loadingProgress) {
+                  if (loadingProgress == null) return child;
+                  return Center(
+                    child: CircularProgressIndicator(
+                      value: loadingProgress.expectedTotalBytes != null
+                          ? loadingProgress.cumulativeBytesLoaded / loadingProgress.expectedTotalBytes!
+                          : null,
+                      color: Colors.white,
+                    ),
+                  );
+                },
+              ),
+            ),
+          ),
+          Positioned(
+            top: MediaQuery.of(context).padding.top + 8,
+            right: 8,
+            child: IconButton(
+              onPressed: () => Navigator.pop(context),
+              icon: const Icon(FLucideIcons.x, color: Colors.white, size: 28),
+            ),
           ),
         ],
       ),
@@ -427,10 +1158,14 @@ class _PatrolCard extends StatelessWidget {
                     Text(
                       report.patrolRoundName ?? 'Patrol',
                       style: theme.typography.body.md.copyWith(fontWeight: FontWeight.w600),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
                     Text(
                       '${report.employeeName ?? '-'} • ${report.areaName ?? '-'}',
                       style: theme.typography.body.xs.copyWith(color: AppColors.gray500),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ],
                 ),
@@ -439,20 +1174,32 @@ class _PatrolCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: AppSpacing.sm),
-          Row(
+          // Use Wrap instead of Row to prevent overflow on narrow screens
+          Wrap(
+            spacing: AppSpacing.md,
+            runSpacing: AppSpacing.xs,
             children: [
-              Icon(FLucideIcons.calendar, size: 14, color: AppColors.gray500),
-              const SizedBox(width: 4),
-              Text(
-                report.patrolDate ?? '-',
-                style: theme.typography.body.xs.copyWith(color: AppColors.gray600),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(FLucideIcons.calendar, size: 14, color: AppColors.gray500),
+                  const SizedBox(width: 4),
+                  Text(
+                    report.patrolDate ?? '-',
+                    style: theme.typography.body.xs.copyWith(color: AppColors.gray600),
+                  ),
+                ],
               ),
-              const SizedBox(width: AppSpacing.md),
-              Icon(FLucideIcons.qrCode, size: 14, color: AppColors.gray500),
-              const SizedBox(width: 4),
-              Text(
-                '${report.totalScans ?? 0} scans',
-                style: theme.typography.body.xs.copyWith(color: AppColors.gray600),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(FLucideIcons.qrCode, size: 14, color: AppColors.gray500),
+                  const SizedBox(width: 4),
+                  Text(
+                    '${report.totalScans ?? 0} scans',
+                    style: theme.typography.body.xs.copyWith(color: AppColors.gray600),
+                  ),
+                ],
               ),
             ],
           ),
@@ -512,6 +1259,8 @@ class _FieldReportCard extends StatelessWidget {
                     Text(
                       '${report.employeeName ?? '-'} • ${report.location ?? '-'}',
                       style: theme.typography.body.xs.copyWith(color: AppColors.gray500),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ],
                 ),
@@ -519,23 +1268,34 @@ class _FieldReportCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: AppSpacing.sm),
-          Row(
+          // Use Wrap instead of Row to prevent overflow on narrow screens
+          Wrap(
+            spacing: AppSpacing.md,
+            runSpacing: AppSpacing.xs,
             children: [
-              Icon(FLucideIcons.calendar, size: 14, color: AppColors.gray500),
-              const SizedBox(width: 4),
-              Text(
-                report.reportDate ?? '-',
-                style: theme.typography.body.xs.copyWith(color: AppColors.gray600),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(FLucideIcons.calendar, size: 14, color: AppColors.gray500),
+                  const SizedBox(width: 4),
+                  Text(
+                    report.reportDate ?? '-',
+                    style: theme.typography.body.xs.copyWith(color: AppColors.gray600),
+                  ),
+                ],
               ),
-              if (report.photoUrl != null) ...[
-                const SizedBox(width: AppSpacing.md),
-                Icon(FLucideIcons.image, size: 14, color: AppColors.gray500),
-                const SizedBox(width: 4),
-                Text(
-                  'Ada foto',
-                  style: theme.typography.body.xs.copyWith(color: AppColors.gray600),
+              if (report.photoUrl != null)
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(FLucideIcons.image, size: 14, color: AppColors.gray500),
+                    const SizedBox(width: 4),
+                    Text(
+                      'Ada foto',
+                      style: theme.typography.body.xs.copyWith(color: AppColors.gray600),
+                    ),
+                  ],
                 ),
-              ],
             ],
           ),
         ],

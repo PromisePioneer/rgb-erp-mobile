@@ -406,10 +406,18 @@ class _RGBERPAppState extends State<RGBERPApp> {
         ),
       ),
       builder: (context, child) {
-        return FTheme(
-          data: AppFTheme.light,
-          child: FToaster(
-            child: child ?? const SizedBox.shrink(),
+        // Clamp text scale factor to prevent UI overflow on devices with large font settings
+        // Max scale of 1.15 ensures text remains readable while preventing layout issues
+        final mq = MediaQuery.of(context);
+        return MediaQuery(
+          data: mq.copyWith(
+            textScaler: mq.textScaler.clamp(minScaleFactor: 0.9, maxScaleFactor: 1.15),
+          ),
+          child: FTheme(
+            data: AppFTheme.light,
+            child: FToaster(
+              child: child ?? const SizedBox.shrink(),
+            ),
           ),
         );
       },

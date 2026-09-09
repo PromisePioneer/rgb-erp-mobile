@@ -1529,6 +1529,98 @@ class DailyTaskApi {
       throw ApiException.fromDioException(e);
     }
   }
+
+  // ====================
+  // Task Progress Check APIs (uses task_progress privilege)
+  // ====================
+
+  /// GET /daily-task/progress/tasks - Get tasks for progress checking
+  Future<Map<String, dynamic>> getProgressTasks() async {
+    try {
+      final response = await _dio.get(ApiEndpoints.dailyTaskProgressTasks);
+      return response.data as Map<String, dynamic>;
+    } on DioException catch (e) {
+      throw ApiException.fromDioException(e);
+    }
+  }
+
+  /// POST /daily-task/{id}/progress-check - Submit progress check with photo
+  Future<Map<String, dynamic>> submitProgressCheckPhoto({
+    required int taskId,
+    required int employeeId,
+    required String photoBase64,
+    String? notes,
+  }) async {
+    try {
+      final formData = FormData();
+      formData.fields.add(MapEntry('employee_id', employeeId.toString()));
+      formData.fields.add(MapEntry('photo', photoBase64));
+      if (notes != null && notes.isNotEmpty) {
+        formData.fields.add(MapEntry('notes', notes));
+      }
+
+      final response = await _dio.post(
+        ApiEndpoints.dailyTaskProgressCheck(taskId),
+        data: formData,
+        options: Options(contentType: 'multipart/form-data'),
+      );
+      return response.data as Map<String, dynamic>;
+    } on DioException catch (e) {
+      throw ApiException.fromDioException(e);
+    }
+  }
+
+  /// POST /daily-task/{id}/progress-check - Submit progress check with video
+  Future<Map<String, dynamic>> submitProgressCheckVideo({
+    required int taskId,
+    required int employeeId,
+    required String videoPath,
+    String? notes,
+  }) async {
+    try {
+      final formData = FormData();
+      formData.fields.add(MapEntry('employee_id', employeeId.toString()));
+
+      // Get file extension for filename
+      final extension = videoPath.split('.').last;
+      final filename = 'video_${DateTime.now().millisecondsSinceEpoch}.$extension';
+
+      formData.files.add(MapEntry(
+        'video',
+        await MultipartFile.fromFile(
+          videoPath,
+          filename: filename,
+        ),
+      ));
+
+      if (notes != null && notes.isNotEmpty) {
+        formData.fields.add(MapEntry('notes', notes));
+      }
+
+      final response = await _dio.post(
+        ApiEndpoints.dailyTaskProgressCheck(taskId),
+        data: formData,
+        options: Options(
+          contentType: 'multipart/form-data',
+          sendTimeout: const Duration(seconds: 120), // 2 min for video
+          receiveTimeout: const Duration(seconds: 120),
+        ),
+      );
+      return response.data as Map<String, dynamic>;
+    } on DioException catch (e) {
+      throw ApiException.fromDioException(e);
+    }
+  }
+
+  /// GET /daily-task/{id}/progress-checks - Get progress check history for a task
+  Future<Map<String, dynamic>> getProgressChecks(int taskId) async {
+    try {
+      final response = await _dio.get(ApiEndpoints.dailyTaskProgressChecks(taskId));
+      return response.data as Map<String, dynamic>;
+    } on DioException catch (e) {
+      throw ApiException.fromDioException(e);
+    }
+  }
 }
 
 /// Client API for mobile app - authenticated as Client
@@ -1611,6 +1703,17 @@ class ClientApi {
           'to_date': ?toDate,
         },
       );
+      return response.data as Map<String, dynamic>;
+    } on DioException catch (e) {
+      throw ApiException.fromDioException(e);
+    }
+  }
+
+  /// GET /client/daily-tasks/{id}/progress-checks - Get progress checks for a task
+  Future<Map<String, dynamic>> getDailyTaskProgressChecks(int taskId) async {
+    try {
+      final endpoint = ApiEndpoints.clientDailyTaskProgressChecks.replaceFirst('{id}', taskId.toString());
+      final response = await _dio.get(endpoint);
       return response.data as Map<String, dynamic>;
     } on DioException catch (e) {
       throw ApiException.fromDioException(e);

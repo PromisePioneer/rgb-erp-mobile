@@ -9,8 +9,22 @@ import '../../../../shared/widgets/icons/forui_icon_map.dart';
 import '../providers/client_dashboard_provider.dart';
 
 /// Client employee list screen
-class ClientEmployeeListScreen extends StatelessWidget {
+class ClientEmployeeListScreen extends StatefulWidget {
   const ClientEmployeeListScreen({super.key});
+
+  @override
+  State<ClientEmployeeListScreen> createState() => _ClientEmployeeListScreenState();
+}
+
+class _ClientEmployeeListScreenState extends State<ClientEmployeeListScreen> {
+  @override
+  void initState() {
+    super.initState();
+    // Auto-fetch employees on init
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<ClientDashboardNotifier>().fetchEmployees();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -29,11 +43,11 @@ class ClientEmployeeListScreen extends StatelessWidget {
       ),
       body: Consumer<ClientDashboardNotifier>(
         builder: (context, notifier, child) {
-          if (notifier.isLoadingEmployees) {
+          if (notifier.isLoadingEmployees && notifier.employees.isEmpty) {
             return const Center(child: LoadingIndicator());
           }
 
-          if (notifier.employeesError != null) {
+          if (notifier.employeesError != null && notifier.employees.isEmpty) {
             return Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -66,7 +80,9 @@ class ClientEmployeeListScreen extends StatelessWidget {
           }
 
           return RefreshIndicator(
-            onRefresh: () => notifier.fetchEmployees(),
+            onRefresh: () async {
+              await notifier.fetchEmployees();
+            },
             child: ListView.builder(
               padding: const EdgeInsets.all(AppSpacing.md),
               itemCount: notifier.employees.length,

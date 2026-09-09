@@ -4,12 +4,14 @@
 
 list(APPEND FLUTTER_PLUGIN_LIST
   audioplayers_windows
+  ffmpeg_kit_flutter_new
   file_selector_windows
   firebase_core
   flutter_secure_storage_windows
   geolocator_windows
   local_auth_windows
   permission_handler_windows
+  url_launcher_windows
 )
 
 list(APPEND FLUTTER_FFI_PLUGIN_LIST
