@@ -180,79 +180,25 @@ class _TaskProgressDetailScreenState extends State<TaskProgressDetailScreen> {
         });
 
         try {
-          // Get user info from AuthNotifier
-          final authNotifier = context.read<AuthNotifier>();
-          final userName = authNotifier.state.user?.name ?? 'Unknown';
+          // Log video info
+          final videoFile = File(video.path);
+          final videoSize = await videoFile.length();
+          debugPrint('WatermarkService: Video captured, size: ${videoSize / 1024 / 1024} MB');
+          debugPrint('WatermarkService: Video will be compressed on server via Redis queue');
 
-          // Get area name - try multiple sources
-          String areaName = 'Unknown Area';
-          String? itemName = null;
-
-          final notifier = context.read<DailyTaskNotifier>();
-
-          // 1. Try from progressTasks first
-          if (notifier.progressTasks.isNotEmpty) {
-            final progressTask = notifier.progressTasks.firstWhere(
-              (t) => t['id'] == widget.taskId,
-              orElse: () => <String, dynamic>{},
-            );
-            if (progressTask.isNotEmpty) {
-              final progressAreaName = progressTask['area_name'] as String?;
-              if (progressAreaName != null && progressAreaName.isNotEmpty) {
-                areaName = progressAreaName;
-                debugPrint('WatermarkService: Using areaName from progressTasks: $areaName');
-              }
-              itemName = progressTask['item_name'] as String?;
-            }
-          }
-          // 2. Try from selectedTask (if user is also an employee)
-          else {
-            final task = notifier.selectedTask;
-            if (task != null) {
-              if (task.areaName != null && task.areaName!.isNotEmpty) {
-                areaName = task.areaName!;
-                debugPrint('WatermarkService: Using areaName from selectedTask: $areaName');
-              }
-              itemName = task.itemName;
-            }
-          }
-
-          // 3. Fallback to item name if areaName is still Unknown
-          if (areaName == 'Unknown Area' && itemName != null && itemName.isNotEmpty) {
-            areaName = itemName;
-            debugPrint('WatermarkService: Using itemName as fallback: $areaName');
-          }
-
-          debugPrint('WatermarkService: Final areaName for watermark: $areaName');
-
-          // Add watermark to the video
-          final watermarkedFile = await _watermarkService.processVideoWithProgress(
-            video: video,
-            areaName: areaName,
-            userName: userName,
-            onProgress: (progress) {
-              setState(() {
-                _videoWatermarkProgress = progress;
-              });
-            },
-            compress: true, // Enable compression
-          );
-
-          // Log processed video size for debugging
-          final processedFile = File(watermarkedFile.path);
-          final processedSize = await processedFile.length();
-          debugPrint('WatermarkService: Processed video size: ${processedSize / 1024 / 1024} MB');
+          // Save video directly - backend will handle compression
+          // No local processing needed
 
           setState(() {
-            _videoPath = watermarkedFile.path;
+            _videoPath = video.path;
             _photoPath = null; // Clear photo if video is selected
             _isProcessingWatermark = false;
+            _videoWatermarkProgress = 1.0;
           });
 
-          debugPrint('WatermarkService: Video processed and saved to ${watermarkedFile.path}');
+          debugPrint('WatermarkService: Video ready for upload');
         } catch (e) {
-          debugPrint('WatermarkService: Failed to watermark video: $e');
-          // Fallback: save original video without watermark
+          debugPrint('WatermarkService: Failed to process video: $e');
           setState(() {
             _videoPath = video.path;
             _photoPath = null;
@@ -261,7 +207,7 @@ class _TaskProgressDetailScreenState extends State<TaskProgressDetailScreen> {
 
           if (mounted) {
             AppToast.of(context).show(
-              message: 'Video disimpan tanpa watermark: $e',
+              message: 'Video disimpan: $e',
               style: AppToastStyle.warning,
             );
           }
