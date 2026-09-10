@@ -53,15 +53,12 @@ jobs:
             --flavor=${{ github.event.inputs.flavor || 'dev' }}
 
       - name: Upload to Firebase App Distribution
-        uses: wzieba/Firebase-Distribution-Github-Action@v1
-        with:
-          appFile: build/app/outputs/flutter-apk/app-${{ github.event.inputs.flavor || 'dev' }}-debug.apk
-          groups: ${{ github.ref_name == 'main' && 'production' || 'testers' }}
-          release-notes: |
-            Build: ${{ github.run_number }}
-            Branch: ${{ github.ref_name }}
-            Commit: ${{ github.sha }}
-            Triggered by: ${{ github.actor }}
+        run: |
+          npx firebase-tools appdistribution:distribute \
+            build/app/outputs/flutter-apk/app-${{ github.event.inputs.flavor || 'dev' }}-debug.apk \
+            --app ${{ secrets.FIREBASE_APP_ID }} \
+            --groups ${{ github.ref_name == 'main' && 'production' || 'testers' }} \
+            --release-notes "Build: ${{ github.run_number }} | Branch: ${{ github.ref_name }} | Commit: ${{ github.sha }}"
         env:
           FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
 
