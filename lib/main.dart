@@ -10,6 +10,8 @@ import 'core/core.dart';
 import 'core/theme/app_ftheme.dart';
 import 'core/services/notification_dialog_handler.dart';
 import 'core/services/background_task_service.dart';
+import 'core/services/app_update_service.dart';
+import 'shared/widgets/force_update_dialog.dart';
 import 'features/auth/presentation/providers/auth_provider.dart';
 import 'features/auth/data/repositories/auth_repository.dart';
 import 'features/attendance/presentation/providers/attendance_provider.dart';
@@ -381,6 +383,20 @@ class _RGBERPAppState extends State<RGBERPApp> {
     super.initState();
     // Initialize notification dialog handler
     notificationDialogHandler.init();
+    // Check for app update
+    _checkForUpdate();
+  }
+
+  Future<void> _checkForUpdate() async {
+    try {
+      final updateInfo = await AppUpdateService.checkForUpdate();
+      if (updateInfo != null && mounted) {
+        showForceUpdateDialog(context, updateInfo);
+      }
+    } catch (e) {
+      // Ignore update check errors
+      debugPrint('Update check failed: $e');
+    }
   }
 
   @override
