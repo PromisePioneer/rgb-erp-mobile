@@ -41,6 +41,7 @@ jobs:
           channel: 'stable'
           cache: true
           cache-key: flutter-${{ env.FLUTTER_VERSION }}
+          cache-path: ~/.pub-cache/hoverctl
 
       - name: Setup Java
         uses: actions/setup-java@v4

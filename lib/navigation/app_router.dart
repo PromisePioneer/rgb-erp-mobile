@@ -73,6 +73,15 @@ import '../features/leave/presentation/screens/leave_screen.dart';
 import '../features/purchase_request/presentation/screens/purchase_request_screen.dart';
 import '../features/purchase_request/presentation/screens/purchase_request_form_screen.dart';
 import '../features/purchase_request/presentation/screens/purchase_request_detail_screen.dart';
+import '../features/purchase_order/presentation/screens/purchase_order_screen.dart';
+import '../features/purchase_order/presentation/screens/purchase_order_form_screen.dart';
+import '../features/purchase_order/presentation/screens/purchase_order_detail_screen.dart';
+import '../features/fund_request/presentation/screens/fund_request_screen.dart';
+import '../features/fund_request/presentation/screens/fund_request_form_screen.dart';
+import '../features/fund_request/presentation/screens/fund_request_detail_screen.dart';
+import '../features/reception/presentation/screens/reception_screen.dart';
+import '../features/reception/presentation/screens/reception_form_screen.dart';
+import '../features/reception/presentation/screens/reception_detail_screen.dart';
 import '../features/violation_report/presentation/screens/violation_report_form_screen.dart';
 import '../features/violation_report/presentation/screens/violation_report_history_screen.dart';
 import '../features/violation_report/presentation/screens/violation_report_detail_screen.dart';
@@ -487,6 +496,120 @@ void initRouter(AuthNotifier authNotifier) {
                         );
                       }
                       return PurchaseRequestDetailScreen(purchaseRequestId: id);
+                    },
+                  ),
+                ],
+              ),
+            ],
+          ),
+          // Branch 25: Purchase Order List
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/purchase-order',
+                name: 'purchase-order',
+                builder: (context, state) => const PurchaseOrderScreen(),
+                routes: [
+                  // Form route MUST be before parameterized route
+                  GoRoute(
+                    path: 'form',
+                    name: 'purchase-order-form',
+                    builder: (context, state) {
+                      final editId = state.uri.queryParameters['edit'];
+                      return PurchaseOrderFormScreen(
+                        editId: editId != null ? int.tryParse(editId) : null,
+                      );
+                    },
+                  ),
+                  // Detail route
+                  GoRoute(
+                    path: ':id',
+                    name: 'purchase-order-detail',
+                    builder: (context, state) {
+                      final idParam = state.pathParameters['id'];
+                      final id = int.tryParse(idParam ?? '');
+                      if (id == null) {
+                        return const Scaffold(
+                          body: Center(child: Text('ID tidak valid')),
+                        );
+                      }
+                      return PurchaseOrderDetailScreen(purchaseOrderId: id);
+                    },
+                  ),
+                ],
+              ),
+            ],
+          ),
+          // Branch 26: Fund Request List
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/fund-request',
+                name: 'fund-request',
+                builder: (context, state) => const FundRequestScreen(),
+                routes: [
+                  // Form route MUST be before parameterized route
+                  GoRoute(
+                    path: 'form',
+                    name: 'fund-request-form',
+                    builder: (context, state) {
+                      final editId = state.uri.queryParameters['edit'];
+                      return FundRequestFormScreen(
+                        editId: editId != null ? int.tryParse(editId) : null,
+                      );
+                    },
+                  ),
+                  // Detail route
+                  GoRoute(
+                    path: ':id',
+                    name: 'fund-request-detail',
+                    builder: (context, state) {
+                      final idParam = state.pathParameters['id'];
+                      final id = int.tryParse(idParam ?? '');
+                      if (id == null) {
+                        return const Scaffold(
+                          body: Center(child: Text('ID tidak valid')),
+                        );
+                      }
+                      return FundRequestDetailScreen(fundRequestId: id);
+                    },
+                  ),
+                ],
+              ),
+            ],
+          ),
+          // Branch 27: Reception List
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/reception',
+                name: 'reception',
+                builder: (context, state) => const ReceptionScreen(),
+                routes: [
+                  // Form route MUST be before parameterized route
+                  GoRoute(
+                    path: 'form',
+                    name: 'reception-form',
+                    builder: (context, state) {
+                      final editId = state.uri.queryParameters['edit'];
+                      return ReceptionFormScreen(
+                        editId: editId != null ? int.tryParse(editId) : null,
+                      );
+                    },
+                  ),
+                  // Detail route
+                  GoRoute(
+                    path: ':id',
+                    name: 'reception-detail',
+                    builder: (context, state) {
+                      final idParam = state.pathParameters['id'];
+                      final id = int.tryParse(idParam ?? '');
+                      if (id == null) {
+                        return const Scaffold(
+                          body: Center(child: Text('ID tidak valid')),
+                        );
+                      }
+                      return ReceptionDetailScreen(receptionId: id);
                     },
                   ),
                 ],

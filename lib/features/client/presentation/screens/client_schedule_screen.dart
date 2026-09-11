@@ -233,7 +233,7 @@ class _CalendarGrid extends StatelessWidget {
             ),
             itemCount: 42,
             itemBuilder: (context, index) {
-              final dayOffset = index - (startWeekday - 1);
+              final dayOffset = index + 1 - startWeekday;
               if (dayOffset < 1 || dayOffset > daysInMonth) {
                 return const SizedBox();
               }

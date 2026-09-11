@@ -150,15 +150,15 @@ class AttendanceApi {
         data: {
           'type': type,
           'photo': photo,
-          'lat': ?lat,
-          'lng': ?lng,
-          'notes': ?notes,
-          'liveness_passed': ?livenessPassed,
-          'face_match_score': ?faceMatchScore,
-          'freq_ratio': ?freqRatio,
-          'texture_score': ?textureScore,
-          'early_leave_notes': ?earlyLeaveNotes,
-          'captured_at': ?capturedAt,
+          'lat': lat,
+          'lng': lng,
+          'notes': notes,
+          'liveness_passed': livenessPassed,
+          'face_match_score': faceMatchScore,
+          'freq_ratio': freqRatio,
+          'texture_score': textureScore,
+          'early_leave_notes': earlyLeaveNotes,
+          'captured_at': capturedAt,
         },
       );
       
@@ -189,11 +189,11 @@ class AttendanceApi {
         data: {
           'photo': photo,
           'captured_at': capturedAt,
-          'lat': ?lat,
-          'lng': ?lng,
-          'type': ?type,
-          'notes': ?notes,
-          'idempotency_key': ?idempotencyKey,
+          'lat': lat,
+          'lng': lng,
+          'type': type,
+          'notes': notes,
+          'idempotency_key': idempotencyKey,
         },
       );
       
@@ -352,10 +352,10 @@ class PatrolApi {
           'qr_code': qrCode,
           'latitude': latitude,
           'longitude': longitude,
-          'otp': ?otp,
-          'device_id': ?deviceId,
-          'is_mock_location': ?isMockLocation,
-          'scanned_at_local': ?scannedAtLocal,
+          'otp': otp,
+          'device_id': deviceId,
+          'is_mock_location': isMockLocation,
+          'scanned_at_local': scannedAtLocal,
         },
       );
       return response.data as Map<String, dynamic>;
@@ -406,7 +406,7 @@ class PanicApi {
         'type': type,
         'latitude': latitude,
         'longitude': longitude,
-        'description': ?description,
+        'description': description,
       },
     );
     
@@ -702,6 +702,431 @@ class PurchaseRequestApi {
   }
 }
 
+class PurchaseOrderApi {
+  final Dio _dio;
+
+  PurchaseOrderApi(this._dio);
+
+  /// GET /purchase-orders - Get all purchase orders (paginated)
+  Future<Map<String, dynamic>> getPurchaseOrders({
+    String? search,
+    String? status,
+    int page = 1,
+    int perPage = 15,
+  }) async {
+    try {
+      final response = await _dio.get(
+        ApiEndpoints.purchaseOrders,
+        queryParameters: {
+          if (search != null && search.isNotEmpty) 'search': search,
+          if (status != null && status.isNotEmpty) 'status': status,
+          'page': page,
+          'per_page': perPage,
+        },
+      );
+      return response.data as Map<String, dynamic>;
+    } on DioException catch (e) {
+      throw ApiException.fromDioException(e);
+    }
+  }
+
+  /// GET /purchase-orders/{id} - Get purchase order detail
+  Future<Map<String, dynamic>> getPurchaseOrderDetail(int id) async {
+    try {
+      final response = await _dio.get(ApiEndpoints.purchaseOrder(id));
+      return response.data as Map<String, dynamic>;
+    } on DioException catch (e) {
+      throw ApiException.fromDioException(e);
+    }
+  }
+
+  /// POST /purchase-orders - Create a new purchase order
+  Future<Map<String, dynamic>> createPurchaseOrder({
+    required int purchaseRequestId,
+    required String date,
+    String? supplier,
+    String? notes,
+    required List<Map<String, dynamic>> details,
+  }) async {
+    try {
+      final response = await _dio.post(
+        ApiEndpoints.purchaseOrders,
+        data: {
+          'purchase_request_id': purchaseRequestId,
+          'date': date,
+          if (supplier != null && supplier.isNotEmpty) 'supplier': supplier,
+          'notes': notes,
+          'details': details,
+        },
+      );
+      return response.data as Map<String, dynamic>;
+    } on DioException catch (e) {
+      throw ApiException.fromDioException(e);
+    }
+  }
+
+  /// PUT /purchase-orders/{id} - Update a purchase order
+  Future<Map<String, dynamic>> updatePurchaseOrder({
+    required int id,
+    required int purchaseRequestId,
+    required String date,
+    String? supplier,
+    String? notes,
+    required List<Map<String, dynamic>> details,
+  }) async {
+    try {
+      final response = await _dio.put(
+        ApiEndpoints.purchaseOrder(id),
+        data: {
+          'purchase_request_id': purchaseRequestId,
+          'date': date,
+          if (supplier != null && supplier.isNotEmpty) 'supplier': supplier,
+          'notes': notes,
+          'details': details,
+        },
+      );
+      return response.data as Map<String, dynamic>;
+    } on DioException catch (e) {
+      throw ApiException.fromDioException(e);
+    }
+  }
+
+  /// DELETE /purchase-orders/{id} - Delete a purchase order
+  Future<Map<String, dynamic>> deletePurchaseOrder(int id) async {
+    try {
+      final response = await _dio.delete(ApiEndpoints.purchaseOrder(id));
+      return response.data as Map<String, dynamic>;
+    } on DioException catch (e) {
+      throw ApiException.fromDioException(e);
+    }
+  }
+
+  /// POST /purchase-orders/{id}/submit - Submit for approval
+  Future<Map<String, dynamic>> submitPurchaseOrder(int id) async {
+    try {
+      final response = await _dio.post(ApiEndpoints.purchaseOrderSubmit(id));
+      return response.data as Map<String, dynamic>;
+    } on DioException catch (e) {
+      throw ApiException.fromDioException(e);
+    }
+  }
+
+  /// GET /purchase-orders/products-select-options - Get products for dropdown
+  Future<Map<String, dynamic>> getProductOptions({String? query}) async {
+    try {
+      final response = await _dio.get(
+        ApiEndpoints.purchaseOrderProducts,
+        queryParameters: {
+          if (query != null && query.isNotEmpty) 'q': query,
+        },
+      );
+      return response.data as Map<String, dynamic>;
+    } on DioException catch (e) {
+      throw ApiException.fromDioException(e);
+    }
+  }
+
+  /// GET /purchase-orders/purchase-requests-select-options - Get PRs for dropdown
+  Future<Map<String, dynamic>> getPurchaseRequestOptions({String? query}) async {
+    try {
+      final response = await _dio.get(
+        ApiEndpoints.purchaseOrderPurchaseRequests,
+        queryParameters: {
+          if (query != null && query.isNotEmpty) 'q': query,
+        },
+      );
+      return response.data as Map<String, dynamic>;
+    } on DioException catch (e) {
+      throw ApiException.fromDioException(e);
+    }
+  }
+}
+
+class FundRequestApi {
+  final Dio _dio;
+
+  FundRequestApi(this._dio);
+
+  /// GET /fund-requests - Get all fund requests (paginated)
+  Future<Map<String, dynamic>> getFundRequests({
+    String? search,
+    String? status,
+    int page = 1,
+    int perPage = 15,
+  }) async {
+    try {
+      final response = await _dio.get(
+        ApiEndpoints.fundRequests,
+        queryParameters: {
+          if (search != null && search.isNotEmpty) 'search': search,
+          if (status != null && status.isNotEmpty) 'status': status,
+          'page': page,
+          'per_page': perPage,
+        },
+      );
+      return response.data as Map<String, dynamic>;
+    } on DioException catch (e) {
+      throw ApiException.fromDioException(e);
+    }
+  }
+
+  /// GET /fund-requests/{id} - Get fund request detail
+  Future<Map<String, dynamic>> getFundRequestDetail(int id) async {
+    try {
+      final response = await _dio.get(ApiEndpoints.fundRequest(id));
+      return response.data as Map<String, dynamic>;
+    } on DioException catch (e) {
+      throw ApiException.fromDioException(e);
+    }
+  }
+
+  /// POST /fund-requests - Create a new fund request
+  Future<Map<String, dynamic>> createFundRequest({
+    required int poId,
+    required double requestedAmount,
+    double? taxAmount,
+    String? paymentTerm,
+    String? bankName,
+    String? bankAccountNumber,
+    String? bankAccountName,
+    String? paymentMethod,
+    String? notes,
+  }) async {
+    try {
+      final response = await _dio.post(
+        ApiEndpoints.fundRequests,
+        data: {
+          'po_id': poId,
+          'requested_amount': requestedAmount,
+          if (taxAmount != null) 'tax_amount': taxAmount,
+          if (paymentTerm != null) 'payment_term': paymentTerm,
+          if (bankName != null) 'bank_name': bankName,
+          if (bankAccountNumber != null) 'bank_account_number': bankAccountNumber,
+          if (bankAccountName != null) 'bank_account_name': bankAccountName,
+          if (paymentMethod != null) 'payment_method': paymentMethod,
+          if (notes != null) 'notes': notes,
+        },
+      );
+      return response.data as Map<String, dynamic>;
+    } on DioException catch (e) {
+      throw ApiException.fromDioException(e);
+    }
+  }
+
+  /// PUT /fund-requests/{id} - Update a fund request
+  Future<Map<String, dynamic>> updateFundRequest({
+    required int id,
+    required double requestedAmount,
+    double? taxAmount,
+    String? paymentTerm,
+    String? bankName,
+    String? bankAccountNumber,
+    String? bankAccountName,
+    String? paymentMethod,
+    String? notes,
+  }) async {
+    try {
+      final response = await _dio.put(
+        ApiEndpoints.fundRequest(id),
+        data: {
+          'requested_amount': requestedAmount,
+          if (taxAmount != null) 'tax_amount': taxAmount,
+          if (paymentTerm != null) 'payment_term': paymentTerm,
+          if (bankName != null) 'bank_name': bankName,
+          if (bankAccountNumber != null) 'bank_account_number': bankAccountNumber,
+          if (bankAccountName != null) 'bank_account_name': bankAccountName,
+          if (paymentMethod != null) 'payment_method': paymentMethod,
+          if (notes != null) 'notes': notes,
+        },
+      );
+      return response.data as Map<String, dynamic>;
+    } on DioException catch (e) {
+      throw ApiException.fromDioException(e);
+    }
+  }
+
+  /// DELETE /fund-requests/{id} - Delete a fund request
+  Future<Map<String, dynamic>> deleteFundRequest(int id) async {
+    try {
+      final response = await _dio.delete(ApiEndpoints.fundRequest(id));
+      return response.data as Map<String, dynamic>;
+    } on DioException catch (e) {
+      throw ApiException.fromDioException(e);
+    }
+  }
+
+  /// POST /fund-requests/{id}/submit - Submit for approval
+  Future<Map<String, dynamic>> submitFundRequest(int id) async {
+    try {
+      final response = await _dio.post(ApiEndpoints.fundRequestSubmit(id));
+      return response.data as Map<String, dynamic>;
+    } on DioException catch (e) {
+      throw ApiException.fromDioException(e);
+    }
+  }
+
+  /// GET /fund-requests/purchase-orders-select-options - Get POs for dropdown
+  Future<Map<String, dynamic>> getPurchaseOrderOptions({String? query}) async {
+    try {
+      final response = await _dio.get(
+        ApiEndpoints.fundRequestPurchaseOrders,
+        queryParameters: {
+          if (query != null && query.isNotEmpty) 'q': query,
+        },
+      );
+      return response.data as Map<String, dynamic>;
+    } on DioException catch (e) {
+      throw ApiException.fromDioException(e);
+    }
+  }
+}
+
+class ReceptionApi {
+  final Dio _dio;
+
+  ReceptionApi(this._dio);
+
+  /// GET /receptions - Get all receptions (paginated)
+  Future<Map<String, dynamic>> getReceptions({
+    String? search,
+    String? status,
+    int page = 1,
+    int perPage = 15,
+  }) async {
+    try {
+      final response = await _dio.get(
+        ApiEndpoints.receptions,
+        queryParameters: {
+          if (search != null && search.isNotEmpty) 'search': search,
+          if (status != null && status.isNotEmpty) 'status': status,
+          'page': page,
+          'per_page': perPage,
+        },
+      );
+      return response.data as Map<String, dynamic>;
+    } on DioException catch (e) {
+      throw ApiException.fromDioException(e);
+    }
+  }
+
+  /// GET /receptions/{id} - Get reception detail
+  Future<Map<String, dynamic>> getReceptionDetail(int id) async {
+    try {
+      final response = await _dio.get(ApiEndpoints.reception(id));
+      return response.data as Map<String, dynamic>;
+    } on DioException catch (e) {
+      throw ApiException.fromDioException(e);
+    }
+  }
+
+  /// POST /receptions - Create a new reception
+  Future<Map<String, dynamic>> createReception({
+    required int purchaseOrderId,
+    int? warehouseId,
+    required String date,
+    required List<int> productIds,
+    required List<double> qtys,
+    required List<double> unitCosts,
+    String? notes,
+  }) async {
+    try {
+      final response = await _dio.post(
+        ApiEndpoints.receptions,
+        data: {
+          'purchase_order_id': purchaseOrderId,
+          if (warehouseId != null) 'warehouse_id': warehouseId,
+          'date': date,
+          'product_id': productIds,
+          'qty': qtys,
+          'unit_cost': unitCosts,
+          if (notes != null) 'notes': notes,
+        },
+      );
+      return response.data as Map<String, dynamic>;
+    } on DioException catch (e) {
+      throw ApiException.fromDioException(e);
+    }
+  }
+
+  /// PUT /receptions/{id} - Update a reception
+  Future<Map<String, dynamic>> updateReception({
+    required int id,
+    int? warehouseId,
+    required String date,
+    required List<int> productIds,
+    required List<double> qtys,
+    required List<double> unitCosts,
+    String? notes,
+  }) async {
+    try {
+      final response = await _dio.put(
+        ApiEndpoints.reception(id),
+        data: {
+          if (warehouseId != null) 'warehouse_id': warehouseId,
+          'date': date,
+          'product_id': productIds,
+          'qty': qtys,
+          'unit_cost': unitCosts,
+          if (notes != null) 'notes': notes,
+        },
+      );
+      return response.data as Map<String, dynamic>;
+    } on DioException catch (e) {
+      throw ApiException.fromDioException(e);
+    }
+  }
+
+  /// DELETE /receptions/{id} - Delete a reception
+  Future<Map<String, dynamic>> deleteReception(int id) async {
+    try {
+      final response = await _dio.delete(ApiEndpoints.reception(id));
+      return response.data as Map<String, dynamic>;
+    } on DioException catch (e) {
+      throw ApiException.fromDioException(e);
+    }
+  }
+
+  /// POST /receptions/{id}/submit - Submit for approval
+  Future<Map<String, dynamic>> submitReception(int id) async {
+    try {
+      final response = await _dio.post(ApiEndpoints.receptionSubmit(id));
+      return response.data as Map<String, dynamic>;
+    } on DioException catch (e) {
+      throw ApiException.fromDioException(e);
+    }
+  }
+
+  /// GET /receptions/purchase-orders-select-options - Get POs for dropdown
+  Future<Map<String, dynamic>> getPurchaseOrderOptions({String? query}) async {
+    try {
+      final response = await _dio.get(
+        ApiEndpoints.receptionPurchaseOrders,
+        queryParameters: {
+          if (query != null && query.isNotEmpty) 'q': query,
+        },
+      );
+      return response.data as Map<String, dynamic>;
+    } on DioException catch (e) {
+      throw ApiException.fromDioException(e);
+    }
+  }
+
+  /// GET /receptions/warehouses-select-options - Get warehouses for dropdown
+  Future<Map<String, dynamic>> getWarehouseOptions({String? query}) async {
+    try {
+      final response = await _dio.get(
+        ApiEndpoints.receptionWarehouses,
+        queryParameters: {
+          if (query != null && query.isNotEmpty) 'q': query,
+        },
+      );
+      return response.data as Map<String, dynamic>;
+    } on DioException catch (e) {
+      throw ApiException.fromDioException(e);
+    }
+  }
+}
+
 class ViolationReportApi {
   final Dio _dio;
 
@@ -848,7 +1273,7 @@ class ReportApi {
           'note': description,
           'lat': latitude,
           'lng': longitude,
-          'location': ?location,
+          'location': location,
         },
       );
       return response.data as Map<String, dynamic>;
@@ -926,7 +1351,7 @@ class ShiftResponseApi {
         endpoint,
         data: {
           'action': action,
-          'reason': ?reason,
+          'reason': reason,
         },
       );
       return response.data as Map<String, dynamic>;
@@ -1328,7 +1753,7 @@ class DailyTaskApi {
         queryParameters: {
           'page': page,
           'per_page': perPage,
-          'status': ?status,
+          'status': status,
         },
       );
       return response.data as Map<String, dynamic>;
@@ -1359,9 +1784,9 @@ class DailyTaskApi {
         ApiEndpoints.dailyTaskAssignments,
         data: {
           'employee_id': employeeId,
-          'target_minutes': ?targetMinutes,
-          'assigned_date': ?assignedDate,
-          'notes': ?notes,
+          'target_minutes': targetMinutes,
+          'assigned_date': assignedDate,
+          'notes': notes,
         },
       );
       return response.data as Map<String, dynamic>;
@@ -1472,12 +1897,12 @@ class DailyTaskApi {
         ApiEndpoints.dailyTaskMobileAssign,
         data: {
           'employee_ids': employeeIds,
-          'item_id': ?itemId,
-          'area_id': ?areaId,
-          'target_minutes': ?targetMinutes,
-          'target_note': ?targetNote,
-          'notes': ?notes,
-          'assigned_date': ?assignedDate,
+          'item_id': itemId,
+          'area_id': areaId,
+          'target_minutes': targetMinutes,
+          'target_note': targetNote,
+          'notes': notes,
+          'assigned_date': assignedDate,
           if (toolIds != null && toolIds.isNotEmpty) 'tool_ids': toolIds,
           if (chemicalIds != null && chemicalIds.isNotEmpty) 'chemical_ids': chemicalIds,
           if (ppeIds != null && ppeIds.isNotEmpty) 'ppe_ids': ppeIds,
@@ -1521,7 +1946,7 @@ class DailyTaskApi {
         '${ApiEndpoints.dailyTask}/$taskId/review',
         data: {
           'scores': scores,
-          'notes': ?notes,
+          'notes': notes,
         },
       );
       return response.data as Map<String, dynamic>;
@@ -1679,9 +2104,9 @@ class ClientApi {
       final response = await _dio.get(
         ApiEndpoints.clientAttendance,
         queryParameters: {
-          'from_date': ?fromDate,
-          'to_date': ?toDate,
-          'employee_id': ?employeeId,
+          'from_date': fromDate,
+          'to_date': toDate,
+          'employee_id': employeeId,
         },
       );
       return response.data as Map<String, dynamic>;
@@ -1699,8 +2124,8 @@ class ClientApi {
       final response = await _dio.get(
         ApiEndpoints.clientDailyTasks,
         queryParameters: {
-          'from_date': ?fromDate,
-          'to_date': ?toDate,
+          'from_date': fromDate,
+          'to_date': toDate,
         },
       );
       return response.data as Map<String, dynamic>;
@@ -1729,8 +2154,8 @@ class ClientApi {
       final response = await _dio.get(
         ApiEndpoints.clientPatrolReports,
         queryParameters: {
-          'from_date': ?fromDate,
-          'to_date': ?toDate,
+          'from_date': fromDate,
+          'to_date': toDate,
         },
       );
       return response.data as Map<String, dynamic>;
@@ -1748,8 +2173,8 @@ class ClientApi {
       final response = await _dio.get(
         ApiEndpoints.clientFieldReports,
         queryParameters: {
-          'from_date': ?fromDate,
-          'to_date': ?toDate,
+          'from_date': fromDate,
+          'to_date': toDate,
         },
       );
       return response.data as Map<String, dynamic>;

@@ -213,12 +213,32 @@ class ApprovalRequestDetails extends Equatable {
   final String? purchaseRequestCode;
   final List<ApprovalItem> items;
 
+  // Fund Request specific fields
+  final double? requestedAmount;
+  final double? totalPoAmount;
+  final String? paymentTerm;
+  final String? bankName;
+  final String? bankAccountNumber;
+  final String? bankAccountName;
+
+  // Reception specific fields
+  final String? purchaseOrderCode;
+  final String? warehouseName;
+
   const ApprovalRequestDetails({
     required this.type,
     this.supplier,
     this.notes,
     this.purchaseRequestCode,
     this.items = const [],
+    this.requestedAmount,
+    this.totalPoAmount,
+    this.paymentTerm,
+    this.bankName,
+    this.bankAccountNumber,
+    this.bankAccountName,
+    this.purchaseOrderCode,
+    this.warehouseName,
   });
 
   factory ApprovalRequestDetails.fromJson(Map<String, dynamic> json) {
@@ -230,10 +250,18 @@ class ApprovalRequestDetails extends Equatable {
       items: (json['items'] as List<dynamic>?)
           ?.map((item) => ApprovalItem.fromJson(item as Map<String, dynamic>))
           .toList() ?? [],
+      requestedAmount: (json['requested_amount'] as num?)?.toDouble(),
+      totalPoAmount: (json['total_po_amount'] as num?)?.toDouble(),
+      paymentTerm: json['payment_term'] as String?,
+      bankName: json['bank_name'] as String?,
+      bankAccountNumber: json['bank_account_number'] as String?,
+      bankAccountName: json['bank_account_name'] as String?,
+      purchaseOrderCode: json['purchase_order_code'] as String?,
+      warehouseName: json['warehouse_name'] as String?,
     );
   }
 
-  /// Calculate total amount
+  /// Calculate total amount from items
   double get total {
     return items.fold(0.0, (sum, item) => sum + item.total);
   }
@@ -243,8 +271,34 @@ class ApprovalRequestDetails extends Equatable {
     return 'Rp ${total.toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (m) => '${m[1]}.')}';
   }
 
+  /// Format requested amount (Fund Request)
+  String get formattedRequestedAmount {
+    if (requestedAmount == null) return '-';
+    return 'Rp ${requestedAmount!.toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (m) => '${m[1]}.')}';
+  }
+
+  /// Format total PO amount (Fund Request)
+  String get formattedTotalPoAmount {
+    if (totalPoAmount == null) return '-';
+    return 'Rp ${totalPoAmount!.toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (m) => '${m[1]}.')}';
+  }
+
   @override
-  List<Object?> get props => [type, supplier, items];
+  List<Object?> get props => [
+    type,
+    supplier,
+    notes,
+    purchaseRequestCode,
+    items,
+    requestedAmount,
+    totalPoAmount,
+    paymentTerm,
+    bankName,
+    bankAccountNumber,
+    bankAccountName,
+    purchaseOrderCode,
+    warehouseName,
+  ];
 }
 
 /// Item in approval request details

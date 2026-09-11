@@ -24,6 +24,9 @@ const Map<String, String> menuPrivilegeMapping = {
   'Jadwal': 'schedule',
   'Cuti': 'leave',
   'Purchase Request': 'purchase_request',
+  'Purchase Order': 'purchase_order',
+  'Fund Request': 'fund_request',
+  'Penerimaan Barang': 'reception',
   'Payroll': 'payroll',
   'Approval': 'approval',
   'Patroli': 'patrol',
@@ -32,7 +35,21 @@ const Map<String, String> menuPrivilegeMapping = {
   'Tugas Harian': 'daily_task',
   'Monitoring': 'task_progress',
   'Progress Daily Task': 'task_progress',
+  'Purchasing': 'purchasing',
 };
+
+/// Privilege keys for purchasing menus (OR logic)
+const List<String> purchasingPrivileges = [
+  'purchase_request',
+  'purchase_order',
+  'fund_request',
+  'reception',
+];
+
+/// Check if user has any purchasing privilege
+bool hasAnyPurchasingPrivilege(User user) {
+  return purchasingPrivileges.any((priv) => user.hasPrivilege(priv));
+}
 
 /// Menu labels that should be hidden when user already has the data
 final Map<String, bool Function(User)> menuConditionalHide = {

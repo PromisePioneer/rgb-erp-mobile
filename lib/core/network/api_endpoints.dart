@@ -106,6 +106,32 @@ class ApiEndpoints {
   static const String purchaseRequestProducts = '/purchase-requests/products-select-options';
 
   // ====================
+  // Purchase Order Endpoints
+  // ====================
+  static const String purchaseOrders = '/purchase-orders';
+  static String purchaseOrder(int id) => '/purchase-orders/$id';
+  static String purchaseOrderSubmit(int id) => '/purchase-orders/$id/submit';
+  static const String purchaseOrderProducts = '/purchase-orders/products-select-options';
+  static const String purchaseOrderPurchaseRequests = '/purchase-orders/purchase-requests-select-options';
+
+  // ====================
+  // Fund Request Endpoints
+  // ====================
+  static const String fundRequests = '/fund-requests';
+  static String fundRequest(int id) => '/fund-requests/$id';
+  static String fundRequestSubmit(int id) => '/fund-requests/$id/submit';
+  static const String fundRequestPurchaseOrders = '/fund-requests/purchase-orders-select-options';
+
+  // ====================
+  // Reception Endpoints
+  // ====================
+  static const String receptions = '/receptions';
+  static String reception(int id) => '/receptions/$id';
+  static String receptionSubmit(int id) => '/receptions/$id/submit';
+  static const String receptionPurchaseOrders = '/receptions/purchase-orders-select-options';
+  static const String receptionWarehouses = '/receptions/warehouses-select-options';
+
+  // ====================
   // Violation Report Endpoints
   // ====================
   static const String violationReportProjects = '/patrol-violation/projects';

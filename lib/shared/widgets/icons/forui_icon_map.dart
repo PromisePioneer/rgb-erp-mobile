@@ -111,4 +111,10 @@ class IconMap {
   // Additional icons for Task Progress
   static IconData people = FLucideIcons.users;
   static IconData videocam = FLucideIcons.video;
+
+  // Additional icons for Purchasing
+  static IconData description = FLucideIcons.fileText;
+  static IconData warehouse = FLucideIcons.warehouse;
+  static IconData link = FLucideIcons.link;
+  static IconData accountBalance = FLucideIcons.landmark;
 }

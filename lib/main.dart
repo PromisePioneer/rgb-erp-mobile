@@ -10,8 +10,9 @@ import 'core/core.dart';
 import 'core/theme/app_ftheme.dart';
 import 'core/services/notification_dialog_handler.dart';
 import 'core/services/background_task_service.dart';
-import 'core/services/app_update_service.dart';
-import 'shared/widgets/force_update_dialog.dart';
+// TODO: Uncomment when app update feature is ready
+// import 'core/services/app_update_service.dart';
+// import 'shared/widgets/force_update_dialog.dart';
 import 'features/auth/presentation/providers/auth_provider.dart';
 import 'features/auth/data/repositories/auth_repository.dart';
 import 'features/attendance/presentation/providers/attendance_provider.dart';
@@ -21,6 +22,9 @@ import 'features/schedule/presentation/providers/schedule_provider.dart';
 import 'features/payroll/presentation/providers/payroll_provider.dart';
 import 'features/leave/presentation/providers/leave_provider.dart';
 import 'features/purchase_request/presentation/providers/purchase_request_provider.dart';
+import 'features/purchase_order/presentation/providers/purchase_order_provider.dart';
+import 'features/fund_request/presentation/providers/fund_request_provider.dart';
+import 'features/reception/presentation/providers/reception_provider.dart';
 import 'features/panic/presentation/providers/panic_provider.dart';
 import 'features/violation_report/presentation/providers/violation_report_provider.dart';
 import 'features/report/presentation/providers/report_provider.dart';
@@ -167,6 +171,27 @@ void main() async {
         ChangeNotifierProvider<PurchaseRequestNotifier>(
           create: (_) => PurchaseRequestNotifier(
             createPurchaseRequestRepository(dio),
+          ),
+        ),
+
+        // Purchase Order Provider (lazy loaded)
+        ChangeNotifierProvider<PurchaseOrderNotifier>(
+          create: (_) => PurchaseOrderNotifier(
+            createPurchaseOrderRepository(dio),
+          ),
+        ),
+
+        // Fund Request Provider (lazy loaded)
+        ChangeNotifierProvider<FundRequestNotifier>(
+          create: (_) => FundRequestNotifier(
+            createFundRequestRepository(dio),
+          ),
+        ),
+
+        // Reception Provider (lazy loaded)
+        ChangeNotifierProvider<ReceptionNotifier>(
+          create: (_) => ReceptionNotifier(
+            createReceptionRepository(dio),
           ),
         ),
 
@@ -383,21 +408,22 @@ class _RGBERPAppState extends State<RGBERPApp> {
     super.initState();
     // Initialize notification dialog handler
     notificationDialogHandler.init();
-    // Check for app update
-    _checkForUpdate();
+    // TODO: Uncomment when app update feature is ready
+    // _checkForUpdate();
   }
 
-  Future<void> _checkForUpdate() async {
-    try {
-      final updateInfo = await AppUpdateService.checkForUpdate();
-      if (updateInfo != null && mounted) {
-        showForceUpdateDialog(context, updateInfo);
-      }
-    } catch (e) {
-      // Ignore update check errors
-      debugPrint('Update check failed: $e');
-    }
-  }
+  // TODO: Implement when app update feature is ready
+  // Future<void> _checkForUpdate() async {
+  //   try {
+  //     final updateInfo = await AppUpdateService.checkForUpdate();
+  //     if (updateInfo != null && mounted) {
+  //       showForceUpdateDialog(context, updateInfo);
+  //     }
+  //   } catch (e) {
+  //     // Ignore update check errors
+  //     debugPrint('Update check failed: $e');
+  //   }
+  // }
 
   @override
   Widget build(BuildContext context) {
