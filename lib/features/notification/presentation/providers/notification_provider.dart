@@ -2,10 +2,27 @@ import 'package:flutter/foundation.dart';
 import '../../data/repositories/notification_repository.dart';
 import '../../domain/entities/notification_entity.dart';
 
+/// Global reference to the current NotificationProvider instance
+/// Used to trigger refresh from outside the widget tree (e.g., after login)
+NotificationProvider? _globalNotificationProvider;
+
+/// Sets the global NotificationProvider instance
+void setGlobalNotificationProvider(NotificationProvider provider) {
+  _globalNotificationProvider = provider;
+}
+
+/// Refreshes notification unread count using the global provider
+void refreshGlobalNotificationCount() {
+  _globalNotificationProvider?.fetchUnreadCount();
+}
+
 class NotificationProvider extends ChangeNotifier {
   final NotificationRepository _repository;
 
-  NotificationProvider(this._repository);
+  NotificationProvider(this._repository) {
+    // Register this instance as the global provider
+    _globalNotificationProvider = this;
+  }
 
   List<NotificationEntity> _notifications = [];
   int _unreadCount = 0;

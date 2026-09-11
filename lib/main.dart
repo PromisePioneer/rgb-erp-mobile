@@ -35,8 +35,8 @@ import 'features/client/presentation/providers/client_attendance_provider.dart';
 import 'features/client/presentation/providers/client_reports_provider.dart';
 import 'features/client/presentation/providers/client_schedule_provider.dart';
 import 'features/approval/presentation/providers/approval_provider.dart';
-import 'features/notification/data/repositories/notification_repository.dart';
 import 'features/notification/presentation/providers/notification_provider.dart';
+import 'features/notification/data/repositories/notification_repository.dart';
 import 'navigation/app_router.dart';
 
 /// Global notification service instance
@@ -99,6 +99,11 @@ void main() async {
 
   // Create notifiers
   final authNotifier = AuthNotifier(authRepository);
+
+  // Setup auth state change callback to refresh notification count
+  onAuthStateChanged = () {
+    refreshGlobalNotificationCount();
+  };
 
   // Initialize router with auth notifier
   initRouter(authNotifier);

@@ -6,6 +6,7 @@ import 'package:forui/forui.dart';
 
 import '../../../../core/core.dart';
 import '../../../../core/services/notification_service.dart';
+import '../../../notification/domain/entities/notification_entity.dart';
 import '../../../../shared/widgets/banners/banner_carousel.dart';
 import '../../../../shared/widgets/icons/forui_icon_map.dart';
 import '../../../../shared/widgets/layout/top_gradient_background.dart';
@@ -14,6 +15,7 @@ import '../../../../shared/widgets/toast/app_toast.dart';
 import '../../../attendance/presentation/providers/attendance_provider.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../panic/presentation/providers/panic_provider.dart';
+import '../../../notification/presentation/providers/notification_provider.dart';
 import '../../domain/menu_access.dart';
 import '../widgets/menu_grid_carousel.dart';
 
@@ -84,6 +86,8 @@ class _HRDashboardScreenState extends State<HRDashboardScreen> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<AttendanceNotifier>().loadTodayAttendance();
+      // Fetch API notifications
+      context.read<NotificationProvider>().fetchNotifications();
     });
   }
 
@@ -834,63 +838,8 @@ class _HRDashboardScreenState extends State<HRDashboardScreen> {
       ),
     );
   }
-}
 
-class _NotificationButton extends StatelessWidget {
-  const _NotificationButton({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    final notifService = globalNotificationService;
-    final unreadCount = notifService.unreadCount;
-
-    return FButton(
-      onPress: () => _showNotificationsSheet(context, notifService),
-      variant: FButtonVariant.ghost,
-      child: Container(
-        width: 44,
-        height: 44,
-        decoration: BoxDecoration(
-          color: AppColors.slate100,
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: Stack(
-          alignment: Alignment.center,
-          children: [
-            Icon(
-              IconMap.notifications,
-              color: AppColors.slate600,
-              size: 22,
-            ),
-            if (unreadCount > 0)
-              Positioned(
-                top: 8,
-                right: 8,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-                  decoration: BoxDecoration(
-                    color: AppColors.danger,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
-                  child: Text(
-                    unreadCount > 99 ? '99+' : unreadCount.toString(),
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 10,
-                      fontWeight: FontWeight.bold,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-              ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  void _showNotificationsSheet(BuildContext context, NotificationService notifService) {
+  void _showNotificationsSheet(NotificationProvider provider) {
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
@@ -936,11 +885,9 @@ class _NotificationButton extends StatelessWidget {
                             color: AppColors.slate800,
                           ),
                         ),
-                        if (notifService.unreadCount > 0)
+                        if (provider.unreadCount > 0)
                           FButton(
-                            onPress: () {
-                              notifService.markAllAsRead();
-                            },
+                            onPress: () => provider.markAllAsRead(),
                             variant: FButtonVariant.ghost,
                             child: Text(
                               'Tandai semua dibaca',
@@ -954,7 +901,7 @@ class _NotificationButton extends StatelessWidget {
                   ),
                   const Divider(height: 1),
                   Expanded(
-                    child: notifService.notifications.isEmpty
+                    child: provider.notifications.isEmpty
                         ? Center(
                             child: Column(
                               mainAxisAlignment: MainAxisAlignment.center,
@@ -972,19 +919,27 @@ class _NotificationButton extends StatelessWidget {
                         : ListView.separated(
                             controller: scrollController,
                             padding: const EdgeInsets.symmetric(vertical: 8),
-                            itemCount: notifService.notifications.length,
+                            itemCount: provider.notifications.length,
                             separatorBuilder: (_, _) => const Divider(height: 1, indent: 72),
                             itemBuilder: (context, index) {
-                              final notif = notifService.notifications[index];
-                              return _NotificationItem(
+                              final notif = provider.notifications[index];
+                              return _ApiNotificationItem(
                                 notification: notif,
                                 onTap: () {
-                                  notifService.markAsRead(notif.id);
+                                  provider.markAsRead(notif.id);
                                   Navigator.pop(sheetContext);
                                   if (notif.type == 'patrol_alarm') {
                                     context.push('/patrol');
                                   } else if (notif.type == 'shift_reminder') {
                                     context.push('/attendance');
+                                  } else if (notif.type == 'task_assigned' ||
+                                             notif.type == 'task_started' ||
+                                             notif.type == 'task_completed' ||
+                                             notif.type == 'task_reviewed') {
+                                    final taskId = notif.data['task_id'];
+                                    if (taskId != null) {
+                                      context.push('/daily-task/$taskId');
+                                    }
                                   }
                                 },
                               );
@@ -1001,11 +956,71 @@ class _NotificationButton extends StatelessWidget {
   }
 }
 
-class _NotificationItem extends StatelessWidget {
-  final NotificationItem notification;
+class _NotificationButton extends StatelessWidget {
+  const _NotificationButton({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Consumer<NotificationProvider>(
+      builder: (context, provider, _) {
+        return FButton(
+          onPress: () {
+            // Call method on parent state
+            final state = context.findAncestorStateOfType<_HRDashboardScreenState>();
+            state?._showNotificationsSheet(provider);
+          },
+          variant: FButtonVariant.ghost,
+          child: Container(
+            width: 44,
+            height: 44,
+            decoration: BoxDecoration(
+              color: AppColors.slate100,
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                Icon(
+                  IconMap.notifications,
+                  color: AppColors.slate600,
+                  size: 22,
+                ),
+                if (provider.unreadCount > 0)
+                  Positioned(
+                    top: 8,
+                    right: 8,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: AppColors.danger,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
+                      child: Text(
+                        provider.unreadCount > 99 ? '99+' : provider.unreadCount.toString(),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _ApiNotificationItem extends StatelessWidget {
+  final NotificationEntity notification;
   final VoidCallback onTap;
 
-  const _NotificationItem({
+  const _ApiNotificationItem({
     required this.notification,
     required this.onTap,
   });
@@ -1019,12 +1034,12 @@ class _NotificationItem extends StatelessWidget {
         width: 44,
         height: 44,
         decoration: BoxDecoration(
-          color: _getIconBg(notification.type),
+          color: _getApiIconBg(notification.type),
           borderRadius: BorderRadius.circular(22),
         ),
         child: Icon(
-          _getIcon(notification.type),
-          color: _getIconColor(notification.type),
+          _getApiIcon(notification.type),
+          color: _getApiIconColor(notification.type),
           size: 22,
         ),
       ),
@@ -1046,7 +1061,7 @@ class _NotificationItem extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           Text(
-            _formatTime(notification.timestamp),
+            _formatApiTime(notification.createdAt),
             style: const TextStyle(color: AppColors.gray400, fontSize: 11),
           ),
         ],
@@ -1064,40 +1079,55 @@ class _NotificationItem extends StatelessWidget {
     );
   }
 
-  IconData _getIcon(String? type) {
+  IconData _getApiIcon(String? type) {
     switch (type) {
       case 'patrol_alarm':
         return IconMap.security;
       case 'shift_reminder':
         return IconMap.accessTime;
+      case 'task_assigned':
+      case 'task_started':
+      case 'task_completed':
+      case 'task_reviewed':
+        return IconMap.task;
       default:
         return IconMap.notifications;
     }
   }
 
-  Color _getIconBg(String? type) {
+  Color _getApiIconBg(String? type) {
     switch (type) {
       case 'patrol_alarm':
         return AppColors.teal100;
       case 'shift_reminder':
         return AppColors.amber100;
+      case 'task_assigned':
+      case 'task_started':
+      case 'task_completed':
+      case 'task_reviewed':
+        return AppColors.successBg;
       default:
         return AppColors.slate100;
     }
   }
 
-  Color _getIconColor(String? type) {
+  Color _getApiIconColor(String? type) {
     switch (type) {
       case 'patrol_alarm':
         return AppColors.teal600;
       case 'shift_reminder':
         return AppColors.amber600;
+      case 'task_assigned':
+      case 'task_started':
+      case 'task_completed':
+      case 'task_reviewed':
+        return AppColors.success;
       default:
         return AppColors.slate600;
     }
   }
 
-  String _formatTime(DateTime time) {
+  String _formatApiTime(DateTime time) {
     final now = DateTime.now();
     final diff = now.difference(time);
 

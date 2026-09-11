@@ -5,6 +5,7 @@ import '../../../../core/core.dart';
 import '../../domain/entities/user.dart';
 import '../../domain/entities/login_credentials.dart';
 import '../../data/repositories/auth_repository.dart';
+import '../../../notification/presentation/providers/notification_provider.dart';
 
 // ====================
 // Repository Factory
@@ -84,10 +85,22 @@ class AuthState extends ChangeNotifier {
 // Notifier
 // ====================
 
+/// Callback to refresh notification count after auth changes
+/// This is called by AuthNotifier after login/logout
+void Function()? onAuthStateChanged;
+
 class AuthNotifier extends ChangeNotifier {
   final AuthRepository _repository;
 
-  AuthNotifier(this._repository) : super();
+  AuthNotifier(this._repository) : super() {
+    // Set up callback to refresh notifications after auth changes
+    onAuthStateChanged = _refreshNotificationCount;
+  }
+
+  void _refreshNotificationCount() {
+    // Trigger notification provider to refresh using global reference
+    refreshGlobalNotificationCount();
+  }
 
   AuthState _state = AuthState();
   AuthState get state => _state;
@@ -230,6 +243,9 @@ class AuthNotifier extends ChangeNotifier {
         await _registerFcmToken();
       }
 
+      // Refresh notification unread count
+      onAuthStateChanged?.call();
+
       return response.user!;
     } on ApiException catch (e) {
       
@@ -267,6 +283,9 @@ class AuthNotifier extends ChangeNotifier {
 
       // Register FCM token after successful biometric login
       await _registerFcmToken();
+
+      // Refresh notification unread count
+      onAuthStateChanged?.call();
 
       return response.user!;
     } on ApiException catch (e) {

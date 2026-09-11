@@ -107,6 +107,8 @@ import '../core/services/onboarding_service.dart';
 
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 
+import '../features/notification/presentation/providers/notification_provider.dart';
+
 /// Global router provider that will be initialized in main.dart
 GoRouter? _router;
 
@@ -1091,6 +1093,11 @@ class _SplashScreenState extends State<SplashScreen> {
         const Duration(seconds: 5),
         onTimeout: () {},
       );
+
+      // After hydration, fetch notification unread count if authenticated
+      if (authNotifier.state.isAuthenticated && mounted) {
+        _fetchNotificationUnreadCount();
+      }
     } catch (_) {}
 
     if (!mounted) return;
@@ -1111,6 +1118,16 @@ class _SplashScreenState extends State<SplashScreen> {
         context.go(destination);
       }
     });
+  }
+
+  void _fetchNotificationUnreadCount() {
+    try {
+      // Get or create notification provider
+      final provider = context.read<NotificationProvider>();
+      provider.fetchUnreadCount();
+    } catch (_) {
+      // Provider might not be available yet, ignore
+    }
   }
 
   @override
