@@ -360,12 +360,21 @@ void initRouter(AuthNotifier authNotifier) {
                 name: 'violation-report',
                 builder: (context, state) => const ViolationReportHistoryScreen(),
                 routes: [
-                  // Nested parameterized route for violation detail
+                  // Form route - MUST come before :id to avoid "form" being parsed as int
+                  GoRoute(
+                    path: 'form',
+                    name: 'violation-report-form',
+                    builder: (context, state) => const ViolationReportFormScreen(),
+                  ),
+                  // Nested parameterized route for violation detail - comes LAST
                   GoRoute(
                     path: ':id',
                     name: 'violation-report-detail',
                     builder: (context, state) {
-                      final id = int.parse(state.pathParameters['id']!);
+                      final id = int.tryParse(state.pathParameters['id'] ?? '');
+                      if (id == null) {
+                        return const ViolationReportHistoryScreen();
+                      }
                       return ViolationReportDetailScreen(violationId: id);
                     },
                   ),
@@ -374,15 +383,8 @@ void initRouter(AuthNotifier authNotifier) {
             ],
           ),
           // Branch 15: Violation Report Form
-          StatefulShellBranch(
-            routes: [
-              GoRoute(
-                path: '/violation-report/form',
-                name: 'violation-report-form',
-                builder: (context, state) => const ViolationReportFormScreen(),
-              ),
-            ],
-          ),
+          // REMOVED - form is now nested under /violation-report to avoid route conflict
+          // See nested form route in violation-report branch
           // Branch 16: Change Password
           StatefulShellBranch(
             routes: [
