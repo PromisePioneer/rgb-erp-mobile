@@ -37,6 +37,8 @@ import 'features/client/presentation/providers/client_schedule_provider.dart';
 import 'features/approval/presentation/providers/approval_provider.dart';
 import 'features/notification/presentation/providers/notification_provider.dart';
 import 'features/notification/data/repositories/notification_repository.dart';
+import 'features/client_notification/presentation/providers/client_notification_provider.dart';
+import 'features/client_notification/data/repositories/client_notification_repository.dart';
 import 'navigation/app_router.dart';
 
 /// Global notification service instance
@@ -83,8 +85,7 @@ void main() async {
   final notificationApi = NotificationApi(dio);
 
   // Initialize notification service (FCM + local notifications)
-  
-  await notificationService.init(notificationApi: notificationApi, storage: storageService);
+  // Note: clientApi and isClientCallback will be set after authNotifier is created
   
   
   final fcmToken = await notificationService.getToken();
@@ -99,6 +100,12 @@ void main() async {
 
   // Create notifiers
   final authNotifier = AuthNotifier(authRepository);
+
+  // Initialize notification service
+  await notificationService.init(
+    notificationApi: notificationApi,
+    storage: storageService,
+  );
 
   // Setup auth state change callback to refresh notification count
   onAuthStateChanged = () {
@@ -269,6 +276,13 @@ void main() async {
         ChangeNotifierProvider<NotificationProvider>(
           create: (_) => NotificationProvider(
             NotificationRepository(dio),
+          ),
+        ),
+
+        // Client Notification Provider (lazy loaded)
+        ChangeNotifierProvider<ClientNotificationProvider>(
+          create: (_) => ClientNotificationProvider(
+            ClientNotificationRepository(dio),
           ),
         ),
       ],

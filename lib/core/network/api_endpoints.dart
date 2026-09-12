@@ -194,6 +194,14 @@ class ApiEndpoints {
   static const String clientScheduleEmployees = '/client/schedules/employees';
 
   // ====================
+  // Client Notification Endpoints
+  // ====================
+  static const String clientNotifications = '/client/notifications';
+  static const String clientNotificationsUnreadCount = '/client/notifications/unread-count';
+  static const String clientNotificationsMarkAllRead = '/client/notifications/read-all';
+  static String clientNotificationRead(int id) => '/client/notifications/$id/read';
+
+  // ====================
   // Approval Endpoints (Mobile)
   // ====================
   static const String approvals = '/approvals';

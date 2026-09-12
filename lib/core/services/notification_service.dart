@@ -187,36 +187,39 @@ class NotificationService {
 
   /// Initialize FCM
   Future<void> _initFcm() async {
-    // Request permission
-    final settings = await _fcm.requestPermission(
-      alert: true,
-      announcement: false,
-      badge: true,
-      carPlay: false,
-      criticalAlert: true,
-      provisional: false,
-      sound: true,
-    );
+    try {
+      // Request permission
+      final settings = await _fcm.requestPermission(
+        alert: true,
+        announcement: false,
+        badge: true,
+        carPlay: false,
+        criticalAlert: true,
+        provisional: false,
+        sound: true,
+      );
 
-    if (settings.authorizationStatus == AuthorizationStatus.denied) {
-      
-      // Permission denied - could show explanation in Settings screen
+      if (settings.authorizationStatus == AuthorizationStatus.denied) {
+        // Permission denied - could show explanation in Settings screen
+      }
+
+      // Handle initial message (app opened from terminated state via notification)
+      final initialMessage = await _fcm.getInitialMessage();
+      if (initialMessage != null) {
+        _handleFcmTap(initialMessage);
+      }
+
+      // Handle when app is opened from background via notification tap
+      FirebaseMessaging.onMessageOpenedApp.listen(_handleFcmTap);
+
+      // Handle foreground messages
+      FirebaseMessaging.onMessage.listen(_handleForegroundMessage);
+
+      // Listen to token refresh (instance member)
+      _fcm.onTokenRefresh.listen(_registerToken);
+    } catch (e) {
+      // FCM init failed - continue without push notifications
     }
-
-    // Handle initial message (app opened from terminated state via notification)
-    final initialMessage = await _fcm.getInitialMessage();
-    if (initialMessage != null) {
-      _handleFcmTap(initialMessage);
-    }
-
-    // Handle when app is opened from background via notification tap
-    FirebaseMessaging.onMessageOpenedApp.listen(_handleFcmTap);
-
-    // Handle foreground messages
-    FirebaseMessaging.onMessage.listen(_handleForegroundMessage);
-
-    // Listen to token refresh (instance member)
-    _fcm.onTokenRefresh.listen(_registerToken);
   }
 
   /// Handle foreground FCM message
@@ -482,8 +485,6 @@ class NotificationService {
 
   /// Register FCM token with backend
   Future<void> _registerToken(String token) async {
-    
-
     // Prevent multiple simultaneous registrations
     if (_isRegisteringToken) {
       return;
@@ -491,7 +492,6 @@ class NotificationService {
     _isRegisteringToken = true;
 
     if (_notificationApi == null || _storage == null) {
-      
       _isRegisteringToken = false;
       return;
     }
@@ -499,20 +499,16 @@ class NotificationService {
     try {
       // Get or generate device ID
       String? deviceId = await _storage!.deviceId;
-      
 
       if (deviceId == null || deviceId.isEmpty) {
         deviceId = _generateDeviceId();
         await _storage!.setDeviceId(deviceId);
-        
-      } else {
-        
       }
 
       // Determine platform
       final platform = Platform.isAndroid ? 'android' : 'ios';
 
-      // Register with backend
+      // Register with backend (employee or client - same endpoint)
       await _notificationApi!.registerDeviceToken(
         token: token,
         platform: platform,
@@ -521,8 +517,6 @@ class NotificationService {
 
       // Store token locally
       await _storage!.setFcmToken(token);
-
-      
     } finally {
       _isRegisteringToken = false;
     }
@@ -557,7 +551,6 @@ class NotificationService {
   /// Unregister FCM token (call on logout)
   Future<void> unregisterToken() async {
     if (_notificationApi == null) return;
-
     try {
       final token = await _fcm.getToken();
       if (token != null) {
@@ -567,10 +560,9 @@ class NotificationService {
         }
       }
     } catch (e) {
-      
+      // Silently fail on unregister
     }
   }
-
   /// Schedule patrol alarm notification
   Future<void> schedulePatrolAlarm({
     required DateTime scheduledTime,

@@ -2247,4 +2247,56 @@ class ClientApi {
       throw ApiException.fromDioException(e);
     }
   }
+
+  // ====================
+  // Client Notifications
+  // ====================
+
+  /// GET /client/notifications - Get notifications for the client
+  Future<Map<String, dynamic>> getNotifications({
+    int limit = 20,
+    int offset = 0,
+  }) async {
+    try {
+      final response = await _dio.get(
+        ApiEndpoints.clientNotifications,
+        queryParameters: {
+          'limit': limit,
+          'offset': offset,
+        },
+      );
+      return response.data as Map<String, dynamic>;
+    } on DioException catch (e) {
+      throw ApiException.fromDioException(e);
+    }
+  }
+
+  /// GET /client/notifications/unread-count - Get unread notification count
+  Future<Map<String, dynamic>> getUnreadCount() async {
+    try {
+      final response = await _dio.get(ApiEndpoints.clientNotificationsUnreadCount);
+      return response.data as Map<String, dynamic>;
+    } on DioException catch (e) {
+      throw ApiException.fromDioException(e);
+    }
+  }
+
+  /// POST /client/notifications/{id}/read - Mark notification as read
+  Future<void> markNotificationAsRead(int notificationId) async {
+    try {
+      await _dio.post(ApiEndpoints.clientNotificationRead(notificationId));
+    } on DioException catch (e) {
+      throw ApiException.fromDioException(e);
+    }
+  }
+
+  /// POST /client/notifications/read-all - Mark all notifications as read
+  Future<Map<String, dynamic>> markAllNotificationsAsRead() async {
+    try {
+      final response = await _dio.post(ApiEndpoints.clientNotificationsMarkAllRead);
+      return response.data as Map<String, dynamic>;
+    } on DioException catch (e) {
+      throw ApiException.fromDioException(e);
+    }
+  }
 }

@@ -98,6 +98,7 @@ import '../features/daily_task/presentation/screens/task_progress_detail_screen.
 import '../features/approval/presentation/screens/approval_list_screen.dart';
 import '../features/approval/presentation/screens/approval_detail_screen.dart';
 import '../features/notification/presentation/screens/notification_screen.dart';
+import '../features/client_notification/presentation/screens/client_notification_screen.dart';
 
 // Navigation imports
 import '../shared/widgets/navigation/app_bottom_nav.dart';
@@ -692,6 +693,11 @@ void initRouter(AuthNotifier authNotifier) {
         path: '/client/schedules',
         name: 'client-schedules',
         builder: (context, state) => const ClientScheduleScreen(),
+      ),
+      GoRoute(
+        path: '/client/notifications',
+        name: 'client-notifications',
+        builder: (context, state) => const ClientNotificationScreen(),
       ),
 
       // Full-screen camera routes (outside shell - no bottom nav)

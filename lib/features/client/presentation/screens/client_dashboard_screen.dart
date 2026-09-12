@@ -8,6 +8,7 @@ import '../../../../core/core.dart';
 import '../../../../shared/widgets/feedback/loading_indicator.dart';
 import '../../../../shared/widgets/icons/forui_icon_map.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../../client_notification/presentation/providers/client_notification_provider.dart';
 import '../providers/client_dashboard_provider.dart';
 
 /// Client dashboard screen - overview stats
@@ -22,9 +23,15 @@ class _ClientDashboardScreenState extends State<ClientDashboardScreen> {
   @override
   void initState() {
     super.initState();
-    // Fetch dashboard data on init
+    // Fetch dashboard data and notification count on init
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<ClientDashboardNotifier>().fetchDashboard();
+      // Fetch notification unread count
+      try {
+        context.read<ClientNotificationProvider>().fetchUnreadCount();
+      } catch (_) {
+        // Provider might not be available
+      }
     });
   }
 
@@ -39,6 +46,50 @@ class _ClientDashboardScreenState extends State<ClientDashboardScreen> {
         title: const Text('Dashboard Client'),
         automaticallyImplyLeading: false,
         actions: [
+          // Notification Bell
+          Consumer<ClientNotificationProvider>(
+            builder: (context, provider, _) {
+              final unreadCount = provider.unreadCount;
+              return Stack(
+                children: [
+                  FButton.icon(
+                    onPress: () {
+                      // Fetch notifications before navigating
+                      provider.fetchUnreadCount();
+                      context.push('/client/notifications');
+                    },
+                    child: Icon(IconMap.notifications),
+                  ),
+                  if (unreadCount > 0)
+                    Positioned(
+                      right: 0,
+                      top: 0,
+                      child: Container(
+                        padding: const EdgeInsets.all(4),
+                        decoration: const BoxDecoration(
+                          color: AppColors.danger,
+                          shape: BoxShape.circle,
+                        ),
+                        constraints: const BoxConstraints(
+                          minWidth: 18,
+                          minHeight: 18,
+                        ),
+                        child: Text(
+                          unreadCount > 99 ? '99+' : '$unreadCount',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                    ),
+                ],
+              );
+            },
+          ),
+          const SizedBox(width: 4),
           FButton.icon(
             onPress: () {
               context.read<ClientDashboardNotifier>().refresh();
