@@ -379,6 +379,9 @@ class DailyTaskMasterItem {
   final String? description;
   final int? roleId;
   final String? roleName;
+  final int? parentItemId;
+  final String? parentItemName;
+  final bool isRoot;
 
   DailyTaskMasterItem({
     required this.id,
@@ -386,6 +389,9 @@ class DailyTaskMasterItem {
     this.description,
     this.roleId,
     this.roleName,
+    this.parentItemId,
+    this.parentItemName,
+    this.isRoot = false,
   });
 
   factory DailyTaskMasterItem.fromJson(Map<String, dynamic> json) {
@@ -395,6 +401,9 @@ class DailyTaskMasterItem {
       description: json['description'] as String?,
       roleId: json['role_id'] as int?,
       roleName: json['role_name'] as String?,
+      parentItemId: json['parent_item_id'] as int?,
+      parentItemName: json['parent_item_name'] as String?,
+      isRoot: json['is_root'] == true || json['is_root'] == 1 || json['parent_item_id'] == null,
     );
   }
 }

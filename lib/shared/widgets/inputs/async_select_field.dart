@@ -289,9 +289,14 @@ class _AsyncSelectFieldState extends State<AsyncSelectField> {
       } else {
         newSelection.clear();
         newSelection.add(option.id);
+        // Update _allSelectedOptions for display
         _allSelectedOptions = [option];
+        // Notify parent
         widget.onSelectionChanged(newSelection);
-        _closeDropdown();
+        // Close dropdown after state propagates
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          _closeDropdown();
+        });
         return;
       }
     }

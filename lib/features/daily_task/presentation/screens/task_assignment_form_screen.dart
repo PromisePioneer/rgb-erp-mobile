@@ -700,6 +700,7 @@ class _TaskAssignmentFormScreenState extends State<TaskAssignmentFormScreen> {
         const SizedBox(height: 16),
 
         // Jenis Tugas - AsyncSelectField
+        // Note: Items are now hierarchical - parent items group their children
         FormFieldCard(
           child: AsyncSelectField(
             label: 'JENIS TUGAS',
@@ -711,18 +712,62 @@ class _TaskAssignmentFormScreenState extends State<TaskAssignmentFormScreen> {
                   : null;
               final items = await notifier.searchItems(
                   query, roleIds: roleIds);
-              return items
-                  .map((item) =>
-                  AsyncSelectOption(id: item.id, name: item.name))
-                  .toList();
+
+              // Group items by parent for hierarchical display
+              final parentItems = items.where((item) => item.isRoot).toList();
+              final childItems = items.where((item) => !item.isRoot).toList();
+
+              // Build hierarchy map: parentId -> list of children
+              final childrenByParent = <int, List<DailyTaskMasterItem>>{};
+              for (final child in childItems) {
+                if (child.parentItemId != null) {
+                  childrenByParent.putIfAbsent(child.parentItemId!, () => []);
+                  childrenByParent[child.parentItemId!]!.add(child);
+                }
+              }
+
+              // Build flattened list with hierarchy indicators
+              final result = <AsyncSelectOption>[];
+              for (final parent in parentItems) {
+                // Add parent item (with folder icon indicator)
+                result.add(AsyncSelectOption(
+                  id: parent.id,
+                  name: '📁 ${parent.name}${parent.roleName != null ? ' (${parent.roleName})' : ''}',
+                ));
+
+                // Add children (indented with child icon)
+                final children = childrenByParent[parent.id] ?? [];
+                for (final child in children) {
+                  result.add(AsyncSelectOption(
+                    id: child.id,
+                    name: '   └ ${child.name}',
+                  ));
+                }
+              }
+
+              // Add items without parent (flat items treated as root)
+              for (final item in items.where((i) => !i.isRoot && i.parentItemId == null)) {
+                result.add(AsyncSelectOption(
+                  id: item.id,
+                  name: item.name,
+                ));
+              }
+
+              return result;
             },
-            selectedIds: _selectedItemId != null ? {_selectedItemId!} : <int>{},
+            selectedIds: _selectedItemId != null ? {_selectedItemId} : {},
             initialOptions: initialItemOptions.isNotEmpty
                 ? initialItemOptions
                 : null,
             onSelectionChanged: (ids) {
               setState(() {
-                _selectedItemId = ids.isNotEmpty ? ids.first : null;
+                // Get first selected ID (single select) - handle both int and String
+                final firstId = ids.isNotEmpty ? ids.first : null;
+                if (firstId != null) {
+                  _selectedItemId = firstId is int ? firstId : int.tryParse(firstId.toString());
+                } else {
+                  _selectedItemId = null;
+                }
                 if (_selectedItemId != null) {
                   final item = notifier.items.firstWhere((i) =>
                   i.id == _selectedItemId);
