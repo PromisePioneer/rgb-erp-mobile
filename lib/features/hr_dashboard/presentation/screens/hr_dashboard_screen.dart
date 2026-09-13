@@ -42,6 +42,7 @@ final _menuItems = <MenuItemData>[
   MenuItemData(label: 'Laporan Mutasi', icon: IconMap.editNote, route: '/report'),
   MenuItemData(label: 'Tugas Harian', icon: IconMap.task, route: '/daily-task'),
   MenuItemData(label: 'Monitoring', icon: IconMap.visibility, route: '/task-progress'),
+  MenuItemData(label: 'Laporan Kunjungan', icon: IconMap.locationOn, route: '/korwil-visit'),
 ];
 
 final _patrolPoints = [

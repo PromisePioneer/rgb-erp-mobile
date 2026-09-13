@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import '../services/storage_service.dart';
 import '../constants/app_constants.dart';
+import '../../navigation/app_router.dart';
 
 /// Interceptor that adds authentication token to requests
 class AuthInterceptor extends Interceptor {
@@ -50,7 +51,7 @@ class AuthInterceptor extends Interceptor {
 
   @override
   void onError(DioException err, ErrorInterceptorHandler handler) async {
-    // Handle 401 Unauthorized
+    // Handle 401 Unauthorized - Redirect to login
     if (err.response?.statusCode == 401) {
       final path = err.requestOptions.path;
       final isClientRequest = path.startsWith('/client');
@@ -59,6 +60,13 @@ class AuthInterceptor extends Interceptor {
         await _storage.clearClientAuthData();
       } else {
         await _storage.clearAuthData();
+      }
+
+      // Navigate to login page
+      try {
+        appRouterProvider.go('/login');
+      } catch (e) {
+        debugPrint('Failed to navigate to login: $e');
       }
     }
 

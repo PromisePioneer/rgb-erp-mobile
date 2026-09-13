@@ -219,6 +219,7 @@ class _ViolationReportFormScreenState extends State<ViolationReportFormScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Container(
+          height: 56,
           padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
           decoration: BoxDecoration(
             color: theme.colors.card,
@@ -239,6 +240,7 @@ class _ViolationReportFormScreenState extends State<ViolationReportFormScreen> {
                 ),
               ),
               isExpanded: true,
+              icon: Icon(IconMap.unfoldMore, color: theme.colors.mutedForeground),
               items: areas.map((p) {
                 return DropdownMenuItem(
                   value: p,
@@ -289,6 +291,7 @@ class _ViolationReportFormScreenState extends State<ViolationReportFormScreen> {
     final hasArea = notifier.state.selectedArea != null;
 
     return Container(
+      height: 56,
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
       decoration: BoxDecoration(
         color: theme.colors.card,
@@ -307,6 +310,7 @@ class _ViolationReportFormScreenState extends State<ViolationReportFormScreen> {
             style: TextStyle(color: theme.colors.mutedForeground),
           ),
           isExpanded: true,
+          icon: Icon(IconMap.unfoldMore, color: theme.colors.mutedForeground),
           items: employees.map((e) {
             return DropdownMenuItem(
               value: e,
@@ -332,6 +336,7 @@ class _ViolationReportFormScreenState extends State<ViolationReportFormScreen> {
     final selected = notifier.state.selectedCategory;
 
     return Container(
+      height: 56,
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
       decoration: BoxDecoration(
         color: theme.colors.card,
@@ -345,6 +350,7 @@ class _ViolationReportFormScreenState extends State<ViolationReportFormScreen> {
             style: TextStyle(color: theme.colors.mutedForeground),
           ),
           isExpanded: true,
+          icon: Icon(IconMap.unfoldMore, color: theme.colors.mutedForeground),
           items: types.map((t) {
             return DropdownMenuItem(
               value: t,
@@ -366,19 +372,24 @@ class _ViolationReportFormScreenState extends State<ViolationReportFormScreen> {
 
     if (children.isEmpty) {
       return Container(
+        height: 56,
         padding: const EdgeInsets.all(AppSpacing.md),
         decoration: BoxDecoration(
           color: theme.colors.card,
           borderRadius: AppRadius.radiusMd,
         ),
-        child: Text(
-          'Tidak ada sub-kategori',
-          style: TextStyle(color: theme.colors.mutedForeground),
+        child: Align(
+          alignment: Alignment.centerLeft,
+          child: Text(
+            'Tidak ada sub-kategori',
+            style: TextStyle(color: theme.colors.mutedForeground),
+          ),
         ),
       );
     }
 
     return Container(
+      height: 56,
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
       decoration: BoxDecoration(
         color: theme.colors.card,
@@ -392,6 +403,7 @@ class _ViolationReportFormScreenState extends State<ViolationReportFormScreen> {
             style: TextStyle(color: theme.colors.mutedForeground),
           ),
           isExpanded: true,
+          icon: Icon(IconMap.unfoldMore, color: theme.colors.mutedForeground),
           items: children.map((c) {
             return DropdownMenuItem(
               value: c,

@@ -95,6 +95,9 @@ import '../features/daily_task/presentation/screens/task_assignment_list_screen.
 import '../features/daily_task/presentation/screens/task_assignment_form_screen.dart';
 import '../features/daily_task/presentation/screens/task_progress_screen.dart';
 import '../features/daily_task/presentation/screens/task_progress_detail_screen.dart';
+import '../features/korwil_visit/presentation/screens/korwil_visit_screen.dart';
+import '../features/korwil_visit/presentation/screens/korwil_visit_form_screen.dart';
+import '../features/korwil_visit/presentation/screens/korwil_visit_detail_screen.dart';
 import '../features/approval/presentation/screens/approval_list_screen.dart';
 import '../features/approval/presentation/screens/approval_detail_screen.dart';
 import '../features/notification/presentation/screens/notification_screen.dart';
@@ -324,6 +327,41 @@ void initRouter(AuthNotifier authNotifier) {
                 path: '/edit-menu',
                 name: 'edit-menu',
                 builder: (context, state) => const EditMenuScreen(),
+              ),
+            ],
+          ),
+          // Branch 12: Korwil Visit (Laporan Kunjungan)
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/korwil-visit',
+                name: 'korwil-visit',
+                builder: (context, state) => const KorwilVisitScreen(),
+                routes: [
+                  GoRoute(
+                    path: 'create',
+                    name: 'korwil-visit-create',
+                    builder: (context, state) => const KorwilVisitFormScreen(),
+                  ),
+                  GoRoute(
+                    path: ':id',
+                    name: 'korwil-visit-detail',
+                    builder: (context, state) {
+                      final id = int.parse(state.pathParameters['id']!);
+                      return KorwilVisitDetailScreen(visitId: id);
+                    },
+                    routes: [
+                      GoRoute(
+                        path: 'edit',
+                        name: 'korwil-visit-edit',
+                        builder: (context, state) {
+                          final id = int.parse(state.pathParameters['id']!);
+                          return KorwilVisitFormScreen(visitId: id);
+                        },
+                      ),
+                    ],
+                  ),
+                ],
               ),
             ],
           ),

@@ -35,6 +35,7 @@ const Map<String, String> menuPrivilegeMapping = {
   'Tugas Harian': 'daily_task',
   'Monitoring': 'task_progress',
   'Progress Daily Task': 'task_progress',
+  'Laporan Kunjungan': 'korwil_visit',
   'Purchasing': 'purchasing',
 };
 

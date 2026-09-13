@@ -117,4 +117,11 @@ class IconMap {
   static IconData warehouse = FLucideIcons.warehouse;
   static IconData link = FLucideIcons.link;
   static IconData accountBalance = FLucideIcons.landmark;
+
+  // Additional icons for Korwil Visit
+  static IconData edit = FLucideIcons.pencil;
+  static IconData image = FLucideIcons.image;
+  static IconData unfoldMore = FLucideIcons.chevronsUpDown;
+  static IconData video = FLucideIcons.video;
+  static IconData videoCamera = FLucideIcons.video;
 }

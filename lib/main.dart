@@ -30,6 +30,8 @@ import 'features/violation_report/presentation/providers/violation_report_provid
 import 'features/report/presentation/providers/report_provider.dart';
 import 'features/daily_task/data/repositories/daily_task_repository.dart';
 import 'features/daily_task/presentation/providers/daily_task_provider.dart';
+import 'features/korwil_visit/data/repositories/korwil_visit_repository.dart';
+import 'features/korwil_visit/presentation/providers/korwil_visit_provider.dart';
 import 'features/client/presentation/providers/client_dashboard_provider.dart';
 import 'features/client/presentation/providers/client_attendance_provider.dart';
 import 'features/client/presentation/providers/client_reports_provider.dart';
@@ -234,6 +236,13 @@ void main() async {
         ChangeNotifierProvider<DailyTaskNotifier>(
           create: (_) => DailyTaskNotifier(
             createDailyTaskRepository(dio),
+          ),
+        ),
+
+        // Korwil Visit Provider (lazy loaded)
+        ChangeNotifierProvider<KorwilVisitNotifier>(
+          create: (_) => KorwilVisitNotifier(
+            KorwilVisitRepository(),
           ),
         ),
 
