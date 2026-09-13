@@ -45,6 +45,7 @@ import '../shared/widgets/feedback/loading_indicator.dart';
 // Features imports
 import '../features/auth/presentation/providers/auth_provider.dart';
 import '../features/auth/presentation/screens/login_screen.dart';
+import '../features/auth/presentation/screens/force_password_change_screen.dart';
 import '../features/client/presentation/screens/client_dashboard_screen.dart';
 import '../features/client/presentation/screens/client_attendance_screen.dart';
 import '../features/client/presentation/screens/client_reports_screen.dart';
@@ -132,8 +133,18 @@ void initRouter(AuthNotifier authNotifier) {
       final isLoggedIn = authNotifier.state.isAuthenticated;
       final isOnSplash = state.matchedLocation == '/splash';
       final isOnLogin = state.matchedLocation == '/login';
+      final isOnForcePasswordChange = state.matchedLocation == '/force-password-change';
 
       if (isOnSplash) return null;
+
+      // Check if user needs to change password
+      final needsPasswordChange = isLoggedIn &&
+        !isOnForcePasswordChange &&
+        authNotifier.state.user?.forcePasswordChange == true;
+
+      if (needsPasswordChange) {
+        return '/force-password-change';
+      }
 
       if (!isLoggedIn && !isOnLogin) {
         return '/login';
@@ -163,6 +174,11 @@ void initRouter(AuthNotifier authNotifier) {
         path: '/forgot-password',
         name: 'forgot-password',
         builder: (context, state) => const ForgotPasswordScreen(),
+      ),
+      GoRoute(
+        path: '/force-password-change',
+        name: 'force-password-change',
+        builder: (context, state) => const ForcePasswordChangeScreen(),
       ),
 
       // Main app shell with bottom navigation

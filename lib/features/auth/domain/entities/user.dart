@@ -18,6 +18,7 @@ class User extends Equatable {
   final String? areaName;
   final List<String> privileges;
   final bool hasFaceEnrollment;
+  final bool forcePasswordChange; // Must change password on first login
 
   const User({
     required this.id,
@@ -36,6 +37,7 @@ class User extends Equatable {
     this.areaName,
     this.privileges = const [],
     this.hasFaceEnrollment = false,
+    this.forcePasswordChange = false,
   });
 
   /// Check if user is RGB (Satpam/Security)
@@ -52,6 +54,47 @@ class User extends Equatable {
 
   /// Check if user has a specific privilege
   bool hasPrivilege(String key) => privileges.contains(key);
+
+  /// Copy with method for immutable updates
+  User copyWith({
+    int? id,
+    String? code,
+    String? name,
+    String? email,
+    String? username,
+    String? nik,
+    String? department,
+    String? role,
+    String? photo,
+    String? division,
+    String? siteId,
+    String? siteName,
+    String? areaId,
+    String? areaName,
+    List<String>? privileges,
+    bool? hasFaceEnrollment,
+    bool? forcePasswordChange,
+  }) {
+    return User(
+      id: id ?? this.id,
+      code: code ?? this.code,
+      name: name ?? this.name,
+      email: email ?? this.email,
+      username: username ?? this.username,
+      nik: nik ?? this.nik,
+      department: department ?? this.department,
+      role: role ?? this.role,
+      photo: photo ?? this.photo,
+      division: division ?? this.division,
+      siteId: siteId ?? this.siteId,
+      siteName: siteName ?? this.siteName,
+      areaId: areaId ?? this.areaId,
+      areaName: areaName ?? this.areaName,
+      privileges: privileges ?? this.privileges,
+      hasFaceEnrollment: hasFaceEnrollment ?? this.hasFaceEnrollment,
+      forcePasswordChange: forcePasswordChange ?? this.forcePasswordChange,
+    );
+  }
 
   factory User.fromJson(Map<String, dynamic> json) {
     return User(
@@ -74,6 +117,7 @@ class User extends Equatable {
               .toList() ??
           [],
       hasFaceEnrollment: json['has_face_enrollment'] == true,
+      forcePasswordChange: json['force_password_change'] == true,
     );
   }
 
@@ -95,6 +139,7 @@ class User extends Equatable {
       'area_name': areaName,
       'privileges': privileges,
       'has_face_enrollment': hasFaceEnrollment,
+      'force_password_change': forcePasswordChange,
     };
   }
 
@@ -116,5 +161,6 @@ class User extends Equatable {
         areaName,
         privileges,
         hasFaceEnrollment,
+        forcePasswordChange,
       ];
 }
